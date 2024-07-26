@@ -35,6 +35,44 @@ select vname as name, course , MAX(CGPA) as TOP_CGPA from student2
 group by course order by TOP_CGPA DESC ;
 List the courses under each semester where none of the students scored less than 5.
 select course, semester from student2 group by semester , course having min(CGPA) >=5
+ ------ 8. Display employee_id, first_name, salary, department_id for department_id 60 and 90 using Set operators. (2 Marks)
+SELECT employee_id, first_name, salary,department_id
+FROM employees
+WHERE department_id=60
+UNION
+SELECT employee_id, first_name, salary,department_id
+FROM employees
+WHERE department_id=90
+ORDER BY 3;
+select * from employees;
+----- 9. Display 2th highest salary of employee using subquery . (3 Mark)"
+select min(salary ) 
+from (select salary from employees order by salary desc limit 2)a;
+----10. Write a query to fetch the employee ID, First Name, Last Name, Salary and Department ID of those employees who draw a salary more than the average salary of their respective department. (2 Mark)
+	SELECT employee_id, first_name, last_name,salary,department_id FROM employees e
+	WHERE salary > ANY  (SELECT avg(salary) FROM employees WHERE e.department_id  = department_id ) ORDER BY department_id ; 
+----16. Write a DDL Statement to create the below table  (5 marks)
+
+	Table name :	Course 
+	Columns/Attributes	Datatype
+	Course_ID             Int
+	Course_Name 		  Varchar(10) 
+	course_duration 	  int 
+	course_title 		  varchar(20) 
+	course_start_date 	  date
+
+-- Create a check constraint on column course_duration should be less than or equal to 21.
+-- Create a check constraint on course_title should be in 'Python','SQL','STATS'
+
+-- Solution
+
+CREATE TABLE COURSE
+(
+Course_ID Int,
+Course_Name Varchar(10) ,
+course_duration int CHECK (course_duration <= 21),
+course_title varchar(20) check (course_title in ('Python','SQL','STATS')),
+course_start_date date);
 
 
 

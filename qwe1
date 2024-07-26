@@ -317,6 +317,361 @@ join drivers d
 on re.driverId=d.driverId
 order by r.raceId,re.milliseconds asc;
 
+# Q2.Write MySQL query to find third lowest run scorer.
+/* Solution */
+select Player_Name , Runs  from cricket_1 order by Runs  limit 2,1;
+# 6) Display the column Quantity from the table Bank_Inventory by applying the below formatting: 
+-- a) convert the data type from numeric to character 
+-- b) Pad the column with 0's  
+
+/* Solution */
+SELECT lpad( convert(quantity , char) , 4, "0")  from bank_inventory;
+
+# 9)  For every branch find the sum of calculated profit after ignoring the loss.  
+/* Solution */
+Select branch, sum(revenue-cost)
+From Bank_branch_PL
+where revenue-cost > 0
+Group by branch;
+# Question 11:
+# 11)  Find the  month wise total quantity of each product
+/* Solution */
+Select sum(Quantity), Month, Product
+From Bank_Inventory_pricing
+group by Product, Month;
+
+# 14) Display the products and month where the total Quantity in Bank Inventory was more than 6.  
+/* Solution */
+Select product , month, sum(quantity )
+from bank_inventory_pricing
+Group by product , month
+Having sum(quantity) > 6;
+
+# Question 15:
+# 15) IF Real profit is calculated as :
+		Real Profit = revenue - cost  
+	Find the branches for which branch level real profit is more than the estimated_profit.
+/* Solution */
+Select branch, sum(estimated_profit)  , sum(revenue - cost )   
+From Bank_branch_PL
+Group by branch
+having  (sum(estimated_profit)  > sum(revenue - cost ) );
+
+
+# Question 8:
+# 8) Print customer_id, customer_name and other common columns  from both the Tables :  bank_customer & bank_customer_export without missing any matching customer_id key column records. 
+-- Note: refer datatype conversion if found any missing records
+
+/* Solution */
+select * from bank_customer_export ;
+
+Select  bc.customer_id ,  	bce.customer_name
+from  bank_customer_export bce 
+natural join   bank_customer  bc
+where CAST(bce.customer_id  AS UNSIGNED) = bc.customer_id;
+
+# Question 5:
+# 5) Display the Savings Account number whose corresponding Credit cards and  AddonCredit card transactions have occured more than one time .
+/* Solution */
+SELECT	ba.Account_Number as savings_account_number, ba.Account_type  as savings_account_type,
+	br.Account_Number as Credit_cardt_account_number, br.Account_type as	CreditCard_account_type, count(bat.transaction_date)  as Count_credit_card_trsanctions
+FROM bank_Account_Details ba
+LEFT JOIN bank_account_relationship_details br
+ON  ba.Account_Number = br.Linking_Account_Number
+LEFT JOIN bank_account_transaction bat
+ON br.Account_Number = bat.Account_Number
+Where br.Account_type like '%Credit%'    
+group by ba.Account_Number, ba.Account_type,br.Account_Number, br.Account_type  
+having count(bat.transaction_date) > 1;
+#Q9. Display the employee_id, first_name, last_name, job_id and department_id of the employees who were recruited first in the department
+
+SELECT employee_id, first_name, last_name, job_id, department_id
+FROM employee_details o
+WHERE hire_Date =(SELECT min(hire_Date) FROM EMPLOYEE_DETAILS i WHERE i.department_id=o.department_id);
+#Q10. Display the employee_id, first_name, last_name, salary and job_id of the employees who earn maximum salary for every job.
+
+SELECT  employee_id, first_name, last_name, salary, Job_id 
+FROM employee_details o
+WHERE salary = (SELECT max(salary) FROM employee_details i WHERE i.job_id=o.job_id);
+
+CREATE SCHEMA IF NOT EXISTS Video_Games;
+USE Video_Games;
+SELECT * FROM Video_Games_Sales;
+
+# Q1. Display the names of the Games, platform and total sales in North America for respective platforms.
+SELECT Name,Platform, SUM(NA_Sales) Over (Partition by Platform) FROM VIdeo_Games_Sales;
+
+# Q2. Display the name of the game, platform , Genre and total sales in North America for corresponding Genre as Genre_Sales,total sales for the given platform as Platformm_Sales and also display the global sales as total sales .
+# Also arrange the results in descending order according to the Total Sales.
+
+SELECT Name, Platform,Genre,
+	SUM(NA_Sales) OVER(Partition by Genre) AS Genre_Sales,
+    SUM(NA_Sales) OVER(PARTITION BY Platform) AS  Platformm_Sales,
+	SUM(Global_Sales) OVER() AS  Total_Sales
+    FROM VIdeo_Games_Sales
+    ORDER BY Total_Sales DESC;
+
+# Q3. Use nonaggregate window functions to produce the row number for each row 
+# within its partition (Platform) ordered by release year.
+SELECT
+	Name, Platform, Year_of_Release, Genre,
+	ROW_NUMBER() OVER(PARTITION BY Platform ORDER BY Year_of_Release DESC) AS row_num
+FROM Video_Games_Sales;
+
+# Q4. Use aggregate window functions to produce the average global sales of each row within its partition (Year of release). Also arrange the result in the descending order by year of release.
+SELECT Name, Platform, Year_of_Release, 
+	AVG(Global_Sales) OVER(PARTITION BY Year_of_Release) AS AvgGlobalSales_In_Millions
+    FROM Video_Games_Sales
+    ORDER BY Year_of_Release DESC;
+   
+
+# Q5. Display the name of the top 5 Games with highest Critic Score For Each Publisher. 
+
+SELECT * 
+from 
+(SELECT Name, Platform, RANK()over(Partition by Publisher Order BY Critic_Score desc) Critic_Rank
+FROM VIdeo_Games_Sales)a
+Where Critic_Rank<=5;
+
+
+
+------------------------------------------------------------------------------------
+# Dataset Used: website_stats.csv and web.csv
+------------------------------------------------------------------------------------
+# Q6. Write a query that displays the opening date two rows forward i.e. the 1st row should display the 3rd website launch date
+
+select * from web;
+SELECT name, launch_date,
+	LEAD(launch_date,2) OVER(ORDER BY launch_date) third_website_launch_date
+FROM web;
+
+
+# Q7. Write a query that displays the statistics for website_id = 1 i.e. for each row, show the day, the income and the income on the first day.
+SELECT day, income,
+	FIRST_VALUE(income) OVER(ORDER BY day) income_on_first_day
+FROM website_stats
+WHERE website_id = 1;
+
+
+-----------------------------------------------------------------
+# Dataset Used: play_store.csv 
+-----------------------------------------------------------------
+# Q8. For each game, show its name, genre and date of release. In the next three columns, show RANK(), DENSE_RANK() and ROW_NUMBER() sorted by the date of release.
+select name, genre, released, 
+	rank() over(order by released),
+	dense_rank() over(order by released),
+	row_number() over(order by released)
+from play_store
+
+
+# Datasets used: employee.csv and membership.csv
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------
+-- Schema EmpMemb
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS EmpMemb;
+USE EmpMemb;
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------
+-- Create a table Employee by refering the data file given. 
+
+ Follow the instructions given below: 
+-- -- Q9. Values in the columns Emp_id and Members_Exclusive_Offers should not be null.
+-- -- Q10. Column Age should contain values greater than or equal to 18.
+-- -- Q11. When inserting values in Employee table, if the value of salary column is left null, then a value 20000 should be assigned at that position. 
+-- -- Q12. Assign primary key to Emp_ID
+-- -- Q13. All the email ids should not be same.
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- -----------------------------------------------------
+-- Table Employee
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS Employee (
+  Emp_ID VARCHAR(3) NOT NULL,
+  Name VARCHAR(50) NULL,
+  Age INT NULL CHECK (Age>=18),
+  Email VARCHAR(100) NULL UNIQUE,
+  Salary INT NULL DEFAULT 20000,
+  Members_Exclusive_Offers VARCHAR(5) NOT NULL,
+  PRIMARY KEY (Emp_ID)
+);
+
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------
+-- Create a table Membership by refering the data file given.  
+
+ Follow the instructions given below: 
+-- -- Q14. Values in the columns Prime_Membership_Active_Status and Employee_Emp_ID should not be null.
+-- -- Q15. Assign a foreign key constraint on Employee_Emp_ID.
+-- -- Q16. If any row from employee table is deleted, then the corresponding row from the Membership table should also get deleted.
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-- -----------------------------------------------------
+-- Table Membership
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS Membership (
+  Prime_Membership_Active_Status VARCHAR(5) NOT NULL,
+  Enrollment_Date VARCHAR(15) NULL,
+  End_Date VARCHAR(15) NULL,
+  Employee_Emp_ID VARCHAR(3) NOT NULL,
+  PRIMARY KEY (Employee_Emp_ID),
+  CONSTRAINT fk_Membership_Employee
+    FOREIGN KEY (Employee_Emp_ID)
+    REFERENCES Employee(Emp_ID)
+    ON DELETE CASCADE
+);
+
+
+SELECT * FROM MEMBERSHIP;
+SELECT * FROM EMPLOYEE;
+DELETE FROM MEMBERSHIP;
+
+
+DELETE FROM EMPLOYEE WHERE Emp_ID = 'G1';
+
+
+
+###################### Use 'account_details' table for below questions
+
+CREATE TABLE IF NOT EXISTS `account_details` (
+  `acc_id` int(10) NOT NULL,
+  `first_name` varchar(50) NOT NULL,
+  `last_name` varchar(50) NOT NULL,
+  `ssn` char(10) NOT NULL,
+  `acc_holder_id` int(10) NOT NULL,
+  `balance` decimal(20,4) DEFAULT '0.0000',
+  PRIMARY KEY (`acc_id`));
+  
+INSERT INTO `account_details` (`acc_id`, `acc_holder_id`, `balance`, `first_name`, `last_name`, `ssn`) VALUES
+	(1, 100, 132.1020, 'Joseph', 'Cane', '098765432'),
+	(2, 300, 4435.2030, 'Kim', 'Karry', '087654321'),
+	(3, 120, 2345223.6600, 'Jim', 'Anderson', '123456780'),
+	(4, 90, 98763.2300, 'Jessie', 'Thomson', '765432109'),
+	(5, 110, 34221.1000, 'Palak', 'Patel', '654321890'),
+	(6, 80, 7634.8000, 'Max', 'Jerrard', '456789012'),
+	(7, 10, 876964.7000, 'Peter', 'Koshnov', '512345670'),
+	(8, 110, 299876.6000, 'Monica', 'Irodov', '120088551'),
+	(9, 100, 7659809.5300, 'Petro', 'Jenkins Jr', '123456789'),
+	(10, 200, 111.1200, 'Jeff', 'Joshua', '765432189' );
+###################################################################################################################################################
+# Q.1 Kim wants to pay Jeff 550 dollars after they both had lunch together. At the same time, GL NEWSLETTER is going to deduct 
+# 150 dollars from Jeff's bank account as annual subscription. Write a query such that GL NEWSLETTER should be able to deduct the amount once Kim transfers 
+# the amount to Jeff's account
+# Solution: 
+START TRANSACTION;
+SELECT * FROM account_details WHERE first_name = 'Jeff' FOR UPDATE;
+update account_details SET balance = balance - 550 where first_name = 'Kim';
+update account_details SET balance = balance + 550 where first_name = 'Jeff';
+select * from account_details;
+COMMIT;
+
+
+######################################################################################################################################
+# Create table:
+CREATE TABLE BANK_ACCOUNT ( Customer_id INT, 		   			  
+							Account_Number VARCHAR(19),
+							Account_type VARCHAR(25),
+							Balance_amount INT ,
+                            Account_status VARCHAR(10), 
+                            Relationship_type varchar(1));
+# Insert records:
+INSERT INTO BANK_ACCOUNT  VALUES (123001, "4000-1956-3456",  "SAVINGS"            , 200000 ,"ACTIVE","P"); 
+INSERT INTO BANK_ACCOUNT  VALUES (123001, "5000-1700-3456",  "RECURRING DEPOSITS" ,9400000 ,"ACTIVE","S");  
+INSERT INTO BANK_ACCOUNT  VALUES (123002, "4000-1956-2001",  "SAVINGS"            , 400000 ,"ACTIVE","P"); 
+INSERT INTO BANK_ACCOUNT  VALUES (123002, "5000-1700-5001",  "RECURRING DEPOSITS" ,7500000 ,"ACTIVE","S"); 
+INSERT INTO BANK_ACCOUNT  VALUES (123003, "4000-1956-2900",  "SAVINGS"            ,750000,"INACTIVE","P"); 
+INSERT INTO BANK_ACCOUNT  VALUES (123004, "5000-1700-6091",  "RECURRING DEPOSITS" ,7500000 ,"ACTIVE","S"); 
+INSERT INTO BANK_ACCOUNT  VALUES (123004, "4000-1956-3401",  "SAVINGS"            , 655000 ,"ACTIVE","P"); 
+INSERT INTO BANK_ACCOUNT  VALUES (123005, "4000-1956-5102",  "SAVINGS"            , 300000 ,"ACTIVE","P"); 
+INSERT INTO BANK_ACCOUNT  VALUES (123006, "4000-1956-5698",  "SAVINGS"            , 455000 ,"ACTIVE" ,"P"); 
+INSERT INTO BANK_ACCOUNT  VALUES (123007, "5000-1700-9800",  "SAVINGS"            , 355000 ,"ACTIVE" ,"P"); 
+INSERT INTO BANK_ACCOUNT  VALUES (123007, "4000-1956-9977",  "RECURRING DEPOSITS" , 7025000,"ACTIVE" ,"S"); 
+INSERT INTO BANK_ACCOUNT  VALUES (123007, "9000-1700-7777-4321",  "CREDITCARD"    ,0      ,"INACTIVE","P"); 
+INSERT INTO BANK_ACCOUNT  VALUES (123008, "5000-1700-7755",  "SAVINGS"            ,NULL   ,"INACTIVE","P"); 
+
+select * from bank_account; 
+
+# Q.2 Write a lock query such that whenever an User X perform trasaction customer_id 123001 in table bank_account, it should only allow other users
+# to read the table and not perfrom any transaction till the lock is released by User X
+# Solution:
+
+START TRANSACTION;
+SELECT * FROM bank_account LOCK IN SHARE MODE;
+
+############################################################################################################################################
+# Q.3 A customer approaches a bank and wishes to open a new account. Unknonwingly two bankers try to perform same entries in the bank_account table
+#Table: Bank_account
+#customer_id : 123009
+#Account_number : '5000-1700-9800'
+#Account_type: 'SAVINGS'
+#balance: 20000
+#status: 'ACTIVE'
+#relationship: 'P'
+#How the avoid duplicate entry into the table when two users try to insert the same record at a time.
+#Solution:	
+	start transaction;
+	Select * from Bank_account for update ;
+	insert into bank_account  values ( 123009, '5000-1700-9800', 'SAVINGS', 20000, 'ACTIVE', 'P' ) ;
+
+#############################################################################################################################################
+-- ----------------------------------------------------
+# Datset Used: admission_predict.csv
+-- ----------------------------------------------------
+# Q.4 A university is looking for candidates with GRE score between 330 and 340. Also they should be proficient in english 
+#i.e. their Toefl score should not be less than 115. Create a view for this university.
+#Solution:	
+CREATE VIEW GT_filtered_View As
+SELECT * FROM admission_predict
+WHERE `GRE SCORE` BETWEEN 330 AND 340 
+AND `TOEFL SCORE` >= 115;
+
+
+# Q.5 Create a view of the candidates with the CGPA greater than the average CGPA.
+#Solution:	
+CREATE VIEW GTavg_cgpa AS
+SELECT * FROM admission_predict
+WHERE CGPA > 
+	(SELECT AVG(CGPA) FROM admission_predict);
+    
+ #############################################################################################################################################
+ 
+-- -------------------------------------------------------------------------------------
+# Datsets Used: world_cup_2015.csv and world_cup_2016.csv 
+-- -------------------------------------------------------------------------------------
+# Q.6 Create a view "team_1516" of the players who played in world cup 2015 as well as in world cup 2016.
+#Solution:	
+CREATE VIEW team_1516 AS
+SELECT wc15.Player_Id, wc15.Player_Name, wc15.Runs, wc15.Popularity, wc16.Charisma 
+FROM WORLD_CUP_2015 AS wc15
+INNER JOIN WORLD_CUP_2016 AS wc16
+ON wc15.Player_id = wc16.Player_id;
+
+
+# Q.7 Create a view "All_From_15" that contains all the players who played in world cup 2015 but not in the year 2016Along with those players who played in both the world cup matches.
+#Solution:	
+CREATE VIEW All_From_15 AS
+SELECT wc15.Player_Id, wc15.Player_Name, wc15.Runs, wc15.Popularity, wc16.Charisma 
+FROM WORLD_CUP_2015 AS wc15
+LEFT JOIN WORLD_CUP_2016 AS wc16
+ON wc15.Player_id = wc16.Player_id;
+
+
+# Q.8 Create a view "All_From_16" that contains all the players who played in world cup 2016 but not in the year 2015 Along with those players who played in both the world cup matches.
+#Solution:
+CREATE VIEW All_From_16 AS
+SELECT wc16.Player_Id, wc16.Player_Name, wc16.Runs, wc15.Popularity, wc16.Charisma 
+FROM WORLD_CUP_2015 AS wc15
+RIGHT JOIN
+WORLD_CUP_2016 AS wc16
+ON wc15.Player_id = wc16.Player_id;
+
+# Q.9 Drop multiple views "all_from_16", "all_from_15"
+#Solution:
+DROP VIEW  all_from_16, all_from_15;
+
 
 
 

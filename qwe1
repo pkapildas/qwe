@@ -111,6 +111,212 @@ select e1.first_name, e1.job_id,e1.hire_date 	from employees e1 join employees e
 	GROUP BY 
     e.department_id;
 
+####
+/*
+1.a	Mention the differences between UNION and UNION ALL (Marks 2)
+UNION ALL command is equal to UNION command,
+except that UNION ALL selects all the values. 
+The difference between Union and Union all is 
+that Union all will not eliminate duplicate rows
+
+1.b Can we use aggregate functions in where clause? Justify your answer. (Marks 2)
+We cannot use aggregate functions in where clause because of order of evaluation of clauses. 
+If you use sum () in select clause then it will be applied to the rows that specify the where condition. 
+As it will not make sense to have aggregate functions in where, we can actually try using having.
+
+/*	
+1.c	Mention the difference between TRUNCATE and ROUND functions. (Marks 2)
+ROUND() function rounds the number up or down depends upon the 
+second argument D and the number itself(digit after D decimal places >=5 or not). 
+TRUNCATE() function truncate the number up to D number of decimal places without
+checking whether the digit after D decimal >=5 or not.
+
+1.d	Mention the difference between ISNULL() and IFNULL(). (Marks 2)
+IsNull() function returns TRUE (1) if the expression is a null value, otherwise FALSE (0).
+IFNULL() function lets you return an alternative value if an expression is NULL.
+
+1.e	What is referential integrity (Marks 2)
+Ensures consistency of records between two related tables.
+•	It establishes relationships between two different tables using referencing columns.
+•	It sets up a parent child relationship between two tables. 
+•	So the child table always references the parent table.  
+•	At the same time, the parent table prevents entering a row in child table. 
+•	Establishing a Parent - child relationship between tables is achieved by defining the tables using - FOREIGN KEY and PRIMARY KEY.
+
+2.a	Explain about EXISTS operator (Marks 2)
+The subquery is examined by each record of the main query using common key columns
+•	The common key column should be same in main query and subquery
+•	The subquery returns true (1) or false (0) when its conditions are satisfied with main query input column values
+•	EXISTS operator is used when a record in the main query has one or more matching records in the subquery result set
+•	In the next example the subquery of Transaction is executed for multiple times for each account in ACCOUNT table
+SELECT A.Acct_Num, A.Balance  , A.acct_type, A.acct_status
+FROM   ACCOUNT A
+WHERE Exists (SELECT 'yes'
+FROM Transaction T
+WHERE T.Acct_Num = A.Acct_Num);
+
+2.b	Mention the difference between WHERE and HAVING . (Marks 2)
+WHERE Caluse
+	WHERE Clause is used to filter the records 
+    from the table based on the specified condition.
+    WHERE Clause implements in row operations
+    WHERE Clause cannot contain aggregate function
+HAVING Clause
+	HAVING Clause is used to filter record from the groups based on the 
+    specified condition.
+    HAVING Clause implements in column operation
+    HAVING Clause can contain aggregate function
+    
+2.c	Count total number of 'a' appearing in the mentioned phrase ‘Great Learning’. (Marks 2)
+select length('Great Learning')-length(replace('Great Learning','a','')) from Dual;
+
+2.d After creating a table, how a unique constraint can be added to a column and 
+how will you delete the same?  (Marks 2)
+To add:
+alter table employee_111 modify Phone_Number varchar(15) not null unique;
+or
+alter table employee_111 add constraint UNI_PhNo unique (Phone_Number);
+To To Delete:
+alter table employee_111 drop index Phone_Number;
+
+2.e How correlated sub-query can be applied in Having clause? Explain with an example.  (Marks 2)
+The SubQuery in the Having Clause can also correlates  with non grouping fields selected in the Main query. So that each result of the main query is conditionally retrieved based on the each record of subquery
+SELECT Branch, P1.Product, SUM(Estimated_profit) AS Profit
+FROM PROFIT_LOSS P1
+GROUP BY Branch, P1.Product
+HAVING SUM(Estimated_profit) > (SELECT AVG(Estimated_profit)
+  FROM PROFIT_LOSS P2
+  WHERE P2.Product = P1.Product)
+
+Here, for each individual product, branch level profit is verified with overall organization level profit. The main query retrieves total- profit of each product at branch. Since the subquery is correlated with main query, the subquery is executed with an input from main query, and returns average of profit per each product. The execution of the subquery is repeated for all the corresponding inputs from main query. Having clause will conditionally filters the records of main query
+
+
+Section B -30 Marks
+/*
+3 a. Write a Query to display average rainfall and average Evaporation for each Location 
+-- except records with Evaporation as NULL. (Executable) (Marks 4)
+(Use Tables: AustraliaWeather). 
+-- Solutions  */
+
+select Location, year(`Date`), month(`Date`), avg(Rainfall) , avg(Evaporation)
+from australiaweather 
+WHERE Evaporation IS NOT NULL
+group by Location, year(`Date`), month(`Date`);
+/*
+3	b	Write a Query to display the maximum temperature recorded in the morning and afternoon for each 
+location in each month (Use Tables: AustraliaWeather).(Marks 6)
+-- Solutions  
+ */
+ 
+select Location, month(`Date`), max(Temp9am), max(Temp3pm)
+ from australiaweather
+group by Location, month(`Date`);
+
+/*
+3	c	Write a Query to add a new column to the existing table "australiaweather" with the name `Pressure9pm`.
+ The column should be of type Int and hold a default value of 1001 in case no value is supplied during 
+ insertion. Also make sure the column does not have accept null values. (Marks 5)
+-- Solutions  
+ */
+
+ALTER TABLE australiaweather
+ADD Pressure9pm int NOT NULL default 1001;
+/*
+3	d	An observation on Rainfall has to be made on a bi-yearly basis for forecasting purpose, 
+hence write a query to compare Average Rainfall for month of January, 2008 and July, 2008.
+--  (Use Tables: AustraliaWeather). (Marks 5)
+-- Solutions 
+ */
+
+ SELECT 
+    AVG(CASE WHEN DATE_FORMAT(Date, '%Y-%m') = '2008-01' THEN rainfall END) AS Jan_Avg_Rainfall,
+    AVG(CASE WHEN DATE_FORMAT(Date, '%Y-%m') = '2008-07' THEN rainfall END) AS July_Avg_Rainfall
+FROM 
+    AustraliaWeather
+WHERE 
+    DATE_FORMAT(Date, '%Y-%m') IN ('2008-01', '2008-07');
+
+/*
+3	e	A study requires the total humidity recorded per day, combine the columns into a single column by 
+adding the Humudity recorded in the morning and noon. 
+-- Compare the average Humidity in the month of January 2009 and February 2009. (Use Tables: AustraliaWeather).(Marks 4)
+-- Solutions  
+ */
+
+SELECT 
+    AVG(CASE WHEN DATE_FORMAT(Date, '%Y-%m') = '2009-01' THEN (Humidity9am + Humidity3pm) END) AS Jan_Avg_Humidity,
+    AVG(CASE WHEN DATE_FORMAT(Date, '%Y-%m') = '2009-02' THEN (Humidity9am + Humidity3pm) END) AS Feb_Avg_Humidity
+FROM 
+    AustraliaWeather
+WHERE 
+    DATE_FORMAT(Date, '%Y-%m') IN ('2009-01', '2009-02');
+
+/*
+3	f	The Meteorogical Department wants an analysis of the morning weather. 
+Write a Query to display the highest recorded Pressure in each location in every month, 
+when the evaporation record is available and temperature range in the morning should range between 14 and 30 
+degrees.  Filter the records where Maximum Humidity (Executable) in the morning should not exceed 70. 
+ (Make appropriate date conversions if necessary). (Use Tables: AustraliaWeather). (Marks 6)
+-- Solutions  
+ */
+ 
+ 
+select Location, month (date_format (`Date`, '%Y-%m-%d')) as `month`, max(Pressure9am) 
+from australiaweather
+where Evaporation is not null and Temp9am between 14 and 30
+group by Location, month (date_format (`Date`, '%Y-%m-%d'))
+having max(Humidity9am) < 70;
+
+-- Create ER> Database>Reverse Engineer>Password>next> select schema> next>next>finish
+-- SECTION C – 30 MARKS
+/*
+Scenario:
+Formula One (also Formula 1 or F1 and officially the FIA Formula One World Championship) is the highest class of single-seat auto racing that is sanctioned by the Fédération Internationale de l'Automobile (FIA). The FIA Formula One World Championship has been one of the premier forms of racing around the world since its inaugural season in 1950. 
+This dataset contains data from 1950 all the way through the 2017 season, and consists of tables describing constructors, race drivers, lap times, pit stops and more.*/
+/*
+4.a The Racing Association is planning to conduct  the races in less worn out circuits. 
+Hence, there is a need to identify the circuits where no races have been held so far. Write a Query to get the list.(Use Tables: Circuits & races )(4 marks)
+-- Solutions  */
+select * 
+from Circuits
+where circuitId Not in (select circuitId 
+                        from races);
+/*
+4.b A journalist is writing an article about the racer who holds the record for completing a lap in shortest time duration. 
+Get the details about the driver.(Use Tables : drivers & results ) (6 Marks)
+-- Solutions  */
+select * 
+from drivers
+where driverId= ( select driverID
+                    from results 
+                    where fastestLapTime = (select min(fastestLapTime)
+                                        from results));
+/*
+ 4.c An article is to be published for ranking the race drivers based on their points accumulated. Generate such a report along with the details of the race driver.(Use Tables : drivers ) (6 Marks)
+ -- Solutions  */
+select d.*, dense_rank() over(order by points desc)
+from drivers d
+join results r
+on d.driverID=r.driverId;
+/*
+4.d Create a virtual table which consits of the the details of all the race drivers , along with the count of total number of races played so far. Sort the result in the order of highest races played to the lowest.(Use Tables : drivers & results) (7 Marks) [Descriptive]
+-- Solutions  */
+create view driver_race_details
+as
+select *, (select count(raceId) from results r where r.driverId=d.driverId ) as total_Races_played
+from drivers d
+order by total_races_played desc;
+/*
+4.e Generate a report for displaying the Id and names of the races conducted. Also display the driver who participated, points scored, no of laps in race and the duration taken to complete the race in milliseconds. Display the report in a sorted manner.(Use Tables : races & results) (7 Marks)
+-- Solutions  */
+select r.raceId,r.name,d.driverId,d.driverRef,re.points,re.laps,re.milliseconds
+from results re
+join races r
+on re.raceId=r.raceId
+join drivers d 
+on re.driverId=d.driverId
+order by r.raceId,re.milliseconds asc;
+
 
 
 

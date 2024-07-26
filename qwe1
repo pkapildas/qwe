@@ -75,7 +75,41 @@ course_title varchar(20) check (course_title in ('Python','SQL','STATS')),
 course_start_date date);
 
 
+---- 1. Write a query that returns the result <Name of employee> joined on <Hire_date> for all the employees .
+	select distinct concat(first_name,' joined on ',date_format(hire_date,'%D %M %Y')) 
+		from employees;
+----- 2. Write down the query to print first letter of a Name in Lower Case and all other letter in Upper Case.(3 Marks)"
+	SELECT First_Name,concat(lower(SUBSTRING(First_Name,1,1)),upper(SUBSTRING(First_Name,2,LENgth(First_Name)-1)))
+ 		AS First_Name from employees;
+----- 3. Write a query to display the first & last names of all the employees separated by a space as employee_name and the numbers of years that the employee has been working with the company for only those employees who have been working with the company for more than 30 years. (2 Mark)
+	Select concat(first_name,' ',last_name) as employees_name ,year(current_date())-year(hire_date) as Tenure from employees
+		where year(current_date())-year(hire_date)>30;
+-----4. display the grade of the employee according to their salaries: (3 Marks)
+----Solution:
+	SELECT employee_id,
+	CASE 
+     WHEN salary<=3000 THEN 'v'
+    WHEN salary>=3000 and salary<=5000 THEN 'iv'
+    WHEN salary>5000 and salary<=10000 then 'iii'
+    WHEN salary>10000 and salary<=50000 then 'ii'
+     When salary>50000 then 'i'
+END as grade
+FROM employees;
+----- 5. Display the First Name, Job ID and the Hire Date of all the employees who have the same joining date(3 Mark)"
+select e1.first_name, e1.job_id,e1.hire_date 	from employees e1 join employees e2
+		where e1.employee_id!=e2.employee_id
+		and e1.hire_date=e2.hire_date;
+----6. Write a Query to find maximum salary for each department.(2 Marks)
+----Solution:
+		Select department_id,max(salary) from Employees group by department_id;
 
+-----7. Display the headcount of employees in each department along with department name (3 Mark)
+----Solution:
+	SELECT  department_name, COUNT(employee_id) headcount
+	FROM  employees e INNER JOIN departments d
+        ON d.department_id = e.department_id
+	GROUP BY 
+    e.department_id;
 
 
 

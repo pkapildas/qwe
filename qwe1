@@ -1,3 +1,24 @@
+While the partitioned rows are in ascending order, the percent_rank () calculates the percentage of rank basis on formula:     (rank - 1) / ( rows - 1)
+Eventually, all of the rows in a partition shares a range of fraction from 0 - 1
+SELECT Cust_Id, Acct_Num, acct_type, Balance, PERCENT_RANK()OVER ( PARTITION BY Cust_Id  ORDER BY balance) AS Percent_rank_of_balance FROM  ACCOUNT WHERE Cust_Id  =  123004
+n a normal select query , all records are interpreted serially; Sometimes there is a need to look back and forth while you are retrieving the current record in SELECT quer
+SELECT Cust_Id, Acct_Num, Acct_Type , Balance ,LAG (Balance)  OVER(ORDER BY Balance)  previous_balance,LEAD(Balance)  OVER (ORDER BY Balance)  next_balanceFROM  Account WHERE Cust_Id  =  123004
+In this example, the current record shows its previous record balance and its next record balance●‘previous _balance’ is Null if no records exist. Similarly, next_balance is Null if there are no further records
+
+SELECT Cust_Id, Acct_Num, Acct_type, Balance, DENSE_RANK() OVER (PARTITIoN BY Cust_Id  ORDER BY Balance desc)ASDense_rank_of_balanceFROM  ACCOUNT WHERE Cust_Id =  123004
+In this example, Dense_Rank() function assigns the same rank - (1) when the balance : 7500000 is identified same for two different accounts. But it preserved the rank - (2) without skipping it
+
+FIRST_VALUE () function analyzes the results of analytical expression which is defined as OVER(), and then returns the first value from the ordered set of rows.Here, OVER() expression is defined with Order clause only.E.g : Select Cust_Id, Acct_Num, Acct_Type, Balance original_balance,FIRST_VALUE (Balance)  OVER( order by Balance )   Least_balanceFROM  Account where acct_type = 'FIXED DEPOSITS'
+
+Select Cust_Id, Acct_Num, Acct_Type, Balance original_balance,FIRST_VALUE (Balance)  OVER( order by Balance )   Least_balanceFROM  Account where acct_type = 'FIXED DEPOSITS'
+
+n this example, the original balance of the ACCOUNT table is placed in an order in OVER() expression.Later , the first_Value () has chosen the least balance out of all FIXED DEPOSITS, and displayed it across all records in total output
+
+FIRST_VALUE () function analyzes the results of analytical expression which is defined as OVER(), and then returns the first value from the ordered set of rows.Here, OVER() expression is defined with partition by and Order by clausesE
+
+Select Acct_Num, Acct_Type, Balance original_balance,FIRST_VALUE (Balance) OVER( partition by Acct_type order by balance)   Least_balanceFROM  Account where balance > 0 ;
+
+
 select weight , FLOOR(weight) as kg, ROUND( (weight - FLOOR(weight)) *1000 ) as gms from mass_table;
 #Display the name of students along with their respective scores city of residence
 select s.s_name as student_name , m.score as score, d.address_city as city_of_residence from

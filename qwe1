@@ -264,4 +264,192 @@ plt.legend()
 # Show plot
 plt.grid(True)
 plt.show()
+====Imaage
+
+from PIL import Image, ImageFilter, ImageOps
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Step 1: Load the image
+image_path = "/content/drive/MyDrive/MF_sagarika_changes/MF ESA Jan24 model paper/Lena.jpg"
+image = Image.open(image_path)
+
+# Step 2: Display the original image
+plt.figure(figsize=(10, 10))
+plt.subplot(3, 3, 1)
+plt.imshow(image)
+plt.title("Original Image")
+plt.axis("off")
+
+# Step 3: Apply grayscale transformation
+gray_image = ImageOps.grayscale(image)
+plt.subplot(3, 3, 2)
+plt.imshow(gray_image, cmap="gray")
+plt.title("Grayscale Image")
+plt.axis("off")
+
+# Step 4: Apply Gaussian blur filter
+blurred_image = gray_image.filter(ImageFilter.GaussianBlur(radius=5))
+plt.subplot(3, 3, 3)
+plt.imshow(blurred_image, cmap="gray")
+plt.title("Blurred Image")
+plt.axis("off")
+
+# Step 5: Apply edge detection (Sobel filter)
+sobel_image = gray_image.filter(ImageFilter.FIND_EDGES)
+plt.subplot(3, 3, 4)
+plt.imshow(sobel_image, cmap="gray")
+plt.title("Edge Detection")
+plt.axis("off")
+
+# Step 6: Rotate the image by 45 degrees
+rotated_image = image.rotate(45)
+plt.subplot(3, 3, 5)
+plt.imshow(rotated_image)
+plt.title("Rotated Image")
+plt.axis("off")
+
+# Step 7: Scale the image
+scaled_image = image.resize((int(image.width * 1.5), int(image.height * 1.5)))
+plt.subplot(3, 3, 6)
+plt.imshow(scaled_image)
+plt.title("Scaled Image")
+plt.axis("off")
+
+# Step 8: Translate the image
+translated_image = image.transpose(Image.FLIP_LEFT_RIGHT)
+plt.subplot(3, 3, 7)
+plt.imshow(translated_image)
+plt.title("Translated Image")
+plt.axis("off")
+
+plt.tight_layout()
+plt.show()
+-------
+A = np.array([ [5,6,2], [4,7, 1], [0,3,1] ])
+A
+B = np.array([ [1,-2,1], [4,4, 5], [5,5,1] ])
+B
+C = np.array([ [1,0,1], [4,1, 0], [2,0,1] ])
+C
+# (AB)T = AT.BT
+AB  = A.dot(B)
+print(AB)
+AT=A.T
+print(AT)
+BT= B.T
+print(BT)
+BTAT == BT.dot(AT)
+print(BTAT)
+AB_T = AB.T
+AB_T == BTAT
+####
+Ainv = np.linalg.inv(A)
+print(Ainv)
+Binv = np.linalg.inv(B)
+print(Binv)
+AB_inv = np.linalg.inv(AB)
+print(AB_inv)
+BinvAinv = Binv.dot(Ainv)
+print(BinvAinv)
+ABinv == Binv.dot(Ainv)
+
+#####
+BplusC = B+C
+print(BplusC)
+A_BplusC = A.dot(BplusC)
+print(A_BplusC)
+AB = A.dot(B)
+print(AB)
+AC = A.dot(C)
+print(AC)
+A_BplusCAC = AB +AC
+print(A_BplusCAC)
+A_BplusC==A_BplusCAC
+
+#### AT =AT
+AT =A.T
+print(AT)
+AT_inv =  np.linalg.inv(AT)
+print(AT_inv)
+Ainv = np.linalg.inv(A)
+print(Ainv)
+AinvT= Ainv.T
+AT_inv ==AinvT
+##
+AT=  A.T
+print(AT)
+AA = A.dot(A)
+print(AA)
+ATAT = AT.dot(A).T
+print(ATAT)
+ATAT == AT.dot(A)
+###
+
+Cin = np.linalg.inv(C)
+print(Cin)
+DetCin = np.linalg.det(Cin)
+print(DetCin)
+DetC = np.linalg.det(C)
+print(DetC)
+onebyDetC = 1/DetC
+print(onebyDetC)
+DetCin == onebyDetC
+
+(2) Find the critical points of the function  f(x)=x5−5x4+5x3−1
+import sympy as sp
+
+# Define the variable
+x = sp.symbols('x')
+
+# Define the function
+f = x**5 - 5*x**4 + 5*x**3 - 1
+
+# Calculate the derivative of the function
+f_prime = sp.diff(f, x)
+
+# Find the critical points by solving f'(x) = 0
+critical_points = sp.solve(f_prime, x)
+
+# Output the critical points
+print("Critical points:", critical_points)
+
+(3) The revenue generation function of an IT company is 3000x - 20x2 + 200   rupees where x is the number of employees. Find out the marginal revenue generation when 10 employees are hired.
+# Define the revenue generation function
+revenue_function = 3000*x - 20*x**2 + 200
+
+# Calculate the derivative of the revenue generation function
+marginal_revenue_function = sp.diff(revenue_function, x)
+
+# Evaluate the marginal revenue function at x = 10
+marginal_revenue_at_10_employees = marginal_revenue_function.subs(x, 10)
+
+# Output the result
+print("Marginal revenue generation when 10 employees are hired:", marginal_revenue_at_10_employees, "rupees")
+(4) Calculate the angle between two given vectors. The two vectors are, a = i + 2j and b = 9 i + 3j
+import numpy as np
+
+# Define the vectors
+a = np.array([1, 2])  # Vector a = i + 2j
+b = np.array([9, 3])  # Vector b = 9i + 3j
+
+# Calculate the dot product of the vectors
+dot_product = np.dot(a, b)
+
+# Calculate the magnitudes of the vectors
+magnitude_a = np.linalg.norm(a)
+magnitude_b = np.linalg.norm(b)
+
+# Calculate the cosine of the angle between the vectors
+cosine_theta = dot_product / (magnitude_a * magnitude_b)
+
+# Calculate the angle in radians
+angle_radians = np.arccos(cosine_theta)
+
+# Convert radians to degrees
+angle_degrees = np.degrees(angle_radians)
+
+# Output the result
+print("Angle between vectors a and b (in degrees):", angle_degrees)
+
 

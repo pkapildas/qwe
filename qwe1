@@ -133,7 +133,7 @@ f(x) =\begin{cases}
  & 0.5x , \text{ if }  x \leq0 \\
  & 1 ,\text{ if }  x > 0
 \end{cases} \text { find }  f(-3) $ $ \text{and}$ $ f(2) $
-
+sol
 import sympy as sp
 
 x = sp.symbols('x')
@@ -145,3 +145,123 @@ def do_fn(x):
 
 print(do_fn(-3))
 print(do_fn(2))
+
+----
+(b) function optimization problem  or
+
+PCA step by step on a iris dataset and capture 95 % variance(15 marks)
+import numpy as np
+import pandas as pd
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import StandardScaler
+
+# Step 1: Load the Iris dataset
+iris = load_iris()
+X = iris.data
+y = iris.target
+feature_names = iris.feature_names
+
+# Step 2: Standardize the Data
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Step 3: Compute the Covariance Matrix
+cov_matrix = np.cov(X_scaled.T)
+
+# Step 4: Compute the Eigenvectors and Eigenvalues
+eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
+
+# Step 5: Select Principal Components
+# Sort eigenvalues and eigenvectors in descending order
+sorted_indices = np.argsort(eigenvalues)[::-1]
+eigenvalues = eigenvalues[sorted_indices]
+eigenvectors = eigenvectors[:, sorted_indices]
+
+# Select the top k eigenvectors based on the explained variance ratio
+total_variance = np.sum(eigenvalues)
+explained_variance_ratio = eigenvalues / total_variance
+cumulative_explained_variance_ratio = np.cumsum(explained_variance_ratio)
+k = np.argmax(cumulative_explained_variance_ratio >= 0.95) + 1
+
+# Step 6: Project Data onto Principal Components
+projection_matrix = eigenvectors[:, :k]
+X_pca = X_scaled.dot(projection_matrix)
+
+# Display the explained variance ratio and cumulative explained variance ratio
+print("Explained Variance Ratio:", explained_variance_ratio[:k])
+print("Cumulative Explained Variance Ratio:", cumulative_explained_variance_ratio[:k])
+----
+3. Consider the data given below and fit a linear regression line y=ax+b using gradient descent.
+
+X
+0
+0.4
+0.6
+1
+
+Y
+0
+1
+0.48
+0.95
+
+Initialize the weights a and b to 0.8, 0.2 respectively.
+
+Update the weights such that the error is minimum using gradient descent.
+
+Use the function sum of squared errors $ y−y^2$ where $y^$ is the y-predicted value and y is the actual given y.
+
+Plot the linear regression line after updating the values of a and b in two iterations.
+
+---
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the dataset
+X = np.array([0, 0.4, 0.6, 1])
+Y = np.array([0, 1, 0.48, 0.95])
+
+# Define initial weights
+a = 0.8
+b = 0.2
+
+# Define learning rate and number of iterations
+learning_rate = 0.1
+iterations = 2
+
+# Define function to calculate sum of squared errors
+def sum_squared_errors(Y, Y_pred):
+    return np.sum((Y - Y_pred) ** 2)
+
+# Perform gradient descent
+for i in range(iterations):
+    # Calculate predicted values of y
+    Y_pred = a * X + b
+
+    # Calculate gradients
+    gradient_a = -2 * np.sum((Y - Y_pred) * X)
+    gradient_b = -2 * np.sum(Y - Y_pred)
+
+    # Update weights
+    a -= learning_rate * gradient_a
+    b -= learning_rate * gradient_b
+
+    # Print the updated weights and sum of squared errors
+    print(f"Iteration {i+1}: a = {a}, b = {b}, Sum of Squared Errors = {sum_squared_errors(Y, Y_pred)}")
+
+# Plot the original data points
+plt.scatter(X, Y, color='blue', label='Original data points')
+
+# Plot the linear regression line
+plt.plot(X, a*X + b, color='red', label='Linear regression line')
+
+# Add labels and legend
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('Linear Regression using Gradient Descent')
+plt.legend()
+
+# Show plot
+plt.grid(True)
+plt.show()
+

@@ -623,6 +623,91 @@ principal_df = pd.DataFrame(mat_reduced , columns = ['PC1','PC2'])
 #Concat it with target variable to create a complete Dataset
 principal_df = pd.concat([principal_df , pd.DataFrame(target)] , axis = 1)
 
+--
+Define the concept of a unit vector and explain its significance in vector operations.
+Calculate the angle between two given vectors. The two vectors are, 
+                                    a = i ⃗ + 2j ⃗  and 
+                                    b = 9 i ⃗  + 3j ⃗ 
+Ans: A unit vector is a vector with a magnitude of 1. It is often denoted by a hat symbol and is used to represent direction 
+in space. In vector operations, unit vectors are significant because they allow us to separate information about 
+direction from information about magnitude, making calculations more intuitive and efficient.
+cos Ɵ =  ( (a ) ⃗.*  (b ) ⃗)/(‖ (a ) ⃗‖ ‖ (b ) ⃗‖  )    = ((1*9)+(2*3))/(√(1+4)  √(81+9))  
+= 15/(√5  √90)   =   15/(5√18)   
+= 3/(3√2  )     =  1/(√2  )  
+
+Hence Ɵ = 45°
+
+
+rite down all the arithmetic operations possible on vectors.
+Find the vector projection of the vector a=[3,4] on b=[5,-12]
+
+Ans: Arithmetic operations that can be performed on vectors include:
+Vector addition: Adding corresponding elements of two vectors to create a new vector.
+Vector subtraction: Subtracting corresponding elements of two vectors to create a new vector.
+Scalar multiplication: Multiplying a vector by a scalar value to scale its magnitude.
+Dot product: Multiplying corresponding elements of two vectors and summing the results.
+Cross product: Finding a new vector that is perpendicular to the plane defined by two vectors.
+Vector normalization: Dividing a vector by its magnitude to create a unit vector in the same direction.
+Vector projection: Finding the component of one vector in the direction of another vector.
+Vector reflection: Finding the mirror image of a vector across a specified plane or line.
+           
+
+What are local minima and global minima ?
+Find out the minima of the following function for the interval ( -5, -2)  f(x)=x3+2x   
+
+Ans: Local minima and global minima are concepts in optimization and function analysis.
+	Local Minima: A local minimum is a point on the graph of a function where the value of the function is smaller than 
+	the values of the function at all nearby points. Formally, a point x is considered a local minimum of a function f(x)
+	 if there exists a neighborhood around x such that f(x) is less than or equal to f(y) for all y in the neighborhood. 
+	In other words, it is the lowest point in the vicinity of a particular location. However, it may not necessarily be 
+	the lowest point of the entire function.
+	
+	Global Minima: A global minimum is the lowest value of a function over its entire domain. 
+
+	It is the absolute lowest point of the function and cannot be surpassed by any other point in the function's domain.
+
+	 Formally, a point x is considered a global minimum of a function f(x) if f(x) is less than or equal to f(y) for all y 
+
+	in the domain of f(x).
+           In essence, a local minimum is a point that is lower than its neighboring points, 
+while a global minimum is the lowest point of the entire function.
+ It's important to note that a global minimum is also a local minimum, but not vice versa.
+derivative of f(x)
+
+f'(x)= 3x^2 +2
+critical points by setting f(x) equal to zero:
+3x^2 =-2
+x^2 =-2/3
+Since x^2 cannot be negative, there are no real solutions for x. Hence, there are no critical points. Since there are
+ no critical points within the interval (−5,−2), we'll evaluate the function f(x) at the endpoints of the interval to
+ determine the minimum:
+
+--
+Write the transformation matrix for rotation and reflection of a 2d image.
+Ans: 
+Rotation Matrix (2D):
+For rotation of an angle θ counterclockwise about the origin in a 2D plane, the transformation matrix is:
+ 
+This matrix represents a linear transformation that rotates points in the 2D plane counterclockwise around 
+the origin by an angle θ.
+
+Reflection Matrix (2D):
+For reflection about the x-axis, the transformation matrix is:
+[-1 2
+0 1]
+
+This matrix reflects points in the 2D plane about the x-axis. For reflection about the y-axis, 
+the transformation matrix is:
+ 
+This matrix reflects points in the 2D plane about the y-axis. These transformation matrices can
+ be used to perform rotations and reflections of 2D images by multiplying them with the coordinates 
+of the points in the image.
+
+: Critical points in a function are the values of the independent variable (usually denoted as x) 
+where the derivative of the function is either zero or undefined. In other words, critical points are
+ the points where the function may have a local minimum, local maximum, or a saddle point.
+ f(x)=x5−5x4+5x3−1
+
 
 print(w)
 print(v)

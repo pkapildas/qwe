@@ -711,3 +711,64 @@ where the derivative of the function is either zero or undefined. In other words
 
 print(w)
 print(v)
+
+plt.figure(figsize=(10, 4))
+plt.plot(np.linspace(0, 30, len(record_voice)), record_voice)
+plt.title('Recorded Audio Signal')
+plt.xlabel('Time (s)')
+plt.ylabel('Amplitude')
+plt.grid(True)
+plt.show()
+# Normalize the signal values
+pow_audio_signal = record_voice / np.power(2, 15)
+# We shall now extract the first 100 values from the signal 
+pow_audio_signal = pow_audio_signal [:100]
+time_axis = 1000 * np.arange(0, len(pow_audio_signal), 1) / float(fs)
+
+# Visualize the signal
+plt.plot(time_axis, pow_audio_signal, color='blue')
+plt.xlabel('Time (milliseconds)')
+plt.ylabel('Amplitude')
+plt.title('Input audio signal')
+plt.show()
+record_15_sec = record_voice[:int(fs * 15)]
+
+plt.plot(np.linspace(0, 30, len(record_15_sec)), record_15_sec)
+plt.
+title('Trimmed to 15sec Audio Signal')
+plt.xlabel('Time (s)')
+plt.ylabel('Amplitude')
+plt.grid(True)
+plt.show()
+
+gray_image = img.convert('L')
+
+# Apply the Sobel filter for edge detection
+edges = gray_image.filter(ImageFilter.FIND_EDGES)
+
+# Display the original image and the detected edges
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)
+plt.imshow(img)
+plt.title('Original Image')
+plt.subplot(1, 2, 2)
+plt.imshow(edges)
+plt.title('Edges Detected')
+plt.show()
+
+# use image transformation and use vector dot product 
+flipped_image = img.transpose(Image.FLIP_LEFT_RIGHT)
+plt.figure(figsize=(10, 5))
+
+plt.imshow(flipped_image)
+plt.title('Flipped Image')
+plt.show()
+# use image transformation and use vector dot product 
+# Define the new dimensions for the zoomed out image
+zoom_width = img.width // 2 
+zoom_height = img.height // 2 
+zoomed_out_image = img.resize((zoom_width, zoom_height), Image.BILINEAR)
+
+plt.imshow(zoomed_out_image)
+plt.title('Zoomed Out Image')
+plt.show()

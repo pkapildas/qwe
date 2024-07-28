@@ -1,3 +1,158 @@
+flower_img = io.imread('flower.jpg')
+plt.imshow(flower_img
+## Splitting RGB
+# As this is an RGB image, we can separate Red, Green and Blue from the image
+
+# Split
+red = flower_img[:, :, 0]
+green = flower_img[:, :110, 1]
+blue = flower_img[:, :, 2]
+plt.imshow(red, cmap="Reds")
+plt.show()
+plt.imshow(green, cmap="Greens")
+plt.show()
+plt.imshow(blue, cmap="Blues")
+plt.show()
+## Image Transformations
+def plot_points(matrix, ls=':', lw=6):
+    x_points, y_points = matrix
+    size = len(x_points)
+    colors = ['red', 'green', 'blue', 'black'] if not None else colors
+    for i in range(size):
+        plt.plot(x_points[i], y_points[i], color=colors[i], marker='*')
+        plt.plot([x_points[i], x_points[(i+1) % size]], 
+             [y_points[i], y_points[(i+1) % size]], 
+             linestyle=ls, linewidth=lw)
+# Points generator
+#def get_grid(x, y, homogenous=False):
+#    coords = np.indices((x, y)).reshape(2, -1)
+#    return np.vstack((coords, np.ones(coords.shape[1]))) if homogenous else coords
+
+x = np.array([0, 0, 20, 20])
+y = np.array([0, 20, 20, 0])
+matrix = np.array([x, y])
+matrix
+matrix_grid=np.vstack([matrix,[1, 1, 1, 1]])
+def get_rotation(angle):
+    angle = np.radians(angle)
+    return np.array([
+
+[np.cos(angle), -np.sin(angle), 0],
+[np.sin(angle), np.cos(angle), 0],
+[0, 0, 1]
+])
+
+def get_translation(tx, ty):
+    return np.array([
+                        [1, 0, tx],  
+                        [0, 1, ty], 
+                        [0, 0, 1]
+                    ])
+
+def get_scale(s):
+    return np.array([
+        [s, 0, 0],
+        [0, s, 0],
+        [0, 0, 1]
+])
+
+R1 = get_rotation(45)
+T1 = get_translation(25, 25)
+S1 = get_scale(2)
+
+# Apply transformation x' = Ax
+coords_rot = R1 @ matrix_grid
+print(coords_rot)
+coords_trans = T1 @ matrix_grid
+coords_scale = S1 @ matrix_grid
+coords_composite1 = R1 @ T1 @ matrix_grid
+coords_composite2 = T1 @ R1 @ matrix_grid
+coords_rot_corrected = np.delete(coords_rot, 2, 0)
+plot_points(coords_rot_corrected)
+plt.ylim([-25,45])
+plt.xlim([-25,45])
+plt.show()
+
+img_transformed = np.empty((1000, 1000, 3), dtype=np.uint8)
+T1 = get_translation(1000//2, 1000//2)
+
+for i, row in enumerate(img):
+    for j, col in enumerate(row):
+        pixel_data = img[i, j, :]
+        input_coords = np.array([i, j, 1])
+        #print(input_coords)
+        i_out, j_out, _ = (T1 @ input_coords).astype(int)
+        #print(i_out,j_out)
+        img_transformed[i_out,j_out, :] = pixel_data
+
+
+plt.figure(figsize=(5, 5))
+plt.imshow(img_transformed)
+img_transformed = zeros((1000, 1000, 3), dtype=np.uint8)
+T1 = get_translation(600/2, 600/6)  
+R1 = get_rotation(45)
+
+for i, row in enumerate(img):
+    for j, col in enumerate(row):
+        pixel_data = img[i, j, :]
+        input_coords = np.array([i, j, 1])
+        #print(input_coords)
+        i_out, j_out, _ = (T1 @ R1 @ input_coords).astype(int)
+        #print(i_out,j_out)
+        img_transformed[i_out,j_out, :] = pixel_data
+        
+plt.figure(figsize=(5, 5))
+plt.imshow(img_transformed)
+----
+blur_filter = np.array([[1/8,1/8,1/8],
+                        [1/8,1/16,1/8],
+                        [1/8,1/8,1/8]])
+from skimage.color import rgb2gray
+grayscale = rgb2gray(gl_small_image)
+plt.imshow(grayscale,cmap='Greys_r')
+def filtering(image, kernel):
+    m, n = kernel.shape
+    if (m == n):
+        y, x = image.shape
+        y = y - m + 1
+        x = x - m + 1
+        new_image = np.zeros((y,x))
+        print(y,x)
+        for i in range(y):
+            for j in range(x):
+                new_image[i][j] = np.sum(image[i:i+m, j:j+m]*kernel) 
+    return new_image             
+
+blur_img =plt.imshow(filtering(grayscale, blur_filter),cmap='Greys_r')
+#Filter to sharpen the image
+#sharpen_filter = np.array([[1,1, 1], [1, 50, 1], [1,1,1]])
+#hori_strip= np.array([[2,0,0],[0,1,0],[0,0,1]])
+vert_strip= np.array([[1,0,0],[0,2,0],[0,0,1]])
+sharp_img = plt.imshow(filtering(grayscale, vert_strip),cmap='Greys_r')
+sharp_img = plt.imshow(filtering(grayscale, vert_strip),cmap='Greys_r')
+---
+fig = plt.figure(figsize=(5,5))        
+fig.add_subplot(1,2,1)
+plt.imshow(grayscale,cmap='Greys_r')
+
+fig.add_subplot(1,2,2)
+plt.imshow(filtering(grayscale, sharpen_filter),cmap='Greys_r')
+
+---
+def filtering(image, kernel):
+    m, n = kernel.shape
+    if (m == n):
+        y, x = image.shape
+        y = y - m + 1
+        x = x - m + 1
+        new_image = np.zeros((y,x))
+        print(y,x)
+        for i in range(y):
+            for j in range(x):
+                new_image[i][j] = np.sum(image[i:i+m, j:j+m]*kernel) 
+    return new_image             
+blur_img =plt.imshow(filtering(grayscale, blur_filter),cmap='Greys_r')
+
 Convert the following matrix to an orthogonal matrix using Gram Schmidt Process?
 A = np.array( ((1,1,1), (-1, 0, 1), (1, 1, 2)))
 A

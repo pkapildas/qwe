@@ -1,3 +1,145 @@
+Rate of change
+Let's remind ourselves of the problem we're trying to solve, here's a function:
+
+
+We can calculate the average change for the interval between x=4 and x=6 by dividing the change (or delta, indicated as Δ) in the value of f(x) by the change in the value of x:
+
+ 
+
+The delta for f(x) is calculated by subtracting the f(x) values of our points, and the delta for x is calculated by subtracting the x values of our points; like this:
+
+ 
+
+So for the interval between x=4 and x=6, that's:
+
+ 
+
+The average rate of change for the interval between x=4 and x=6 is 11/1 (or simply 11), meaning that for every 1 added to x, f(x) increases by 11.
+
+Let's visualize this case:
+
+%matplotlib inline
+
+def f(x):
+    return x**2 + x
+
+from matplotlib import pyplot as plt
+
+# Create an array of x values from 0 to 10 to plot
+x = list(range(0, 11)) # {0,1,2,...,11}
+
+# Use the function to get the y values
+y = [f(i) for i in x] # y = {f(0),f(1),...,f(11)=0,2,6,12}
+
+# Set the a values
+x1 = 4
+x2 = np.arange(4,5,0.1)
+
+# Get the corresponding f(x) values 
+y1 = f(x1) # y1=f(4)=4^2+4 =20
+y2 = f(x2) # y2= f(6)=6^2+6 =42
+
+# Calculate the slope by dividing the deltas
+a = (y2 - y1)/(x2 - x1)
+
+# Create an array of x values for the secant line
+sx = [x1,x2]
+
+# Use the function to get the y values
+sy = [f(i) for i in sx]
+
+# Set up the graph
+plt.xlabel('x')
+plt.ylabel('f(x)')
+plt.grid()
+
+# Plot the function
+plt.plot(x,y, color='blue')
+
+# Plot the interval points
+plt.scatter([x1,x2],[y1,y2], c='red')
+
+# Plot the secant line
+plt.plot(sx,sy, color='orange')
+
+# Display the calculated average rate of change
+plt.annotate('Average change =' + str(a),(x2, (y2+y1)/2))
+
+plt.show()
+------jaco
+Using Sympy module
+from sympy import sin, cos, Matrix
+
+x,y = sym.symbols('x,y')
+F = sym.Matrix([x**2,x+y])
+F.jacobian([x,y]
+
+Fxy = sym.Matrix([(x**2)*y,  5*x + sym.sin(y)])
+gradient = Fxy.jacobian([x,y])
+gradient
+
+
+sym.integrate(6 * x ** 5, x)
+sym.integrate(sym.sin(x), x)
+===
+import sympy as sym
+a = sym.Rational(1, 2)
+a
+from sympy import*
+x = sym.Symbol('x')
+y = sym.Symbol('y')
+print(x + y + x - y)
+print(sym.expand((x+y)**6))
+print(sym.simplify((cos(x+y))))
+sym.expand((x + y) ** 3)
+sym.simplify((x + x * y) / x)
+---
+x = sym.Symbol('x')
+y = sym.Symbol('y')
+x = np.arange(-4*np.pi,4*np.pi,0.1)   # start,stop,step
+y1 = np.sin(x)/x
+plt.plot(x,y1)
+plt.show()
+--Integral
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+
+def func(x):
+    return (x - 3) * (x - 5) * (x - 7) + 85
+
+from sympy import *
+a, b = 2,9
+x = Symbol('x')
+y = func(x)
+integrate(y,(x,2,9) )
+fig, ax = plt.subplots()
+ax.plot(x,y,'r',linewidth=2)
+ax.set_ylim(bottom=0)
+plt.axhline(color='black')
+plt.fill_between(
+        x,y, 
+        where= (2 <= x)&(x <= 9),
+        color= "b",
+        alpha= 0.2)
+        
+plt.show()
+---
+If the speed of the vehicle is given as function of position (x),
+find the acceleration of the vehicle.
+import matplotlib.pyplot as plt
+import numpy as np
+distance = 1
+x = np.arange(0,distance*np.pi,0.1)  # start,stop,steps
+speed = np.sin(x) + 2
+acceleration = np.cos(x)
+plt.plot(x,speed,x,acceleration)
+plt.xlabel('X values')
+plt.ylabel('Y=F(x)')
+plt.legend(['speed','acceleration'])
+plt.grid(True)
+plt.show()
+---
 flower_img = io.imread('flower.jpg')
 plt.imshow(flower_img
 ## Splitting RGB

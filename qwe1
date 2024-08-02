@@ -1,3 +1,14 @@
+Data preprocessing is the process of evaluating, filtering, manipulating, and encoding data so that a machine learning algorithm can understand it and use the resulting output. The major goal of data preprocessing is to eliminate data issues such as missing values, improve data quality, and make the data useful for machine learning purposes.
+It Improves Data Quality, It Handles Missing Data,It Normalizes and Scales Data, It Eliminates Duplicate Records, outlier
+Min-Max Scaler	It reduces the feature values between any range of options (for example, between zero and four)
+Standard Scaler	It assumes that the variable is normally distributed and then scales it down until the standard deviation is one and the distribution is centered at zero
+Robust Scaler	It performs best when the dataset contains outliers. After eliminating the median, the data is scaled based on the interquartile range
+Max-Abs Scaler	Similar to the min-max scaler, except instead of a certain range, the feature is scaled to its greatest absolute value
+Data Transformation Feature Engineering Imbalanced Data
+Oversampling – Oversampling is the technique of augmenting your dataset with generated data from the minority class. The Synthetic Minority Oversampling Technique (SMOTE) is the most commonly used method for doing this; it selects a random sample from the minority class.
+Undersampling – Undersampling is the process of lowering a dataset and eliminating genuine data from the majority class. The two primary algorithms used in this method are TomekLinks, which eliminates observations based on the nearest neighbor, and Edited Nearest Neighbors (ENN).
+Hybrid Oversampling – The hybrid strategy incorporates both oversampling and undersampling strategies in your dataset. One of the methods used in this technique is the SMOTEENN, which uses the SMOTE algorithm for minority oversampling and the ENN algorithm for majority undersampling.
+
 Machine Learning is the science to make computers learn from data without programming them explicitly and improve their learning over time in an autonomous fashion
 This learning comes by feeding the data in the form of observations and real-world interactions
 Supervised Learning - Training happens based on labelled data●Unsupervised Learning - Meant to recognise patterns in unlabelled data●Reinforcement Learning - Machine gets rewarded for right outcome

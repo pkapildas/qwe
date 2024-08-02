@@ -512,7 +512,23 @@ VIF = 1, no correlation between the independent variable and the other variables
 VIF exceeding 5 or 10 indicates high multicollinearity between this independent variable and the others.
 Some researchers assume VIF>5 as a serious issue for our model while some researchers assume VIF>10 as serious, it varies from person to person.
 
+Addressing Multicollinearity:
+Feature Selection: One approach to mitigate multicollinearity is by selecting a subset of relevant features. We can remove variables that have high VIF values and retain those that are crucial for the model.
+2. Principal Component Analysis (PCA): It transforms the original features into a set of uncorrelated principal components,
+3. Regularization Techniques:
 
+Regularization methods like Ridge Regression (L2 regularization) and Lasso Regression (L1 regularization) can also help mitigate multicollinearity. These techniques add penalty terms to the regression model, reducing the impact of highly correlated features. Let’s demonstrate Ridge Regression in Python
+from sklearn.linear_model import Ridge
+
+# Create a Ridge Regression model
+ridge_model = Ridge(alpha=1.0)
+
+# Fit the model to the data
+ridge_model.fit(X, y)
+
+# Get the coefficients
+coefficients = ridge_model.coef_
+print("Ridge Regression coefficients:", coefficients)
 
 Reasons for Multicollinearity
 Multicollinearity can exist when two independent variables are highly correlated. It can also happen if an independent variable is computed from other variables in the data set or if two independent variables provide similar and repetitive results.

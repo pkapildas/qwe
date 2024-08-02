@@ -481,3 +481,39 @@ p-values - p-values for all the coefficients seem to be less than the significan
 Adj. R-squared: 0.923
 
 
+----------------------
+What is Multicollinearity?
+Multicollinearity occurs when two or more independent variables(also known as predictor) are highly correlated with one another in a regression model.
+
+This means that an independent variable can be predicted from another independent variable in a regression model. For Example, height, and weight, student consumption and father income, age and experience, mileage and price of a car, etc.
+The problem with having multicollinearity
+Since in a regression model our research objective is to find out how each predictor is impacting the target variable individually which is also an assumption of a method namely Ordinary Least Squares through which we can find the parameters of a regression model.
+What causes multicollinearity?
+Multicollinearity might occur due to the following reasons:
+
+1. Multicollinearity could exist because of the problems in the dataset at the time of creation. These problems could be because of poorly designed experiments, highly observational data, or the inability to manipulate the data. (This is known as Data related multicollinearity)
+
+2. Multicollinearity could also occur when new variables are created which are dependent on other variables(Basically when we do the data preprocessing or feature engineering to make the new feature from the existing features . This is known as Structure related multicollinearity)
+3. When there are identical variables in the dataset.
+4. When we want to encode the categorical features to numerical features for applying the machine learning algorithms since ML algorithms only understand numbers not text. So for this task, we use the concept of the Dummy variable. Inaccurate use of Dummy variables can also cause multicollinearity. (This is known as Dummy Variable Trap)
+5. Insufficient data in some cases can also cause multicollinearity problems.
+Detecting Multicollinearity using VIF (Variance Inflation Factor)
+” VIF determines the strength of the correlation between the independent variables. It is predicted by taking a variable and regressing it against every other variable. “
+or
+VIF score of an independent variable represents how well the variable is explained by other independent variables.
+R² value is determined to find out how well an independent variable is described by the other independent variables. A high value of R² means that the variable is highly correlated with the other variables. This is captured by the VIF which is denoted below:
+
+VIF=1/(1-R²)
+
+So, the closer the R² value to 1, the higher the value of VIF and the higher the multicollinearity with the particular independent variable.
+
+VIF starts at 1(when R²=0, VIF=1 — minimum value for VIF) and has no upper limit.
+VIF = 1, no correlation between the independent variable and the other variables.
+VIF exceeding 5 or 10 indicates high multicollinearity between this independent variable and the others.
+Some researchers assume VIF>5 as a serious issue for our model while some researchers assume VIF>10 as serious, it varies from person to person.
+
+
+
+Reasons for Multicollinearity
+Multicollinearity can exist when two independent variables are highly correlated. It can also happen if an independent variable is computed from other variables in the data set or if two independent variables provide similar and repetitive results.
+

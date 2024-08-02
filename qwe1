@@ -529,7 +529,193 @@ ridge_model.fit(X, y)
 # Get the coefficients
 coefficients = ridge_model.coef_
 print("Ridge Regression coefficients:", coefficients)
+----
+Homoscedasticity essentially means ‘same variance' and is an important concept in linear regression.
+
+Homoscedasticity describes how the error term (the noise or disturbance between independent and dependent variables) is the same across the values of the independent variables. So, in homoscedasticity, the residual term is constant across observations, i.e., the variance is constant. In simple terms, as the value of the dependent variable changes, the error term does not vary much.
+n contrast, heteroscedasticity occurs when the size of the error term differs across the independent variable’s value. Heteroscedasticity may lead to inaccurate inferences and occurs when the standard deviations of a predicted variable, monitored across different values of an independent variable, are non-constant. 
+
+Heteroscedasticity is an issue for linear regression because ordinary least squares (OLS) regression assumes that residuals have constant variance (homoscedasticity).
+
+Heteroscedasticity doesn’t create bias, but it means the results of a regression analysis become hard to trust. More specifically, while heteroscedasticity increases the variance of the regression coefficient estimates, the regression model itself fails to pick up on this. Homoscedasticity and heteroscedasticity form a scale; as one increases, the other decreases. 
+There are many tests for heteroscedasticity, but you can also just plot the errors against predicted values and see visually detect the hallmark pattern of heteroscedasticity. The Breusch-Pagan and Goldfeld-Quandt are two tests that detect and analyze homoscedasticity and heteroscedasticity. 
+Homoscedasticity occurs when the variance in a dataset is constant, making it easier to estimate the standard deviation and variance of a data set. 
+
+Heteroscedasticity occurs for many reasons, but many issues lie in the dataset itself. 
+
+Models that utilize a wider range of observed values are more prone to heteroscedasticity. This is generally because the difference between the smallest and large values is more significant in these datasets, thus increasing the chance of heteroscedasticity. 
+
 
 Reasons for Multicollinearity
 Multicollinearity can exist when two independent variables are highly correlated. It can also happen if an independent variable is computed from other variables in the data set or if two independent variables provide similar and repetitive results.
 
+
+What is Overfitting?
+When a model performs very well for training data but has poor performance with test data (new data), it is known as overfitting. In this case, the machine learning model learns the details and noise in the training data such that it negatively affects the performance of the model on test data. Overfitting can happen due to low bias and high variance.
+The Complete Guide on Overfitting and Underfitting in Machine Learning
+Lesson 26 of 38By Avijeet Biswal
+
+Last updated on Mar 12, 2024112286
+The Complete Guide on Overfitting and Underfitting in Machine Learning
+PreviousNext
+Table of Contents
+What is Overfitting?Reasons for OverfittingWays to Tackle OverfittingWhat is Underfitting?Reasons for UnderfittingView More
+Overfitting and Underfitting are two crucial concepts in machine learning and are the prevalent causes for the poor performance of a machine learning model. This tutorial will explore Overfitting and Underfitting in machine learning, and help you understand how to avoid them with a hands-on demonstration.
+
+Your AI/ML Career is Just Around The Corner!
+AI Engineer Master's ProgramExplore ProgramYour AI/ML Career is Just Around The Corner!
+What is Overfitting?
+When a model performs very well for training data but has poor performance with test data (new data), it is known as overfitting. In this case, the machine learning model learns the details and noise in the training data such that it negatively affects the performance of the model on test data. Overfitting can happen due to low bias and high variance.
+
+Overfitting_in-ML
+
+Become an AI and ML Expert in 2024
+Discover the Power of AI and ML With UsEXPLORE NOWBecome an AI and ML Expert in 2024
+Reasons for Overfitting
+Data used for training is not cleaned and contains noise (garbage values) in it
+The model has a high variance
+The size of the training dataset used is not enough
+The model is too complex
+Ways to Tackle Overfitting
+Using K-fold cross-validation
+Using Regularization techniques such as Lasso and Ridge
+Training model with sufficient data
+Adopting ensembling techniques
+What is Underfitting?
+When a model has not learned the patterns in the training data well and is unable to generalize well on the new data, it is known as underfitting. An underfit model has poor performance on the training data and will result in unreliable predictions. Underfitting occurs due to high bias and low variance.
+
+Reasons for Underfitting
+Data used for training is not cleaned and contains noise (garbage values) in it
+The model has a high bias
+The size of the training dataset used is not enough
+The model is too simple
+Ways to Tackle Underfitting
+Increase the number of features in the dataset
+Increase model complexity
+Reduce noise in the data
+
+Increase the duration of training the data
+Now that you have understood what overfitting and underfitting are, let’s see what is a good fit model in this tutorial on overfitting and underfitting in machine learning. 
+What Is a Good Fit In Machine Learning?
+To find the good fit model, you need to look at the performance of a machine learning model over time with the training data. As the algorithm learns over time, the error for the model on the training data reduces, as well as the error on the test dataset. If you train the model for too long, the model may learn the unnecessary details and the noise in the training set and hence lead to overfitting. In order to achieve a good fit, you need to stop training at a point where the error starts to increase.
+
+-------------
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, OrdinalEncoder
+import matplotlib.pyplot as plt
+import seaborn as sns
+df_base = pd.read_csv("Bengaluru_House_Data.csv")
+df_base
+#2. Print/show the dimensions of Dataframe i.e., no of rows and columns. (1 mark)
+df_base.shape
+#3. Print/show the data types of all the features/columns. (1 mark)
+df_base.info()
+#4. Print/show statistical summary of all the numeric featurs. (1 mark)
+df_base.select_dtypes(include=np.number).describe()
+#5. Print/show statistical summary for all the categorical variable. (2 marks)
+df_base.select_dtypes(include='object').describe()  df.describe(incude='object).T
+#1. Show/Visualize the relationship between fetures 'bath' and 'price' using scattered plot. (1 marks)
+plt.scatter(df_base['bath'].values, df_base['price'].values)
+plt.title("Bath vs Price plot")
+plt.show()
+#2. Show/Visualize the relationship between fetures 'balcony'and 'price' using scattered plot. (1 mark)
+plt.scatter(df_base['balcony'].values, df_base['price'].values)
+plt.title("Balcony vs Price plot")
+plt.show()
+#show/Visualize the relationship between features 'bath','balcony' and 'price' using 3D Scatterplot. (2 marks)
+ax = plt.axes(projection='3d')
+ax.scatter(df_base['balcony'].values, df_base['bath'].values, df_base['price'].values)
+#Show outliers distribution of variable 'bath' by drawing Boxplot. (3marks)
+sns.boxplot(x=df_base['bath'].values)
+#1. Replace missing values of the feature 'balcony' with numerical value 0 and convert its feature type to int.(2 marks)
+df_base.balcony.fillna(0, inplace=True)
+df_base['balcony'] = df_base['balcony'].astype(int)
+df_base.info()
+#2. Replace missing values of the feature 'bath' missing values with numerical 1 and convert feature type to int.(2 marks)
+df_base.bath.fillna(1, inplace=True)
+df_base['bath'] = df_base['bath'].astype(int)
+df_base.info()
+#3. Replace missing values of the feature 'location' with a constant "missing".(2 marks)
+df_base.location.fillna('missing', inplace=True)
+df_base.isnull().sum()
+#5. Convert the feature 'size' to int by removing alphabetic content and keep only numeric content.
+#In case of missing/null content replace by constant numeric value- 2. (3 marks)
+df_base['size'].fillna('2', inplace=True)
+df_base['size'] = df_base['size'].apply(lambda x: int(x) if(str(x).isalnum()) else int(2))
+df_base.isnull().sum()
+#6. Convert the feature 'total_sqft' to numerical using 'to_numeric' method. 
+#Also, replace all its missing entries by mean.(3 marks)
+
+df_base['total_sqft'] = pd.to_numeric(df_base['total_sqft'], errors="coerce")
+df_base.total_sqft.fillna(df_base.total_sqft.mean(), inplace=True)
+lb_enc = LabelEncoder()
+df_base['avilability_encoded'] = lb_enc.fit_transform(df_base['availability'])
+df_base['location_encoded'] = lb_enc.fit_transform(df_base['location'])
+df_base['society_encoded'] = lb_enc.fit_transform(df_base['society'])
+df_base = pd.get_dummies(df_base, columns=['area_type'], dtype=int)
+df_base.drop(columns=['availability', 'location', 'society'], axis=1, inplace=True) 
+df_base.dtypes
+#1. Split the processed Dataframe into 2 parts train and test with ratio as 70:30. 
+#Ensure feature 'price' as target(y). (3 marks)
+
+from sklearn.model_selection import train_test_split
+target = df_base['price']
+X = df_base.drop(columns='price', axis=1)
+X_train, X_test, y_train, y_test = train_test_split(X, target, test_size=0.3, random_state=100)
+X_train.shape
+#2. Use OLS statsmodels package to build the Linear Regression model on the train set. 
+#Also,generate the summary report. (6 marks)
+
+lr = sm.OLS(y_train, X_train)
+lr = lr.fit()
+lr.summary()
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The smallest eigenvalue is 8.18e-26. This might indicate that there are
+strong multicollinearity problems or that the design matrix is singular.
+#linear reg model
+from sklearn.linear_model import LinearRegression
+
+sk_lr = LinearRegression()
+sk_lr = sk_lr.fit(X_train, y_train)
+print(sk_lr.score(X_train, y_train))
+sk_lr.coef_
+#Train below models and obtain values using 5 fold cross validation on train data and 'RMSE' metric. 
+#Find the metric (RMSE) score in test set and suggest the best model
+from sklearn.model_selection import LeaveOneOut
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
+score = cross_val_score(estimator=LinearRegression(), X=X_train, y=y_train, cv=5, scoring='r2')
+print(score)
+from sklearn.linear_model import Ridge, Lasso, ElasticNet
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import mean_squared_error
+ridge = Ridge(alpha=1, max_iter=500)
+ridge = ridge.fit(X_train, y_train)
+r_score = cross_val_score(estimator=ridge, X=X_train, y=y_train, cv=5, scoring='r2')
+r_rmse = np.sqrt(mean_squared_error(y_test, ridge.predict(X_test)))
+print(r_score, np.mean(r_score), r_rmse)
+#Lasso (alpha = 0.01, max_iter = 500) (5 marks)
+
+lasso = Lasso(alpha=0.01, max_iter=500)
+lasso.fit(X_train, y_train)
+l_score = cross_val_score(estimator=lasso, X=X_train, y=y_train, cv=5, scoring='r2')
+l_rmse = np.sqrt(mean_squared_error(y_test, lasso.predict(X_test)))
+print(l_score, np.mean(l_score), l_rmse)
+#- ElasticNet(alpha = 0.1, l1_ratio = 0.01, max_iter = 500) (5 marks)
+el_net = ElasticNet(alpha=0.1, l1_ratio=0.01, max_iter=500)
+el_net.fit(X_train, y_train)
+el_score = cross_val_score(estimator=el_net, X=X_train, y=y_train, cv=5, scoring='r2')
+el_rmse = np.sqrt(mean_squared_error(y_test, el_net.predict(X_test)))
+print(el_score, np.mean(el_score), el_rmse)
+#Using Random search on Lasso model find the best value of alpha and corresponding RMSE value on test set
+from sklearn.model_selection import RandomizedSearchCV
+
+tuned_paramaters = [{'alpha':[1e-15, 1e-10, 1e-8, 0.0001, 0.001, 0.01, 0.1, 1, 5, 10, 20],
+                     'max_iter':[10,50,100,150,200,250,300,400,500]}]
+rsearch = RandomizedSearchCV(estimator=Lasso(), param_distributions=tuned_paramaters, scoring='r2')
+rsearch = rsearch.fit(X_train, y_train)
+rsearch.score(X_train, y_train)
+rsearch.best_params_

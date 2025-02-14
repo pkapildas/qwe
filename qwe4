@@ -227,6 +227,75 @@ sns.barplot(x="Importance", y="Feature", data=feature_importance.head(10))
 plt.title("Top Features Affecting Loan Payback")
 plt.show()
 # -------------------- END OF CODE --------------------
+
+----
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
+from xgboost import XGBClassifier
+from sklearn.model_selection import cross_val_score,KFold
+
+clf1 = LogisticRegression(max_iter=3000)
+clf2= DecisionTreeClassifier(random_state=0)
+clf3=  RandomForestClassifier(random_state=0)
+clf4 = KNeighborsClassifier(n_neighbors=5) 
+clf5= GaussianNB()
+clf6=XGBClassifier(random_state=0)
+kf=KFold(n_splits=5,shuffle=True,random_state=0)
+for i,j in zip([clf1,clf2,clf3,clf4,clf5,clf6],['LR','DT','RF','KNN','GNB','XGB']):
+    score = cross_val_score(i, inp, out, cv=kf, scoring='f1')
+    print(j,np.mean(score),np.std(score)/np.mean(score))
+# Voting Classifier 
+from sklearn.ensemble import VotingClassifier
+estimator=[('DT',DecisionTreeClassifier()),('rf',RandomForestClassifier()),
+          ('xb',XGBClassifier())]
+vot1=VotingClassifier(estimators=estimator, voting='hard')
+vot2=VotingClassifier(estimators=estimator, voting='soft')
+score_vot1 = cross_val_score(vot1, inp, out, cv=kf, scoring='f1')
+score_vot2 = cross_val_score(vot2, inp, out, cv=kf, scoring='f1')
+print('vot1',np.mean(score_vot1),np.std(score_vot1)/np.mean(score_vot1))
+print('vot2',np.mean(score_vot2),np.std(score_vot2)/np.mean(score_vot2))
+rf=RandomForestClassifier()
+rf.fit(xtrain,ytrain)
+ypred=rf.predict(xtest)
+feat_imp=pd.DataFrame()
+feat_imp['Feature']=xtrain.columns
+feat_imp['Importance']=rf.feature_importances_
+feat_imp.sort_values('Importance',ascending=False)
+from treeinterpreter import treeinterpreter as ti
+ xtest.iloc[50,:]
+obser = xtest.iloc[50,:].values.reshape(1,-1)
+obser
+prediction, bias, contributions = ti.predict(rf,obser)
+prediction
+ytest.iloc[50]
+np.round(contributions,3)
+bias
+np.sum(contributions[0][:,0]) + bias[0][0]
+np.round(np.sum(contributions[0][:,1]) + bias[0][1])
+# Parameter Tuning
+be=[]
+ve=[]
+for i in [5,10,20,40,60,80,100,120,150,200,250,300,400]:
+    #for j in [10,15,20,30]:
+    dt=RandomForestClassifier(n_estimators=i,random_state=48)
+    #scorer = make_scorer(f1_score, average = 'weighted')
+    score=cross_val_score(dt,inp,out,cv=kf,scoring='f1')
+    print('n_estimator:',i)
+    print('Bias Error',1-np.mean(score))
+    print('Variance Error',np.std(score)/np.mean(score))
+    be.append(1-np.mean(score))
+    ve.append(np.std(score)/np.mean(score))
+from matplotlib import pyplot as plt
+plt.plot([5,10,20,40,60,80,100,120,150,200,250,300,400],be)
+be1=pd.DataFrame(be)/pd.DataFrame(be).sum()
+ve1=pd.DataFrame(ve)/pd.DataFrame(ve).sum()
+plt.plot([5,10,20,40,60,80,100,120,150,200,250,300,400],np.array(be1),label='bias')
+plt.plot([5,10,20,40,60,80,100,120,150,200,250,300,400],np.array(ve1),label='var')
+plt.legend()
+------
 #It uses a Bayes' Theorem with the assumption of independence of predictor variables. The sklearn library provides different naive bayes classifiers, as GaussianNB, MultinomialNB and so on.
 stantiate the 'GaussianNB'
 gnb = GaussianNB()

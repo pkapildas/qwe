@@ -97,6 +97,11 @@ df_admissions.drop('Chance of Admit', axis = 1).skew()
 #Correlation 
     sb.heatmap(df_n.corr(), annot=True, cmap='rainbow')
 
+# Check skewness for numerical features
+for col in df_num:
+    skewness = skew(df[col])
+    print(f"Skewness of {col}: {skewness}")
+
 # -------------------- (C) Feature Engineering --------------------
 df = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
 
@@ -108,7 +113,13 @@ df_num_scaled = pd.DataFrame(num_scaled, columns = df_num.columns)
 dummy_var = pd.get_dummies(data = df_cat, drop_first = True)
 X = pd.concat([df_num_scaled, dummy_var], axis = 1)
 
-
+# Scaling numerical features using StandardScaler
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+# Update the training and testing sets with scaled numerical features
+X_train = pd.DataFrame(X_train_scaled, columns=X_train.columns)
+X_test = pd.DataFrame(X_test_scaled, columns=X_test.columns)
 
 
 # -------------------- (D) Variance Inflation Factor (VIF) --------------------

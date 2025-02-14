@@ -352,8 +352,90 @@ Identify the Important Features
 Let us create a barplot to identify the important featur
 # use fit() to fit the model on the train set
 
-# get the best parameters
-print('Best parameters for random forest classifier: ', rf_grid_model.best_params_, '\n')
+Stacking is a machine learning technique that takes several classification or regression models and uses their predictions as the input for the meta-classifier (final classifier) or meta-regressor (final regressor).
+As we are using the distance-based algorithm like KNN, we scale the data before applying the stacking technique.
+Build the stacking classifier using the Random forest, KNN and Naive bayes as base learners (consider the hyperparameters tuned using GridSearchCV in the previous sessions).
+# consider the various algorithms as base learners
+base_learners = [('rf_model', RandomForestClassifier(criterion = 'entropy', max_depth = 10, max_features = 'sqrt', 
+                                                     max_leaf_nodes = 8, min_samples_leaf = 5, min_samples_split = 2, 
+                                                     n_estimators = 50, random_state = 10)),
+                 ('KNN_model', KNeighborsClassifier(n_neighbors = 17, metric = 'euclidean')),
+                 ('NB_model', GaussianNB())]
+ initialize stacking classifier 
+# pass the base learners to the parameter, 'estimators'
+# pass the Naive Bayes model as the 'final_estimator'/ meta model
+stack_model = StackingClassifier(estimators = base_learners, final_estimator = GaussianNB())
+plot_confusion_matrix(stack_model)
+test_report = get_test_report(stack_model)
+plot_roc(stack_model)
+
+# fit the model on train dataset
+stack_model.fit(X_train, y_train)
+-------
+clf1 = LogisticRegression(max_iter=3000)
+clf2= DecisionTreeClassifier(random_state=0)
+clf3=  RandomForestClassifier(random_state=0)
+clf4 = KNeighborsClassifier(n_neighbors=5) 
+clf5= GaussianNB()
+clf6=XGBClassifier(random_state=0)
+from sklearn.model_selection import cross_val_score,KFold
+
+kf=KFold(n_splits=5,shuffle=True,random_state=0)
+for i,j in zip([clf1,clf2,clf3,clf4,clf5,clf6],['LR','DT','RF','KNN','GNB','XGB']):
+    score = cross_val_score(i, inp, out, cv=kf, scoring='f1')
+    print(j,np.mean(score),np.std(score)/np.mean(score))
+# Voting Classifier 
+from sklearn.ensemble import VotingClassifier
+estimator=[('DT',DecisionTreeClassifier()),('rf',RandomForestClassifier()),
+          ('xb',XGBClassifier())]
+vot1=VotingClassifier(estimators=estimator, voting='hard')
+vot2=VotingClassifier(estimators=estimator, voting='soft')
+core_vot2 = cross_val_score(vot2, inp, out, cv=kf, scoring='f1')
+print('vot1',np.mean(score_vot1),np.std(score_vot1)/np.mean(score_vot1))
+print('vot2',np.mean(score_vot2),np.std(score_vot2)/np.mean(score_vot2))
+
+rf=RandomForestClassifier()
+rf.fit(xtrain,ytrain)
+ypred=rf.predict(xtest)
+feat_imp=pd.DataFrame()
+feat_imp['Feature']=xtrain.columns
+feat_imp['Importance']=rf.feature_importances_
+feat_imp.sort_values('Importance',ascending=False)
+
+# Parameter Tuning
+be=[]
+ve=[]
+for i in [5,10,20,40,60,80,100,120,150,200,250,300,400]:
+    #for j in [10,15,20,30]:
+    dt=RandomForestClassifier(n_estimators=i,random_state=48)
+    #scorer = make_scorer(f1_score, average = 'weighted')
+    score=cross_val_score(dt,inp,out,cv=kf,scoring='f1')
+    print('n_estimator:',i)
+    print('Bias Error',1-np.mean(score))
+    print('Variance Error',np.std(score)/np.mean(score))
+    be.append(1-np.mean(score))
+    ve.append(np.std(score)/np.mean(score))
+# Grid Search CV
+from sklearn.model_selection import GridSearchCV
+
+params={'n_estimators':[50,80,100,120,140,190,200,210],
+        #'max_features':['auto','sqrt','log2'],
+        #'criterion':['gini','entropy'],
+        'max_depth':[10,15,20,25,30,40]}
+rf_mod1=RandomForestClassifier()
+hyp_mod=GridSearchCV(rf_mod1,param_grid=params,scoring='f1')
+tun_mod=hyp_mod.fit(xtrain,ytrain)
+tun_mod.best_params_
+tun_mod.best_score_
+res=pd.DataFrame(tun_mod.cv_results_)
+res.shape
+final_mod=RandomForestClassifier(**tun_mod.best_params_)
+final_mod.fit(xtrain,ytrain)
+ypred1=final_mod.predict(xtest)
+ypred1_train=final_mod.predict(xtrain)
+confusion_matrix(ytest,ypred1)
+print(classification_report(ytest,ypred1))
+
 
 Decision Tree is a non-parametric supervised learning method. It builds a model in the form of a tree structure. It breaks down a dataset into smaller and smaller subsets, which is called splitting. A decision node is a node on which a decision of split is to be made. A node that can not be split further is known as the terminal/leaf node. A leaf node represents the decision. A decision tree can work with both numerical and categorical variables.
 A decision tree for classification is built using criteria like the Gini index and entropy.

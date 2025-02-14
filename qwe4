@@ -536,3 +536,51 @@ decision_tree_classification = DecisionTreeClassifier(criterion = 'entropy', ran
 
 # fit the model using fit() on train data
 decision_tree = decision_tree_classification.fit(X_train, y_train)
+# XG Boost classsifier 
+
+xgb_model = XGBClassifier(max_depth = 10, gamma = 1)
+
+# fit the model using fit() on train data
+xgb_model.fit(X_train, y_train)
+plot_confusion_matrix(xgb_model)
+test_report = get_test_report(xgb_model)
+print(test_report)
+plot_roc(xgb_model)
+3.3.1 Tune the Hyperparameters (GridSearchCV)
+tuning_parameters = {'learning_rate': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
+                     'max_depth': range(3,10),
+                     'gamma': [0, 1, 2, 3, 4]}
+
+# instantiate the 'XGBClassifier' 
+xgb_model = XGBClassifier()
+xgb_grid = GridSearchCV(estimator = xgb_model, param_grid = tuning_parameters, cv = 3, scoring = 'roc_auc')
+xgb_grid.fit(X_train, y_train)
+print('Best parameters for XGBoost classifier: ', xgb_grid.best_params_, '\n')
+xgb_grid_model = XGBClassifier(learning_rate = xgb_grid.best_params_.get('learning_rate'),
+                               max_depth = xgb_grid.best_params_.get('max_depth'),
+                              gamma = xgb_grid.best_params_.get('gamma'))
+
+# use fit() to fit the model on the train set
+xgb_model = xgb_grid_model.fit(X_train, y_train)
+
+# print the performance measures for test set for the model with best parameters
+print('Classification Report for test set:\n', get_test_report(xgb_model))
+plot_roc(xgb_model)
+###
+important_features = pd.DataFrame({'Features': X_train.columns, 
+                                   'Importance': xgb_model.feature_importances_})
+
+# sort the dataframe in the descending order according to the feature importance
+important_features = important_features.sort_values('Importance', ascending = False)
+
+# create a barplot to visualize the features based on their importance
+sns.barplot(x = 'Importance', y = 'Features', data = important_features)
+
+# add plot and axes labels
+# set text size using 'fontsize'
+plt.title('Feature Importance', fontsize = 15)
+plt.xlabel('Importance', fontsize = 15)
+plt.ylabel('Features', fontsize = 15)
+
+# display the plot
+plt.show()

@@ -1,3 +1,227 @@
+from yellowbrick.cluster import SilhouetteVisualizer
+from sklearn.metrics import silhouette_score
+
+
+
+df = df17.copy()
+#---------------------1 eda ----------------------------------------------
+df = df.drop(columns='CUST_ID')
+df['CREDIT_LIMIT'].replace(to_replace = '?' , value = np.NaN, inplace = True)  #, regex = True)
+df['MINIMUM_PAYMENTS'] = df['MINIMUM_PAYMENTS'].astype('float64')
+df = df.dropna()
+df = df.reset_index(drop = True)
+
+snc = StandardScaler()
+df_snc = pd.DataFrame( snc.fit_transform(df) , columns = df.columns, index = df.index)
+pc1=PCA()
+inp_pc1=pc1.fit_transform(df_snc)
+pc1.explained_variance_[:5] )               # EIgen Values
+pc1.components_[:5]                         # EIgen Vector
+np.cov(pc1.components_)                     # print("Principal Component Covariance Matrix:\n",  np.cov(pc1.components_) )
+
+a = np.cumsum(pc1.explained_variance_ratio_)
+b = np.argmax(a >= 0.90) + 1                # "Number of components to explain 90% variance: {b}")
+
+pca_90      = PCA(n_components = b)
+pca_data_90 = pca_90.fit_transform(df_snc)
+inp_df_pc_90   = pd.DataFrame(pca_data_90, columns=[f"PC{i+1}" for i in range(b)])
+inp_df_pc_90.head(2)
+
+------------------------------------------------------------------------------------
+wcss=[]
+sc=[]
+for i in range(2,9):
+    k1=KMeans(n_clusters=i,random_state=48)
+    k1.fit(inp_df_pc_90)
+    ----------
+    wcss.append(k1.inertia_)
+    sc.append(silhouette_score(inp_df_pc_90,k1.labels_))
+    ---------
+    # silhouette_avg = silhouette_score(inp_df_pc_90, kmeans.labels_)
+    # print('Silhouette Score:', silhouette_avg)    #close to 1 better
+    # model = SilhouetteVisualizer(kmeans , colors='yellowbrick' )
+    # model.fit(inp_df_pc_90)
+    # model.show()
+    ---------
+# df["Cluster_best_knn"] = kmeans_final.labels_ 
+# cluster_summary = df.groupby("Cluster").mean()
+# print("Cluster Summary Statistics:")
+# display(cluster_summary)
+   ----------
+------------------------------------------------------------------------------------
+plt.figure(figsize=(4,4))
+plt.plot(range(2,9),wcss,c='r',marker='o')   # 2 to 20 is clusture si
+plt.twinx()
+plt.plot(range(2,9),sc,marker='*')
+plt.axvline(3,c='orange')
+plt.show()
+-------------------------------------------------------------------------------------
+kmeans_5 = KMeans(n_clusters=5, random_state=42)
+kmeans_5.fit(pca_data_90)
+clusters_inertia_5 =    [(i, kmeans_5.inertia_) for i in range(5)]
+clusters_inertia_5 = sorted(clusters_inertia_5, key=lambda x: x[1])  # Sort by inertia
+print("Clusters (5 groups) ordered by inertia:")
+for cluster, inertia in clusters_inertia_5:
+    print(f"Cluster {cluster}: Inertia = {inertia:.2f}")
+
+-----------------------dendrograms -------------------------------------------------
+from scipy.cluster.hierarchy import dendrogram, linkage, cophenet
+from scipy.spatial.distance import pdist
+#  ['single','complete','average','centroid']
+
+z = linkage(inp_df_pc_90, method='ward')
+plt.figure(figsize=(6, 2))
+dendrogram(z)                   #  truncate_mode='lastp', p=100)
+plt.title("Dendrogram (Ward Linkage)") ; plt.xlabel("Data Points"); plt.ylabel("Distance"); plt.show()
+
+# Compute Cophenetic Correlation Coefficient
+c, _ = cophenet(z, pdist(pca_data_90))
+print(f"Cophenetic Correlation Coefficient: {c:.2f}")
+
+-----------------------clusturing -------------------------------------------------
+
+from sklearn.cluster import AgglomerativeClustering
+from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.spatial.distance import pdist
+
+lm = linkage(inp_df_pc_90, method='ward')  
+cluster_labels = fcluster(lm, 4, criterion='maxclust')  
+df['Cluster_Ward'] = cluster_labels  
+
+ac = AgglomerativeClustering(n_clusters=4, linkage='ward')
+df['Cluster_Agglo'] = ac.fit_predict(inp_df_pc_90) 
+
+
+def func_wcss(df, cluster_labels_col, data):
+    x = []  # List to store WCSS values
+
+    for j in np.unique(df[cluster_labels_col]):
+        a = data[df[cluster_labels_col] == j]
+        b = a.mean(axis=0)
+        c = ((a - b) ** 2).sum().sum()
+        x.append((j, c))  
+
+    x_sort = sorted(x, key=lambda x: x[1])  # Sort based on WCSS value
+
+    print("\n\n ----Cluster WCSS (Ordered by Quality):")
+    for cluster_label, wcss in x_sort:  # Use x_sort instead of wcss_per_cluster_sorted
+        print(f"Cluster {cluster_label}: WCSS = {wcss:.2f}")
+
+# Call the function for Ward and Agglomerative clustering
+func_wcss(df,  'Cluster_Ward', inp_df_pc_90)
+func_wcss(df, 'Cluster_Agglo', inp_df_pc_90)
+
+
+------------------------- 3 M0del -------------------------------------------------------------
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA, TruncatedSVD
+from sklearn.ensemble import RandomForestRegressor  # Import Regressor
+from sklearn.metrics import mean_squared_error  # Import mean_squared_error for regression
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+-----------------------------------
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+scaler = StandardScaler()
+X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns, index=X.index)
+-----------------------------------
+a = RandomForestRegressor()
+a.fit(X_train, y_train)
+y_pred_original = a.predict(X_test)
+rmse_original = np.sqrt(mean_squared_error(y_test, y_pred_original))
+------pca--------------------------
+pca = PCA(n_components=0.95)
+X_pca = pca.fit_transform(X_scaled)
+X_train_pca, X_test_pca, y_train_pca, y_test_pca = train_test_split(X_pca, y, test_size=0.2, random_state=42)
+-------svd------------------------
+n_components_95 = np.argmax(np.cumsum(pca.explained_variance_ratio_) >= 0.95) + 1
+svd = TruncatedSVD(n_components=n_components_95)
+X_svd = svd.fit_transform(X_scaled)
+X_train_svd, X_test_svd, y_train_svd, y_test_svd = train_test_split(X_svd, y, test_size=0.2, random_state=42)
+------predict----------------------
+a = RandomForestRegressor()
+a.fit(X_train_pca, y_train_pca)
+p = a.predict(X_test_pca)
+rmse_pca = np.sqrt(mean_squared_error(y_test_pca, p))
+print(f"\nRMSE of PCA Data Model: {rmse_pca:.4f}")
+
+
+
+
+--------------------------------------recommendation------------------------------------------------
+df = pd.read_csv(path18)
+df = df.drop(columns=(['Unnamed: 0.1', 'Unnamed: 0' ]))
+df = df[['user_id', 'book_id', 'rating']]
+top5books = df.groupby('book_id')['rating'].count().sort_values(ascending=False).head(5)
+
+-------------------------- collaborative filtering with KNN-----------------------------------------
+
+reader1 = Reader(rating_scale=(df2['rating'].min(),df2['rating'].max()))
+dataset=Dataset.load_from_df(df,reader=reader1)
+[trainset,testset]=surprise_train_test_split(dataset,test_size=0.2,random_state=48)
+model=KNNBasic(sim_options={'name':'cosine','user_based':True})
+model.fit(trainset)
+predictions=model.test(testset)   # Make predictions on the test set
+accuracy.rmse(predictions)        # Calculate RMSE
+
+# Perform cross-validation
+cv_knn = cross_validate(model, dataset, measures=['RMSE'], cv=5, verbose=True)
+# Print the average RMSE across folds
+np.mean(cv_knn['test_rmse'])
+
+##########single user
+user1='116'
+item_visited=set(df[df2['user_id']==user1]['book_id'])
+item_all=set(df2['book_id'])
+item_not_visted=list(item_all.difference(item_visited))
+unread_books = item_not_visted
+
+# Use user1 instead of user_id in the prediction
+predictions = [(book, model.predict(user1, book).est) for book in unread_books] 
+a= pd.DataFrame(predictions).sort_values(ascending=False ,by=1)
+a.head()
+---------------------------svd------------
+# Use SVD from Surprise library instead of TruncatedSVD from sklearn
+model = SVD(n_factors=10)  # You can adjust n_factors (similar to n_components)
+model.fit(trainset)
+predictions = model.test(testset)
+rmse_score = rmse(predictions)
+
+print(f"RMSE of Collaborative Filtering Model: {rmse_score:.4f}")
+
+
+
+
+
+
+
+#############################################################################
+############### Apiori MBA good   ###########################################
+#############################################################################
+
+dfm = pd.read_csv(path19)
+dfm = dfm[dfm['Country'] == 'France']
+dfm = dfm.dropna()
+dfm = dfm.reset_index(drop=True)
+dfm = dfm[['InvoiceNo', 'Description', 'Quantity']]
+dfm = dfm[~dfm['InvoiceNo'].str.startswith('C')]
+dfm = dfm.groupby(['InvoiceNo', 'Description'])['Quantity'].sum()
+dfm = dfm.unstack()
+dfm = dfm.reset_index()
+dfm = dfm.fillna(0)
+dfm = dfm.set_index('InvoiceNo')
+def encode1(x):
+  return 1  if x > 0.0 else 0
+dfm=dfm.applymap(encode1)
+dfm.head(2)
+
+ap1=apriori(dfm,min_support=0.07,use_colnames=True)
+rules = association_rules(ap1,metric='lift',min_threshold=1)
+rules.sort_values(by='lift',ascending=False)
+rules.head(1)
+------------------done----
+
 df = df17.copy()
 #---------------------1 eda ----------------------------------------------
 df = df.drop(columns='CUST_ID')

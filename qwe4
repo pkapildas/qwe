@@ -1151,3 +1151,131 @@ ax[3].set_ylabel('PC2')
 ax[3].set_title('Classification After LDA')
 plt.show()
 
+2. (a) Perform EDA and pre-processing techniques required for PCA and clustering. (10 marks)
+
+Print the top 5 Eigenvalues and Eigenvectors. (4 marks)
+df['culmen_length_mm']=df['culmen_length_mm'].fillna(df['culmen_length_mm'].median())
+df['culmen_depth_mm']=df['culmen_depth_mm'].fillna(df['culmen_depth_mm'].median())
+df['flipper_length_mm']=df['flipper_length_mm'].fillna(df['flipper_length_mm'].median())
+df['body_mass_g']=df['body_mass_g'].fillna(df['body_mass_g'].median())
+df['sex']=df['sex'].fillna(df['sex'].mode()[0])
+
+df['sex'].value_counts()
+MALE      178
+FEMALE    165
+.           1
+Name: sex, dtype: int64
+df['sex']=df['sex'].replace(to_replace='.',value=df['sex'].mode()[0])
+df_num=df.select_dtypes(include='number')
+df_c=df.select_dtypes(include='object')
+snc=StandardScaler()
+df_snc=pd.DataFrame(snc.fit_transform(df_num),columns=df_num.columns,index=df_num.index)
+df_snc.head()
+pc1=PCA()
+inp_pc1=pc1.fit_transform(df_snc)
+print('Top 5 Eigen values: ')
+print(pc1.explained_variance_[:5])
+print('Top 5 Eigen Vectors: ')
+print(pc1.components_[:5])
+
+2. (b) Calculate the optimal number of clusters for K-means, using the principal components that represent 90% of the explained variance.(use SilhouetteVisualizer) (6 marks)
+cum_var=np.cumsum(pc1.explained_variance_ratio_)
+num_pc=np.sum((cum_var<0.9).astype('int'))+1
+print(f'Number of PCA components required to explain 90 percent of the variance in data is {num_pc}')
+inp_df_pc=pd.DataFrame(inp_pc1[:,:3],columns=[f'PCA{i+1}' for i in range(num_pc)])
+inp_df_pc.head()
+wcss=[]
+sc=[]
+for i in range(2,20):
+    kmeans1=KMeans(n_clusters=i,random_state=48)
+    kmeans1.fit(inp_df_pc)
+    wcss.append(kmeans1.inertia_)
+    sc.append(silhouette_score(inp_df_pc,kmeans1.labels_))
+plt.figure(figsize=(12,8))
+plt.plot(range(2,20),wcss,c='r',marker='o')
+plt.twinx()
+plt.plot(range(2,20),sc,marker='*')
+plt.axvline(3,c='orange')
+plt.show()
+
+for i in range(2,10):
+    kmeans1=KMeans(n_clusters=i,random_state=48)
+    kmeans1.fit(inp_df_pc)
+    print(f'silhouette_score={silhouette_score(inp_df_pc,kmeans1.labels_)}')
+    model=SilhouetteVisualizer(kmeans1)
+    model.fit(inp_df_pc)
+    model.show()
+2. (c) Create dendrograms (top 100 cluster) using five different linkage methods and compare their performance, utilizing the principal components that explain 90% of the variance and calculate the cophenetic correlation coefficient for each linkage, display the results. (6 marks)
+inp_df_pc.head()
+linkage1=['single','complete','average','centroid','ward']
+for lk in linkage1:
+    lk1=linkage(inp_df_pc,method=lk)
+    c,_=cophenet(lk1,pdist(inp_df_pc))
+    print(f'Cophenet correlation for the linkage method {lk} is {c}')
+    plt.figure(figsize=(16,10))
+    dendrogram(lk1,truncate_mode='lastp',p=100)
+    plt.show()
+
+2 (d)Group the data into the optimal number of clusters and rank the clusters based on their quality, using the within-cluster sum of squares (WCSS) for each cluster. (6 marks)
+df_clus0=df2[df2['Cluster_label']==0].drop(columns='Cluster_label')
+df_clus1=df2[df2['Cluster_label']==1].drop(columns='Cluster_label')
+df_clus2=df2[df2['Cluster_label']==2].drop(columns='Cluster_label')
+df2['Cluster_label'].value_counts()
+df_clus0_ar=np.array(df_clus0)
+df_clus1_ar=np.array(df_clus1)
+df_clus2_ar=np.array(df_clus2)
+df_cent=np.array(kmeans2.cluster_centers_)
+wcss1=[]
+wcss1.append(((df_clus0_ar - df_cent[0,:])**2).sum())
+wcss1.append(np.sum((df_clus1_ar - df_cent[1,:]) ** 2))
+wcss1.append(np.sum((df_clus2_ar - df_cent[2,:]) ** 2))
+wcss1
+np.argsort(np.array(wcss1))
+2 (e)Cluster the data using both K-Means and Agglomerative methods without applying PCA, and analyze the differences in their performance. (8 marks)
+wcss3=[]
+sc1=[]
+for i in range(2,20):
+    kmeans3=KMeans(n_clusters=i,random_state=48)
+    kmeans3.fit(df_snc)
+    wcss3.append(kmeans3.inertia_)
+    sc1.append(silhouette_score(df_snc,kmeans3.labels_))
+plt.figure(figsize=(12,8))
+plt.plot(range(2,20),wcss3,c='r',marker='o')
+plt.twinx()
+plt.plot(range(2,20),sc1,marker='*')
+plt.axvline(3,c='orange')
+plt.show()
+
+for i in range(2,10):
+    kmeans4=KMeans(n_clusters=i,random_state=48)
+    kmeans4.fit(df_snc)
+    print(f'silhouette_score={silhouette_score(df_snc,kmeans4.labels_)}')
+    model1=SilhouetteVisualizer(kmeans4)
+    model1.fit(df_snc)
+    model1.show()
+print('The best number of cluster from the above analysis is 3 clusters')
+The best number of cluster from the above analysis is 3 clusters
+df3=df_snc.copy()
+kmeans5=KMeans(n_clusters=3,random_state=48)
+kmeans5.fit(df3)
+
+df3['Cluster_label']=kmeans5.labels_
+ 
+linkage1=['single','complete','average','centroid','ward']
+for lk in linkage1:
+    lk1=linkage(df_snc,method=lk)
+    c,_=cophenet(lk1,pdist(df_snc))
+    print(f'Cophenet correlation for the linkage method {lk} is {c}')
+    plt.figure(figsize=(16,10))
+    dendrogram(lk1,truncate_mode='lastp',p=100)
+    plt.show()
+agg1=AgglomerativeClustering(n_clusters=3)
+agg1.fit(df_snc)
+df4=df3.copy()
+df4['Cluster_label']=agg1.labels_
+agg2=AgglomerativeClustering(n_clusters=3)
+agg2.fit(inp_df_pc)
+print(f'Silhouette_score of Kmeans clustering with PCA is {silhouette_score(inp_df_pc,kmeans2.labels_)}')
+print(f'Silhouette_score of Kmeans clustering without PCA is {silhouette_score(df_snc,kmeans5.labels_)}')
+print(f'Silhouette_score of hierarchal clustering with PCA is {silhouette_score(inp_df_pc,agg2.labels_)}')
+print(f'Silhouette_score of  hierarchal clustering without PCA is {silhouette_score(df_snc,agg1.labels_)}')

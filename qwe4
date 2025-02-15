@@ -426,7 +426,29 @@ unique_transactions = [set(map(str, transaction)) for transaction in list(set(tr
  print("\nAssociation Rules:")
  rules[['antecedents', 'consequents', 'support', 'confidence', 'lift']].head(10)
 
+5. Displays the associated results of items = ['Rule','Support','Confidence','Lift']
+association_rules = apriori(records, min_support=0.1, min_confidence=0.4,min_lift=1)
+association_results = list(association_rules)
+# Initialize an empty list to collect rows
+rows = []
 
+# Iterate over the association results
+for item in association_results:
+    pair = item[2]
+    for i in pair:
+        if i[3] != 1:
+            row = {
+                'Rule': str([x for x in i[0]]) + " -> " + str([x for x in i[1]]),
+                'Support': item[1],
+                'Confidence': i[2],
+                'Lift': i[3]
+            }
+            rows.append(row)
+
+# Create the DataFrame from the list of rows
+Result = pd.DataFrame(rows, columns=['Rule', 'Support', 'Confidence', 'Lift'])
+
+print(Result)
 ---------------------
 
 

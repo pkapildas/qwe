@@ -614,3 +614,97 @@ for i in  [0.5, 0.6, 0.7, 0.8, 0.9,0.94, 0.96]:
     recall_list.append(recall)
     cohen_score_list.append(cohen)
 pd.DataFrame({"Threshold":threshold, "Accuracy":accuracy_list, "Precision":precision_list, "CohenScore":cohen_score_list, "Recall":recall_list})
+
+
+Logistic Regression (2 Marks) 
+Definition: Logistic Regression is a statistical method used for binary classification, predicting 
+the probability of an outcome using the sigmoid function. It models the relationship between 
+independent variables and a categorical dependent variable. 
+Working: 
+1. Computes a linear combination of input features: 
+2. Applies the sigmoid function to map to a probability: 
+3. Classifies as 1 if , else 0. 
+4. Optimizes weights using log loss and gradient descent to improve predictions. 
+Precision, Recall, and F1 Score (2 Marks) 
+1. Precision: Measures the accuracy of positive predictions. 
+2. Recall (Sensitivity): Measures how well the model captures actual positives. 
+3. F1 Score: Harmonic mean of Precision and Recall, balancing both metrics. 
+How Random Forest Solves the Problem of Low Bias and High Variance (2 Marks) 
+Random Forest reduces high variance while maintaining low bias using bagging (Bootstrap 
+Aggregation): 
+1. Reduces Overfitting (High Variance): It trains multiple decision trees on different 
+random subsets of the data and averages their predictions, reducing model dependency on 
+any single tree. 
+2. Maintains Low Bias: Since decision trees have low bias, aggregating multiple trees 
+preserves predictive power while smoothing fluctuations caused by variance. 
+By combining many weak learners, Random Forest achieves a balance between bias and 
+variance, improving generalization. 
+Steps in k-Nearest Neighbors (K-NN) Algorithm (2 Marks) 
+1. Load the Data: Gather the training dataset with labeled examples. 
+2. Choose : Select the number of nearest neighbors (). 
+3. Calculate Distance: Compute the distance (e.g., Euclidean, Manhattan) between the 
+query point and all training points. 
+4. Find Nearest Neighbors: Identify the closest data points. 
+5. Majority Voting (Classification) / Averaging (Regression): 
+o For classification, assign the most frequent class among the neighbors. 
+o For regression, take the average of nearest values. 
+6. Return the Prediction. 
+Bagging and Boosting (2 Marks) 
+1. Bagging (Bootstrap Aggregating): 
+o Creates multiple subsets of the dataset using random sampling with 
+replacement. 
+o Trains independent models (e.g., Decision Trees) on each subset. 
+o Aggregates predictions by majority voting (classification) or averaging 
+(regression). 
+o Reduces variance and prevents overfitting (e.g., Random Forest). 
+2. Boosting: 
+o Trains models sequentially, where each model corrects errors of the previous 
+one. 
+o Assigns higher weights to misclassified samples to improve learning. 
+o Combines weak learners into a strong model. 
+o Reduces bias and improves accuracy (e.g., AdaBoost, Gradient Boosting, 
+XGBoost). 
+Binomial Logistic Regression and Its Assumptions (2 Marks) 
+Definition: Binomial Logistic Regression is a type of logistic regression used when the 
+dependent variable is binary (0 or 1). It estimates the probability that a given input belongs to a 
+particular class using the logistic (sigmoid) function. 
+Assumptions: 
+1. Binary Outcome: The dependent variable must be binary (e.g., Yes/No, 0/1). 
+2. Independence of Observations: Data points should be independent of each other. 
+3. No Multicollinearity: Independent variables should not be highly correlated. 
+4. Linearity of Logits: The log-odds of the outcome should have a linear relationship with 
+the independent variables. 
+5. Large Sample Size: Logistic regression performs best with a large dataset. 
+Significance of Coefficients in a Logistic Regression Model (2 Marks) 
+Interpretation of Coefficients: 
+1. Log-Odds Transformation: Each coefficient represents the change in the log-odds of 
+the dependent variable for a one-unit change in the corresponding independent variable.  
+2. Odds Ratio (Exp()): The exponentiation of a coefficient gives the odds ratio, which tells 
+how much the odds of the outcome change for a one-unit increase in the predictor. 
+3. Significance Testing: The p-value of each coefficient determines its statistical 
+significance, helping decide if a variable should be included in the model. 
+Comparison of AdaBoost and Gradient Boosting (2 Marks) 
+Feature 
+Model 
+Training 
+Weak 
+AdaBoost 
+Sequential boosting with weight 
+adjustments 
+Gradient Boosting 
+Sequential boosting with gradient 
+optimization 
+Learners 
+Error 
+Handling 
+Decision stumps (shallow trees) 
+Assigns higher weights to misclassified 
+samples 
+Performance Effective for simple models 
+Deeper decision trees 
+Minimizes loss function using gradient 
+descent 
+More powerful, suited for complex 
+problems 
+Both aim to improve model accuracy by combining weak learners, but Gradient Boosting is 
+generally more flexible and powerful. 

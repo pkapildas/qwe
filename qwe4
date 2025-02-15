@@ -1454,6 +1454,37 @@ print(f'Silhouette_score of Kmeans clustering without PCA is {silhouette_score(d
 print(f'Silhouette_score of hierarchal clustering with PCA is {silhouette_score(inp_df_pc,agg2.labels_)}')
 print(f'Silhouette_score of  hierarchal clustering without PCA is {silhouette_score(df_snc,agg1.labels_)}')
 ====
+ Build the Apriori ML model with minimum support 10% and print values of Lift greater than 2. 
+store_Data  = pd.readCSV()
+final_data = pd.DataFrame(columns=['Transaction','Items'])
+store_Data = df.T
+for col in store_Data.columns:
+    col_data = list(store_Data[col].dropna())
+    temp_dict = {'Transaction':[int(col)]*len(col_data),  'Items':col_data }
+    temp_df = pd.DataFrame(temp_dict)
+    final_data = pd.concat([final_data,temp_df,],ignore_index=True)
+final_data.head()
+
+frequent_itemsets  =  apriori(format_data, min_support = 0.01, use_colnames = True)
+frequent_itemsets.head()
+
+final_data_dummy = pd.get_dummies(final_data['Items'])
+final_data_dummy['Transaction'] = final_data['Transaction']
+# i don't want the quantity, I want just that product is bought or #not(after doing dummy yow will get 2 if same item bought twice in a #transaction) so i will use encode_units function
+def encode_units(x):
+    if x <=  0:
+        return 0
+    if x >=  1:
+        return 1
+format_data= final_data_dummy.groupby('Transaction').sum()
+format_data = format_data.applymap(encode_units)
+format_data.head()
+
+ result = association_rules(frequent_itemsets, metric = "lift" )
+result.sort_values('lift',ascending=False)
+
+
+
 #Content Based Recommendation system
 df_cb=pd.read_csv('movie_metadata-2.csv')
 df_cb.head()
@@ -1557,3 +1588,23 @@ Euclidean Distance: ...
 Manhattan Distance: ...
 Jaccard Index: ...
 Minkowski distance: ..
+
+
+Let us calculate the Cophenetic correlation coefficient to study the quality of clusters formed using dendrogram.
+from sklearn.metrics.pairwise import euclidean_distances
+from scipy.cluster.hierarchy import cophenet
+
+# instantiate linkage object with scaled data and consider 'average' linkage method 
+# calculate the euclidean distance between the observations 
+eucli_dist = euclidean_distances(X)
+
+# the above code will return the matrix of 3756x3756
+# consider only the array of upper triangular matrix
+# k=1 considers the upper triangular values without the diagonal elements
+dist_array = eucli_dist[np.triu_indices(3756, k = 1)]
+
+# pass the linkage matrix and actual distance
+# 1st output of the cophenet() is the correlation coefficient
+coeff, cophenet_dist = cophenet(link_mat, dist_array)
+
+

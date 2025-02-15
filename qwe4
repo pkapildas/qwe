@@ -1606,5 +1606,228 @@ dist_array = eucli_dist[np.triu_indices(3756, k = 1)]
 # pass the linkage matrix and actual distance
 # 1st output of the cophenet() is the correlation coefficient
 coeff, cophenet_dist = cophenet(link_mat, dist_array)
+Task 2: Prepare a segregation model to justify the rating category of anew movie.
+from sklearn.preprocessing import LabelEncoder
+label_encoder = LabelEncoder()
+y = label_encoder.fit_transform(data2['content_rating'])
+print(y)
+
+from sklearn.metrics import confusion_matrix
+from sklearn import tree
+from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(np.array(X), y, test_size = 0.2, random_state = 0)
+3.1 DT Classifier Before Applying PCA
+from sklearn.ensemble import BaggingClassifier
+model = BaggingClassifier()
+model = model.fit(X_train, y_train)
+y_pred_DT = model.predict(X_test)
+cm_DT= confusion_matrix(y_test, y_pred_DT)
+cm_DT
+sns.heatmap(cm_DT, annot=True)
+plt.show()
+classification=classification_report(y_test,y_pred_DT)
+print(classification)
+ac = accuracy_score(y_test, y_pred_DT)
+print("Accuracy Score:", ac)
+y_test[:5]
+
+fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(7, 3))
+
+# Plot the training points (scatter plot, all rows first and second column only)
+ax[0].scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=plt.cm.Set1,alpha = 1, edgecolor='k')
+ax[0].set_xlabel('PC1')
+ax[0].set_ylabel('PC2')
+ax[0].set_title('Actual label')
+ax[1].scatter(X_test[:, 0], X_test[:, 1], c=y_pred_DT, cmap=plt.cm.Set1,alpha = 1,  edgecolor='k')
+ax[1].set_xlabel('PC1')
+ax[1].set_ylabel('PC2')
+ax[1].set_title('Predicted label')
+plt.show()
+
+3.2 DT After Applying PCA
+from sklearn.decomposition import PCA
+pca = PCA()
+X_train_2 = pca.fit_transform(X_train)
+X_test_2 = pca.transform(X_test)
+explained_variance = pca.explained_variance_ratio_  
+explained_variance
+sns.barplot(np.arange(len(pca.explained_variance_ratio_ )),pca.explained_variance_ratio_ )
+plt.show()
+
+from sklearn import tree
+model2 = BaggingClassifier()
+
+model2.fit(X_train_2,y_train)
+BaggingClassifier()
+y_pred_DT_2 = model2.predict(X_test_2)
+from sklearn.metrics import confusion_matrix
+cm_PCA= confusion_matrix(y_test, y_pred_DT_2)
+sns.heatmap(cm_PCA, annot=True)
+plt.show()
+
+ac_PCA = accuracy_score(y_test, y_pred_DT_2)
+print("Accuracy Score:", ac_PCA)
+
+classification_2=classification_report(y_test,y_pred_DT_2)
+print(classification_2)
+
+fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(7, 3))
+
+# Plot the training points (scatter plot, all rows first and second column only)
+ax[0].scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=plt.cm.Set1,alpha = 1, edgecolor='k')
+ax[0].set_xlabel('PC1')
+ax[0].set_ylabel('PC2')
+ax[0].set_title('Actual label')
+ax[1].scatter(X_test[:, 0], X_test[:, 1], c=y_pred_DT_2, cmap=plt.cm.Set1,alpha = 1,  edgecolor='k')
+ax[1].set_xlabel('PC1')
+ax[1].set_ylabel('PC2')
+ax[1].set_title('Predicted label')
+plt.show()
 
 
+3.3 DT After Applying LDA
+# create the lda model
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+model = LinearDiscriminantAnalysis()
+model.fit(X_train,y_train)
+
+y_pred = model.predict(X_test)
+from sklearn.metrics import confusion_matrix
+cm_LDA= confusion_matrix(y_test, y_pred)
+sns.heatmap(cm_LDA, annot=True)
+plt.show()
+ac_LDA = accuracy_score(y_test, y_pred)
+print("Accuracy Score:", ac_LDA)
+classification_2=classification_report(y_test,y_pred)
+print(classification_2)
+
+3.3.2Hyperparameter tunning of LDA
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+# define model
+model = LinearDiscriminantAnalysis()
+# define model evaluation method
+cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
+# define grid
+grid = dict()
+grid['solver'] = ['svd', 'lsqr', 'eigen']
+#grid['shrinkage'] = np.arange(0, 1, 0.01)
+# define search
+search = GridSearchCV(model, grid, scoring='accuracy', cv=cv, n_jobs=-1)
+# perform the search
+results = search.fit(X_train, y_train)
+# summarize
+print('Mean Accuracy: %.3f' % results.best_score_)
+print('Config: %s' % results.best_params_)
+
+model = LinearDiscriminantAnalysis(solver = 'svd')
+model1 = model.fit(X_train,y_train)
+y_pred = model.predict(X_test)
+from sklearn.metrics import confusion_matrix
+cm_LDA= confusion_matrix(y_test, y_pred)
+sns.heatmap(cm_LDA, annot=True)
+plt.show()
+ac_LDA = accuracy_score(y_test, y_pred)
+print("Accuracy Score:", ac_LDA)
+classification_2=classification_report(y_test,y_pred)
+print(classification_2)
+
+ig, ax = plt.subplots(nrows=1, ncols=2, figsize=(7, 3))
+
+# Plot the training points (scatter plot, all rows first and second column only)
+ax[0].scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=plt.cm.Set1,alpha = 1, edgecolor='k')
+ax[0].set_xlabel('PC1')
+ax[0].set_ylabel('PC2')
+ax[0].set_title('Actual label')
+ax[1].scatter(X_test[:, 0], X_test[:, 1], c=y_pred, cmap=plt.cm.Set1,alpha = 1,  edgecolor='k')
+ax[1].set_xlabel('PC1')
+ax[1].set_ylabel('PC2')
+ax[1].set_title('Predicted label')
+plt.show()
+
+----
+
+from sklearn.cluster import KMeans
+# create several cluster combinations ranging from 2 to 80 and observe the wcss (Within Cluster Sum of Squares) for each cluster
+# consider an empty list to store the WCSS
+wcss  = []
+
+# use for loop to perform K-means with different values of K
+# set the 'random_state' to obtain the same centroid initialization for each code run
+# fit the model on scaled data
+# append the value of WCSS for each K to the list 'wcss'
+# the 'inertia_' retuns the WCSS for specific value of K
+for i in range(1,41):
+    kmeans = KMeans(n_clusters = i, random_state = 10)
+    kmeans.fit(X)
+    wcss.append(kmeans.inertia_)
+Let us plot the elbow plot and identify the elbow point.
+
+plt.figure(figsize = (20,10))
+# visualize the elbow plot to get the optimal value of K
+plt.plot(range(1,41), wcss)
+
+# set the axes and plot labels
+# set the font size using 'fontsize'
+plt.title('Elbow Plot', fontsize = 15)
+plt.xlabel('No. of clusters (K)', fontsize = 15)
+plt.ylabel('WCSS', fontsize = 15)
+plt.yticks(np.arange(0,65000,5000))
+
+# display the plot
+plt.show()
+
+plt.figure(figsize = (20,10))
+# visualize the elbow plot to get the optimal value of K
+plt.plot(range(1,41), wcss)
+
+# set the axes and plot labels
+# set the font size using 'fontsize'
+plt.title('Elbow Plot', fontsize = 15)
+plt.xlabel('No. of clusters (K)', fontsize = 15)
+plt.ylabel('WCSS', fontsize = 15)
+plt.yticks(np.arange(0,65000,5000))
+plt.xticks(range(1,41))
+
+# plot a vertical line at the elbow
+plt.axvline(x = 11 , color = 'red')
+
+# display the plot
+plt.show()
+
+om sklearn.metrics import silhouette_score
+
+# create a list for different values of K
+n_clusters = np.arange(2,81)
+sil = []
+# use 'for' loop to build the clusters
+# 'random_state' returns the same sample each time you run the code  
+# fit and predict on the scaled data
+# 'silhouette_score' function computes the silhouette score for each K
+for K in n_clusters:
+    cluster = KMeans (n_clusters= K, random_state= 10)
+    predict = cluster.fit_predict(X)
+    score = silhouette_score(X, predict, random_state= 10)
+    sil.append(score)
+    print ("For {} clusters the silhouette score is {})".format(K, score))
+
+
+plt.figure(figsize = (20,10))
+
+# visualize the elbow plot to get the optimal value of K
+plt.plot(np.arange(2,81), sil)
+
+# set the axes and plot labels
+# set the font size using 'fontsize'
+plt.title('Elbow Plot', fontsize = 20)
+plt.xlabel('No. of clusters (K)', fontsize = 20)
+plt.ylabel('silhouette score', fontsize = 20)
+plt.xticks(np.arange(2,81))
+# plot a vertical line at the elbow
+plt.axvline(x = 11, color = 'red')
+
+# display the plot
+plt.show()

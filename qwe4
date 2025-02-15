@@ -29,6 +29,180 @@ categorical_cols = df.select_dtypes(exclude=['number']).columns.tolist()
 print("\nNumerical Columns:", numerical_cols)
 print("\nCategorical Columns:", categorical_cols)
 
+data_clust.isnull().sum().sum()
+#Keep the input and output column seperate
+inp_data_dime=data_clust.drop('M3',axis=1)
+out=data_clust['M3']
+For dimensionality reduction scaling is the must do pre-processing step. Students must perform scaling prior to dimensionality reduction. 
+(Students may also performed outlier treatment, which is good to consider for awarding more marks). If they have not performed scaling, then mark must be reduced drastically.
+
+
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+data_sc = scaler.fit_transform(inp_data_dime)
+data_sc=pd.DataFrame(data_sc,columns=inp_data_dime.columns)
+#1.b Perform univariate and bivariate analysis and remove any variable which is absolutely 
+#    insignificant. (2 Marks)
+inp_data_dime.describe()
+out.value_counts().plot(kind='bar')
+--
+import seaborn as sb
+from matplotlib import pyplot as plt
+plt.figure(figsize=(18,8))
+sb.heatmap(inp_data_dime.corr(),annot=True)
+
+for i in inp_data_dime.columns:
+    sb.boxplot(data_clust['M3'],data_clust[i])
+    plt.show()
+
+# 2. Apply K means clustering and identify the ideal value of K using elbow and silhoutee method
+from sklearn.cluster import KMeans
+wcss=[]
+cl=[1,2,3,4,5,6,7,8]
+for i in cl:
+    mod=KMeans(n_clusters=i,random_state=10)
+    mod.fit(data_sc)
+    print(mod.inertia_)
+    wcss.append(mod.inertia_)
+plt.plot(cl,wcss) 
+sil=[]
+from sklearn.metrics import silhouette_score
+cl=[2,3,4,5,6,7,8]
+for i in cl:
+    mod=KMeans(n_clusters=i)
+    mod.fit(data_sc)
+    sil.append(silhouette_score(data_sc,mod.labels_))
+res=pd.DataFrame({'k':cl,'silhoutee':sil})
+res
+Apply PCA on the data. How many PCs are required to reproduce the 95% charecteristics of original data. What is the top 5 features contributing in PC1 ?
+from sklearn.decomposition import PCA 
+pca = PCA(n_components = data_sc.shape[1])
+pca_data = pca.fit_transform(data_sc)
+exp_var_ratio= pca.explained_variance_ratio_
+exp_var_ratio.round(3)
+
+cum_var=exp_var_ratio[0]
+itr=2 # defined as two as first pc1 variance defined outside the loop
+for j in exp_var_ratio[1:]:
+    cum_var=cum_var+j
+    if cum_var >= 0.95:
+        break
+    itr=itr+1
+
+print('The number of principle components capturing 95 percent varaition is data is : ',itr,' Varaince explained is ', cum_var)
+# Variance Ratio bar plot for each PCA components.
+ax = plt.bar(range(1,len(pca.explained_variance_ratio_)+1), pca.explained_variance_ratio_)
+plt.xlabel("PCA Components",fontweight = 'bold')
+plt.ylabel("Variance Ratio",fontweight = 'bold')
+# PC1 is derived from first eigen vector
+e1=pd.DataFrame(pca.components_[0,:]) # first eigen vector
+e1.index=data_sc.columns
+e11=np.abs(e1)
+e11.sort_values(0,ascending=False).head(5) # Top 5 features contributing in PC1
+### 5. Build the following ML model and compare its performace: (5 Marks)
+    #a. ML model with original inp_data_dime and out
+    #b. ML model with inp_data_dime_pca and out
+    #(Note: For pca and svd use the number of components which captures the 95 percent of variance) 
+    
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+
+xtrain,xtest,ytrain,ytest=train_test_split(data_sc,out,test_size=0.2,random_state=48)
+rf=RandomForestClassifier(random_state=48)
+rf.fit(xtrain,ytrain)
+ypred=rf.predict(xtest)
+print('The number of input feature ',xtrain.shape[1])
+print(classification_report(ytest,ypred))
+
+xtrain,xtest,ytrain,ytest=train_test_split(pca_data[:,:5],out,test_size=0.2,random_state=48)
+rf=RandomForestClassifier(random_state=48)
+rf.fit(xtrain,ytrain)
+ypred=rf.predict(xtest)
+print('The number of PCA components ',xtrain.shape[1])
+print(classification_report(ytest,ypred))
+# Recomendation 
+data_recom.head(2)
+from surprise import KNNWithMeans,SVDpp
+from surprise import Dataset
+from surprise import accuracy
+from surprise import Reader
+from surprise.model_selection import train_test_split,cross_validate
+#data_recom=pd.read_csv('recommendation_mini.csv')
+ratings = data_recom
+reader = Reader(rating_scale=(1, 5))
+
+trainsetfull = rating_data.build_full_trainset()
+print('Number of users: ', trainsetfull.n_users, '\n')
+print('Number of items: ', trainsetfull.n_items, '\n')
+
+alg=SVDpp()
+alg.fit(trainsetfull) 
+alg.predict(uid = 'A2CX7LUOHB2NDG', iid ='059400232X')
+
+results = cross_validate(
+    algo = alg, data = rating_data, measures=['RMSE'], 
+    cv=3)
+results['test_rmse'].mean()
+---
+3 (a) Build the popularity based recommendation system and suggest top 5 items. (5 Marks)
+data_recom=data.iloc[:,24:28]
+data_recom.shape
+# Top 5 Items based on Average Rating
+pd.DataFrame(data.groupby('ItemID')['Rating'].mean().sort_values(ascending=False))
+popularity_table = data.groupby('ItemID').agg({'Rating' : 'mean'})
+popularity_table.head(5)
+popularity_table.sort_values('Rating', ascending=False).head(5)
+#Build collaborative recommendation engine to recommend a top 5 items to the specific user. Measure the model quality in terms of RMSE
+reader = Reader(rating_scale =(1,5))
+rating_data = Dataset.load_from_df(data_recom[['UserID', 'ItemID', 'Rating']], reader)
+rating_data
+[train_set, test_set] = train_test_split(rating_data, test_size=.15, shuffle=True)
+trainsetfull = rating_data.build_full_trainset()
+print('Number of Users  : ',trainsetfull.n_users, '\n')
+print('Number of Items  : ',trainsetfull.n_items, '\n')
+algo = KNNWithMeans(k= 15, min_k = 5 , sim_options = {'name':'pearson', 'user_based' :False}, verbose =True)
+results = cross_validate( algo = algo, data =rating_data , measures =['RMSE'], 
+                        cv =5, return_train_measures=True)
+print(results['test_rmse'].mean())
+
+alg = SVDpp()
+alg.fit(trainsetfull)
+alg.predict(uid =76, iid =2)
+item_id = data_recom['ItemID'].unique()
+item_id76 = data_recom.loc[data_recom['UserID']==76, 'ItemID']
+item_id_pred = np.setdiff1d(item_id, item_id76)
+testset= [[76, iid, 4] for iid in item_id_pred]
+pred = alg.test(testset)
+pred
+--
+pred_ratings = np.array([pred1.est for pred1 in pred])
+i_max= pred_ratings.argmax()
+iid = item_id_pred[i_max]
+print('Top item for user has iid {0} with predicted rating{1}'.
+      format(iid, pred_ratings[i_max]))
+r_df = data_recom.pivot(index ='UserID', columns ='ItemID', values='Rating').fillna(0)
+
+
+
+model = SVD(random_state =42)
+model.fit(trainsetfull)
+pred = model.test(testset)
+print("Collabrative Filter Model RMSE ", accuracy.rmse(pred))
+# for a user
+num_recomendations =5
+userId =76
+user_row_number = userId -1 
+all_items= data_recom['ItemID'].unique()
+pred_ratings = [(item, model.predict(userId, item).est) for item in all_items]
+top_5_reco = sorted(pred_ratings, key = lambda x :x[1], reverse =True)[:5]
+print(f' Top 5 Recomended items for User id {userId}')
+for item , rating in top_5_reco :
+    print(f'item : {item}, Predicted Rating {rating}')
+
+
+
+#Imabalanced data
 # -------------------- (B) Data Cleaning --------------------
 
 #First run a check for the presence of missing values and their percentage for each column. Then choose the right approach to treat them.
@@ -39,10 +213,7 @@ missing_data
 df_num = df_feature.select_dtypes(include = [np.number])
 df_cat = df_feature.select_dtypes(include = [np.object])
 
-# change the data type of 'Research'
-df_admissions['Research'] = df_admissions['Research'].astype(object)
-
-# Handling Missing Values
+ 
 
 """
 imputer_num = SimpleImputer(strategy="median")
@@ -105,606 +276,3 @@ for col in df_num:
 # -------------------- (C) Feature Engineering --------------------
 df = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
 
-# Scaling from sklearn.preprocessing import StandardScaler from sklearn.metrics import accuracy_score, precision_score , recall_score, f1_score, classification_report, cohen_kappa_score
-scaler = StandardScaler()
-df[numerical_cols] = scaler.fit_transform(df[numerical_cols])
-# create a dataframe of scaled numerical variables
-df_num_scaled = pd.DataFrame(num_scaled, columns = df_num.columns)
-dummy_var = pd.get_dummies(data = df_cat, drop_first = True)
-X = pd.concat([df_num_scaled, dummy_var], axis = 1)
-
-# Scaling numerical features using StandardScaler
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-# Update the training and testing sets with scaled numerical features
-X_train = pd.DataFrame(X_train_scaled, columns=X_train.columns)
-X_test = pd.DataFrame(X_test_scaled, columns=X_test.columns)
-
-
-# -------------------- (D) Variance Inflation Factor (VIF) --------------------
-X = df.drop(columns=["CustomerId", "Loan"])  
-y = df["Loan"]
-
-vif_data = pd.DataFrame()
-vif_data["Feature"] = X.columns
-vif_data["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
-
-# Remove features with high VIF
-#X = X.loc[:, vif_data["VIF"] < 10]
-X = X.loc[:, vif_data[vif_data["VIF"] < 10]["Feature"]]
-
-
-# -------------------- (E) Train-Test Split --------------------
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
-
-y_train = y_train.astype(int)
-y_test = y_test.astype(int)
-
-# -------------------- (F) Handling Class Imbalance (SMOTE) --------------------
-if len(y_train.unique()) > 1:  
-    sm = SMOTE(random_state=42)
-    X_train, y_train = sm.fit_resample(X_train, y_train)
-
-# -------------------- (G) Model Training & Evaluation --------------------
-# Random Forest
-rf_model = RandomForestClassifier(random_state=42)
-rf_model.fit(X_train, y_train)
-y_pred_rf = rf_model.predict(X_test)
-
-# K-Nearest Neighbors (KNN)
-knn_model = KNeighborsClassifier(n_neighbors=5)
-knn_model.fit(X_train, y_train)
-y_pred_knn = knn_model.predict(X_test)
-
-# AdaBoost Classifier
-ada_model = AdaBoostClassifier(n_estimators=100, random_state=42)
-ada_model.fit(X_train, y_train)
-y_pred_ada = ada_model.predict(X_test)
-
-# Model Evaluation
-accuracy_rf = accuracy_score(y_test, y_pred_rf)
-accuracy_knn = accuracy_score(y_test, y_pred_knn)
-accuracy_ada = accuracy_score(y_test, y_pred_ada)
-
-print("\nRandom Forest Accuracy:", accuracy_rf)
-print("KNN Accuracy:", accuracy_knn)
-print("AdaBoost Accuracy:", accuracy_ada)
-
-# -------------------- (H) Model Comparison Visualizations --------------------
-# Accuracy Comparison
-plt.figure(figsize=(6, 4))
-sns.barplot(x=["Random Forest", "KNN", "AdaBoost"], y=[accuracy_rf, accuracy_knn, accuracy_ada], palette="viridis")
-plt.title("Accuracy Comparison of Models")
-plt.ylabel("Accuracy Score")
-plt.show()
-
-# Confusion Matrices
-plt.figure(figsize=(18, 5))
-
-plt.subplot(1, 3, 1)
-sns.heatmap(confusion_matrix(y_test, y_pred_rf), annot=True, fmt="d", cmap="Blues")
-plt.title("Random Forest Confusion Matrix")
-plt.xlabel("Predicted")
-plt.ylabel("Actual")
-
-plt.subplot(1, 3, 2)
-sns.heatmap(confusion_matrix(y_test, y_pred_knn), annot=True, fmt="d", cmap="Oranges")
-plt.title("KNN Confusion Matrix")
-plt.xlabel("Predicted")
-plt.ylabel("Actual")
-
-plt.subplot(1, 3, 3)
-sns.heatmap(confusion_matrix(y_test, y_pred_ada), annot=True, fmt="d", cmap="Greens")
-plt.title("AdaBoost Confusion Matrix")
-plt.xlabel("Predicted")
-plt.ylabel("Actual")
-
-plt.show()
-
-# -------------------- (I) ROC Curve for All Models --------------------
-if len(np.unique(y_test)) == 2:  # ROC only for binary classification
-    y_probs_rf = rf_model.predict_proba(X_test)[:, 1]
-    y_probs_knn = knn_model.predict_proba(X_test)[:, 1]
-    y_probs_ada = ada_model.predict_proba(X_test)[:, 1]
-
-    fpr_rf, tpr_rf, _ = roc_curve(y_test, y_probs_rf)
-    fpr_knn, tpr_knn, _ = roc_curve(y_test, y_probs_knn)
-    fpr_ada, tpr_ada, _ = roc_curve(y_test, y_probs_ada)
-
-    plt.figure(figsize=(8, 6))
-    plt.plot(fpr_rf, tpr_rf, label=f"Random Forest (AUC = {auc(fpr_rf, tpr_rf):.2f})", color="blue")
-    plt.plot(fpr_knn, tpr_knn, label=f"KNN (AUC = {auc(fpr_knn, tpr_knn):.2f})", color="orange")
-    plt.plot(fpr_ada, tpr_ada, label=f"AdaBoost (AUC = {auc(fpr_ada, tpr_ada):.2f})", color="green")
-
-    plt.plot([0, 1], [0, 1], "k--")  
-    plt.xlabel("False Positive Rate")
-    plt.ylabel("True Positive Rate")
-    plt.title("ROC Curve Comparison")
-    plt.legend()
-    plt.show()
-
-# -------------------- (J) Feature Importance from Random Forest --------------------
-feature_importance = pd.DataFrame({
-    "Feature": X_train.columns,
-    "Importance": rf_model.feature_importances_
-}).sort_values(by="Importance", ascending=False)
-
-print("\nTop Features Influencing Loan Payback:\n", feature_importance.head(10))
-
-# Plot Feature Importance
-plt.figure(figsize=(10, 5))
-sns.barplot(x="Importance", y="Feature", data=feature_importance.head(10))
-plt.title("Top Features Affecting Loan Payback")
-plt.show()
-# -------------------- END OF CODE --------------------
-
-----
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import GaussianNB
-from xgboost import XGBClassifier
-from sklearn.model_selection import cross_val_score,KFold
-
-clf1 = LogisticRegression(max_iter=3000)
-clf2= DecisionTreeClassifier(random_state=0)
-clf3=  RandomForestClassifier(random_state=0)
-clf4 = KNeighborsClassifier(n_neighbors=5) 
-clf5= GaussianNB()
-clf6=XGBClassifier(random_state=0)
-kf=KFold(n_splits=5,shuffle=True,random_state=0)
-for i,j in zip([clf1,clf2,clf3,clf4,clf5,clf6],['LR','DT','RF','KNN','GNB','XGB']):
-    score = cross_val_score(i, inp, out, cv=kf, scoring='f1')
-    print(j,np.mean(score),np.std(score)/np.mean(score))
-# Voting Classifier 
-from sklearn.ensemble import VotingClassifier
-estimator=[('DT',DecisionTreeClassifier()),('rf',RandomForestClassifier()),
-          ('xb',XGBClassifier())]
-vot1=VotingClassifier(estimators=estimator, voting='hard')
-vot2=VotingClassifier(estimators=estimator, voting='soft')
-score_vot1 = cross_val_score(vot1, inp, out, cv=kf, scoring='f1')
-score_vot2 = cross_val_score(vot2, inp, out, cv=kf, scoring='f1')
-print('vot1',np.mean(score_vot1),np.std(score_vot1)/np.mean(score_vot1))
-print('vot2',np.mean(score_vot2),np.std(score_vot2)/np.mean(score_vot2))
-rf=RandomForestClassifier()
-rf.fit(xtrain,ytrain)
-ypred=rf.predict(xtest)
-feat_imp=pd.DataFrame()
-feat_imp['Feature']=xtrain.columns
-feat_imp['Importance']=rf.feature_importances_
-feat_imp.sort_values('Importance',ascending=False)
-from treeinterpreter import treeinterpreter as ti
- xtest.iloc[50,:]
-obser = xtest.iloc[50,:].values.reshape(1,-1)
-obser
-prediction, bias, contributions = ti.predict(rf,obser)
-prediction
-ytest.iloc[50]
-np.round(contributions,3)
-bias
-np.sum(contributions[0][:,0]) + bias[0][0]
-np.round(np.sum(contributions[0][:,1]) + bias[0][1])
-# Parameter Tuning
-be=[]
-ve=[]
-for i in [5,10,20,40,60,80,100,120,150,200,250,300,400]:
-    #for j in [10,15,20,30]:
-    dt=RandomForestClassifier(n_estimators=i,random_state=48)
-    #scorer = make_scorer(f1_score, average = 'weighted')
-    score=cross_val_score(dt,inp,out,cv=kf,scoring='f1')
-    print('n_estimator:',i)
-    print('Bias Error',1-np.mean(score))
-    print('Variance Error',np.std(score)/np.mean(score))
-    be.append(1-np.mean(score))
-    ve.append(np.std(score)/np.mean(score))
-from matplotlib import pyplot as plt
-plt.plot([5,10,20,40,60,80,100,120,150,200,250,300,400],be)
-be1=pd.DataFrame(be)/pd.DataFrame(be).sum()
-ve1=pd.DataFrame(ve)/pd.DataFrame(ve).sum()
-plt.plot([5,10,20,40,60,80,100,120,150,200,250,300,400],np.array(be1),label='bias')
-plt.plot([5,10,20,40,60,80,100,120,150,200,250,300,400],np.array(ve1),label='var')
-plt.legend()
-------
-#It uses a Bayes' Theorem with the assumption of independence of predictor variables. The sklearn library provides different naive bayes classifiers, as GaussianNB, MultinomialNB and so on.
-stantiate the 'GaussianNB'
-gnb = GaussianNB()
-
-# fit the model using fit() on train data
-gnb_model = gnb.fit(X_train, y_train)
-# pass the gaussian naive bayes model to the function
-plot_confusion_matrix(gnb_model)
-# define a to plot a confusion matrix for the model
-def plot_confusion_matrix(model):
-    
-    # predict the target values using X_test
-    y_pred = model.predict(X_test)
-    
-    # create a confusion matrix
-    # pass the actual and predicted target values to the confusion_matrix()
-    cm = confusion_matrix(y_test, y_pred)
-
-    # label the confusion matrix  
-    # pass the matrix as 'data'
-    # pass the required column names to the parameter, 'columns'
-    # pass the required row names to the parameter, 'index'
-    conf_matrix = pd.DataFrame(data = cm,columns = ['Predicted:0','Predicted:1'], index = ['Actual:0','Actual:1'])
-
-    # plot a heatmap to visualize the confusion matrix
-    # 'annot' prints the value of each grid 
-    # 'fmt = d' returns the integer value in each grid
-    # 'cmap' assigns color to each grid
-    # as we do not require different colors for each grid in the heatmap,
-    # use 'ListedColormap' to assign the specified color to the grid
-    # 'cbar = False' will not return the color bar to the right side of the heatmap
-    # 'linewidths' assigns the width to the line that divides each grid
-    # 'annot_kws = {'size':25})' assigns the font size of the annotated text 
-    sns.heatmap(conf_matrix, annot = True, fmt = 'd', cmap = ListedColormap(['lightskyblue']), cbar = False, 
-                linewidths = 0.1, annot_kws = {'size':25})
-
-    # set the font size of x-axis ticks using 'fontsize'
-    plt.xticks(fontsize = 20)
-
-    # set the font size of y-axis ticks using 'fontsize'
-    plt.yticks(fontsize = 20)
-
-    # display the plot
-    plt.show()
-test_report = get_test_report(gnb_model)
-plot_roc(gnb_model)
-# create a generalized function to calculate the performance metrics values for test set
-def get_test_report(model):
-    
-    # for test set:
-    # test_pred: prediction made by the model on the test dataset 'X_test'
-    # y_test: actual values of the target variable for the test dataset
-
-    # predict the output of the target variable from the test data 
-    test_pred = model.predict(X_test)
-
-    # return the classification report for test data
-    return(classification_report(y_test, test_pred))
-# define a function to plot the ROC curve and print the ROC-AUC score
-def plot_roc(model):
-    
-    # predict the probability of target variable using X_test
-    # consider the probability of positive class by subsetting with '[:,1]'
-    y_pred_prob = model.predict_proba(X_test)[:,1]
-    
-    # the roc_curve() returns the values for false positive rate, true positive rate and threshold
-    # pass the actual target values and predicted probabilities to the function
-    fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
-
-    # plot the ROC curve
-    plt.plot(fpr, tpr)
-
-    # set limits for x and y axes
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.0])
-
-    # plot the straight line showing worst prediction for the model
-    plt.plot([0, 1], [0, 1],'r--')
-
-    # add plot and axes labels
-    # set text size using 'fontsize'
-    plt.title('ROC curve for Cancer Prediction Classifier', fontsize = 15)
-    plt.xlabel('False positive rate (1-Specificity)', fontsize = 15)
-    plt.ylabel('True positive rate (Sensitivity)', fontsize = 15)
-
-    # add the AUC score to the plot
-    # 'x' and 'y' gives position of the text
-    # 's' is the text 
-    # use round() to round-off the AUC score upto 4 digits
-    plt.text(x = 0.02, y = 0.9, s = ('AUC Score:',round(roc_auc_score(y_test, y_pred_prob),4)))
-
-    # plot the grid
-    plt.grid(True)
-Note: Algorithms like Naive Bayes and tree based algorithms do not need feature scaling or normalization. Performing a features scaling in these algorithms may not have much effect.
-Tune the Hyperparameters using GridSearchCV (Random Forest)
-tuned_paramaters = [{'criterion': ['entropy', 'gini'],
-                     'n_estimators': [10, 30, 50, 70, 90],
-                     'max_depth': [10, 15, 20],
-                     'max_features': ['sqrt', 'log2'],
-                     'min_samples_split': [2, 5, 8, 11],
-                     'min_samples_leaf': [1, 5, 9],
-                     'max_leaf_nodes': [2, 5, 8, 11]}]
-random_forest_classification = RandomForestClassifier(random_state = 10)
-rf_grid = GridSearchCV(estimator = random_forest_classification, 
-                       param_grid = tuned_paramaters, 
-                       cv = 5)
-rf_grid_model = rf_grid.fit(X_train, y_train)
-print('Best parameters for random forest classifier: ', rf_grid_model.best_params_, '\n')
-
-Build the model using the tuned hyperparameters.
-rf_model = RandomForestClassifier(criterion = rf_grid_model.best_params_.get('criterion'), 
-                                  n_estimators = rf_grid_model.best_params_.get('n_estimators'),
-                                  max_depth = rf_grid_model.best_params_.get('max_depth'),
-                                  max_features = rf_grid_model.best_params_.get('max_features'),
-                                  max_leaf_nodes = rf_grid_model.best_params_.get('max_leaf_nodes'),
-                                  min_samples_leaf = rf_grid_model.best_params_.get('min_samples_leaf'),
-                                  min_samples_split = rf_grid_model.best_params_.get('min_samples_split'),
-                                  random_state = 10)
-rf_model = rf_model.fit(X_train, y_train)
-print('Classification Report for test set:\n', get_test_report(rf_model))
- 
-Identify the Important Features
-Let us create a barplot to identify the important featur
-# use fit() to fit the model on the train set
-
-Stacking is a machine learning technique that takes several classification or regression models and uses their predictions as the input for the meta-classifier (final classifier) or meta-regressor (final regressor).
-As we are using the distance-based algorithm like KNN, we scale the data before applying the stacking technique.
-Build the stacking classifier using the Random forest, KNN and Naive bayes as base learners (consider the hyperparameters tuned using GridSearchCV in the previous sessions).
-# consider the various algorithms as base learners
-base_learners = [('rf_model', RandomForestClassifier(criterion = 'entropy', max_depth = 10, max_features = 'sqrt', 
-                                                     max_leaf_nodes = 8, min_samples_leaf = 5, min_samples_split = 2, 
-                                                     n_estimators = 50, random_state = 10)),
-                 ('KNN_model', KNeighborsClassifier(n_neighbors = 17, metric = 'euclidean')),
-                 ('NB_model', GaussianNB())]
- initialize stacking classifier 
-# pass the base learners to the parameter, 'estimators'
-# pass the Naive Bayes model as the 'final_estimator'/ meta model
-stack_model = StackingClassifier(estimators = base_learners, final_estimator = GaussianNB())
-plot_confusion_matrix(stack_model)
-test_report = get_test_report(stack_model)
-plot_roc(stack_model)
-
-# fit the model on train dataset
-stack_model.fit(X_train, y_train)
--------
-clf1 = LogisticRegression(max_iter=3000)
-clf2= DecisionTreeClassifier(random_state=0)
-clf3=  RandomForestClassifier(random_state=0)
-clf4 = KNeighborsClassifier(n_neighbors=5) 
-clf5= GaussianNB()
-clf6=XGBClassifier(random_state=0)
-from sklearn.model_selection import cross_val_score,KFold
-
-kf=KFold(n_splits=5,shuffle=True,random_state=0)
-for i,j in zip([clf1,clf2,clf3,clf4,clf5,clf6],['LR','DT','RF','KNN','GNB','XGB']):
-    score = cross_val_score(i, inp, out, cv=kf, scoring='f1')
-    print(j,np.mean(score),np.std(score)/np.mean(score))
-# Voting Classifier 
-from sklearn.ensemble import VotingClassifier
-estimator=[('DT',DecisionTreeClassifier()),('rf',RandomForestClassifier()),
-          ('xb',XGBClassifier())]
-vot1=VotingClassifier(estimators=estimator, voting='hard')
-vot2=VotingClassifier(estimators=estimator, voting='soft')
-core_vot2 = cross_val_score(vot2, inp, out, cv=kf, scoring='f1')
-print('vot1',np.mean(score_vot1),np.std(score_vot1)/np.mean(score_vot1))
-print('vot2',np.mean(score_vot2),np.std(score_vot2)/np.mean(score_vot2))
-
-rf=RandomForestClassifier()
-rf.fit(xtrain,ytrain)
-ypred=rf.predict(xtest)
-feat_imp=pd.DataFrame()
-feat_imp['Feature']=xtrain.columns
-feat_imp['Importance']=rf.feature_importances_
-feat_imp.sort_values('Importance',ascending=False)
-
-# Parameter Tuning
-be=[]
-ve=[]
-for i in [5,10,20,40,60,80,100,120,150,200,250,300,400]:
-    #for j in [10,15,20,30]:
-    dt=RandomForestClassifier(n_estimators=i,random_state=48)
-    #scorer = make_scorer(f1_score, average = 'weighted')
-    score=cross_val_score(dt,inp,out,cv=kf,scoring='f1')
-    print('n_estimator:',i)
-    print('Bias Error',1-np.mean(score))
-    print('Variance Error',np.std(score)/np.mean(score))
-    be.append(1-np.mean(score))
-    ve.append(np.std(score)/np.mean(score))
-# Grid Search CV
-from sklearn.model_selection import GridSearchCV
-
-params={'n_estimators':[50,80,100,120,140,190,200,210],
-        #'max_features':['auto','sqrt','log2'],
-        #'criterion':['gini','entropy'],
-        'max_depth':[10,15,20,25,30,40]}
-rf_mod1=RandomForestClassifier()
-hyp_mod=GridSearchCV(rf_mod1,param_grid=params,scoring='f1')
-tun_mod=hyp_mod.fit(xtrain,ytrain)
-tun_mod.best_params_
-tun_mod.best_score_
-res=pd.DataFrame(tun_mod.cv_results_)
-res.shape
-final_mod=RandomForestClassifier(**tun_mod.best_params_)
-final_mod.fit(xtrain,ytrain)
-ypred1=final_mod.predict(xtest)
-ypred1_train=final_mod.predict(xtrain)
-confusion_matrix(ytest,ypred1)
-print(classification_report(ytest,ypred1))
-
-
-Decision Tree is a non-parametric supervised learning method. It builds a model in the form of a tree structure. It breaks down a dataset into smaller and smaller subsets, which is called splitting. A decision node is a node on which a decision of split is to be made. A node that can not be split further is known as the terminal/leaf node. A leaf node represents the decision. A decision tree can work with both numerical and categorical variables.
-A decision tree for classification is built using criteria like the Gini index and entropy.
-Gini Index
-Gini index measures the probability of the sample being wrongly classified. The value of the Gini index varies between 0 and 1. We choose the variable with a low Gini index. The Gini index of the variable is calculated as:
-Gini=1−∑ni=1p2i
-Where,
-pi
-: Probability of occurrence of the class 'i'
-
-Entropy
-Entropy is one of the criteria used to build the decision tree. It calculates the heterogeneity of the sample. The entropy is zero if the sample is completely homogeneous, and it is equal to 1 if the sample is equally divided. Entropy of the variable 'X' is calculated as:
-E(X)=−∑ci=1pilog2pi
-Where,
-pi
-: Probability of occurrence of the class 'i'
-And the conditional emtropy of the variable is given as:
-E(T,X)=∑cϵXP(c)E(c)
-Where,
-P(c)
-: Probability of occurrence of the class 'c'
-E(c)
-: Entropy of the class 'c'
-
-The information gain is the difference between the entropy of the target variable and the entropy of the target variable given an independent variable. We split the on the variable that corresponds to the highest information gain.
-# instantiate the 'DecisionTreeClassifier' object using 'entropy' criterion
-# pass the 'random_state' to obtain the same samples for each time you run the code
-decision_tree_classification = DecisionTreeClassifier(criterion = 'entropy', random_state = 10)
-
-# fit the model using fit() on train data
-decision_tree = decision_tree_classification.fit(X_train, y_train)
-# XG Boost classsifier 
-
-xgb_model = XGBClassifier(max_depth = 10, gamma = 1)
-
-# fit the model using fit() on train data
-xgb_model.fit(X_train, y_train)
-plot_confusion_matrix(xgb_model)
-test_report = get_test_report(xgb_model)
-print(test_report)
-plot_roc(xgb_model)
-3.3.1 Tune the Hyperparameters (GridSearchCV)
-tuning_parameters = {'learning_rate': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
-                     'max_depth': range(3,10),
-                     'gamma': [0, 1, 2, 3, 4]}
-
-# instantiate the 'XGBClassifier' 
-xgb_model = XGBClassifier()
-xgb_grid = GridSearchCV(estimator = xgb_model, param_grid = tuning_parameters, cv = 3, scoring = 'roc_auc')
-xgb_grid.fit(X_train, y_train)
-print('Best parameters for XGBoost classifier: ', xgb_grid.best_params_, '\n')
-xgb_grid_model = XGBClassifier(learning_rate = xgb_grid.best_params_.get('learning_rate'),
-                               max_depth = xgb_grid.best_params_.get('max_depth'),
-                              gamma = xgb_grid.best_params_.get('gamma'))
-
-# use fit() to fit the model on the train set
-xgb_model = xgb_grid_model.fit(X_train, y_train)
-
-# print the performance measures for test set for the model with best parameters
-print('Classification Report for test set:\n', get_test_report(xgb_model))
-plot_roc(xgb_model)
-###
-important_features = pd.DataFrame({'Features': X_train.columns, 
-                                   'Importance': xgb_model.feature_importances_})
-
-# sort the dataframe in the descending order according to the feature importance
-important_features = important_features.sort_values('Importance', ascending = False)
-
-# create a barplot to visualize the features based on their importance
-sns.barplot(x = 'Importance', y = 'Features', data = important_features)
-
-# add plot and axes labels
-# set text size using 'fontsize'
-plt.title('Feature Importance', fontsize = 15)
-plt.xlabel('Importance', fontsize = 15)
-plt.ylabel('Features', fontsize = 15)
-
-# display the plot
-plt.show()
-#Print the classification report of the model builded in the above step and check that increasing or reducing the probability threshold will lead to model’s better performance.
-def get_model_report(threshold = 0.5):
-    pred_prob = base_model.predict_proba(X_test)
-    pred = [1 if x[1] > threshold else 0 for x in pred_prob]
-    return accuracy_score(y_test, pred), precision_score(y_test, pred), recall_score(y_test, pred), cohen_kappa_score(y_test, pred)
-
-accuracy_list = list()
-precision_list = list()
-recall_list = list()
-cohen_score_list = list()
-threshold = list()
-for i in  [0.5, 0.6, 0.7, 0.8, 0.9,0.94, 0.96]:
-    accuracy, precision, recall, cohen = get_model_report(i)
-    accuracy_list.append(accuracy)
-    threshold.append(i)
-    precision_list.append(precision)
-    recall_list.append(recall)
-    cohen_score_list.append(cohen)
-pd.DataFrame({"Threshold":threshold, "Accuracy":accuracy_list, "Precision":precision_list, "CohenScore":cohen_score_list, "Recall":recall_list})
-
-
-Logistic Regression (2 Marks) 
-Definition: Logistic Regression is a statistical method used for binary classification, predicting 
-the probability of an outcome using the sigmoid function. It models the relationship between 
-independent variables and a categorical dependent variable. 
-Working: 
-1. Computes a linear combination of input features: 
-2. Applies the sigmoid function to map to a probability: 
-3. Classifies as 1 if , else 0. 
-4. Optimizes weights using log loss and gradient descent to improve predictions. 
-Precision, Recall, and F1 Score (2 Marks) 
-1. Precision: Measures the accuracy of positive predictions. 
-2. Recall (Sensitivity): Measures how well the model captures actual positives. 
-3. F1 Score: Harmonic mean of Precision and Recall, balancing both metrics. 
-How Random Forest Solves the Problem of Low Bias and High Variance (2 Marks) 
-Random Forest reduces high variance while maintaining low bias using bagging (Bootstrap 
-Aggregation): 
-1. Reduces Overfitting (High Variance): It trains multiple decision trees on different 
-random subsets of the data and averages their predictions, reducing model dependency on 
-any single tree. 
-2. Maintains Low Bias: Since decision trees have low bias, aggregating multiple trees 
-preserves predictive power while smoothing fluctuations caused by variance. 
-By combining many weak learners, Random Forest achieves a balance between bias and 
-variance, improving generalization. 
-Steps in k-Nearest Neighbors (K-NN) Algorithm (2 Marks) 
-1. Load the Data: Gather the training dataset with labeled examples. 
-2. Choose : Select the number of nearest neighbors (). 
-3. Calculate Distance: Compute the distance (e.g., Euclidean, Manhattan) between the 
-query point and all training points. 
-4. Find Nearest Neighbors: Identify the closest data points. 
-5. Majority Voting (Classification) / Averaging (Regression): 
-o For classification, assign the most frequent class among the neighbors. 
-o For regression, take the average of nearest values. 
-6. Return the Prediction. 
-Bagging and Boosting (2 Marks) 
-1. Bagging (Bootstrap Aggregating): 
-o Creates multiple subsets of the dataset using random sampling with 
-replacement. 
-o Trains independent models (e.g., Decision Trees) on each subset. 
-o Aggregates predictions by majority voting (classification) or averaging 
-(regression). 
-o Reduces variance and prevents overfitting (e.g., Random Forest). 
-2. Boosting: 
-o Trains models sequentially, where each model corrects errors of the previous 
-one. 
-o Assigns higher weights to misclassified samples to improve learning. 
-o Combines weak learners into a strong model. 
-o Reduces bias and improves accuracy (e.g., AdaBoost, Gradient Boosting, 
-XGBoost). 
-Binomial Logistic Regression and Its Assumptions (2 Marks) 
-Definition: Binomial Logistic Regression is a type of logistic regression used when the 
-dependent variable is binary (0 or 1). It estimates the probability that a given input belongs to a 
-particular class using the logistic (sigmoid) function. 
-Assumptions: 
-1. Binary Outcome: The dependent variable must be binary (e.g., Yes/No, 0/1). 
-2. Independence of Observations: Data points should be independent of each other. 
-3. No Multicollinearity: Independent variables should not be highly correlated. 
-4. Linearity of Logits: The log-odds of the outcome should have a linear relationship with 
-the independent variables. 
-5. Large Sample Size: Logistic regression performs best with a large dataset. 
-Significance of Coefficients in a Logistic Regression Model (2 Marks) 
-Interpretation of Coefficients: 
-1. Log-Odds Transformation: Each coefficient represents the change in the log-odds of 
-the dependent variable for a one-unit change in the corresponding independent variable.  
-2. Odds Ratio (Exp()): The exponentiation of a coefficient gives the odds ratio, which tells 
-how much the odds of the outcome change for a one-unit increase in the predictor. 
-3. Significance Testing: The p-value of each coefficient determines its statistical 
-significance, helping decide if a variable should be included in the model. 
-Comparison of AdaBoost and Gradient Boosting (2 Marks) 
-Feature 
-Model 
-Training 
-Weak 
-AdaBoost 
-Sequential boosting with weight 
-adjustments 
-Gradient Boosting 
-Sequential boosting with gradient 
-optimization 
-Learners 
-Error 
-Handling 
-Decision stumps (shallow trees) 
-Assigns higher weights to misclassified 
-samples 
-Performance Effective for simple models 
-Deeper decision trees 
-Minimizes loss function using gradient 
-descent 
-More powerful, suited for complex 
-problems 
-Both aim to improve model accuracy by combining weak learners, but Gradient Boosting is 
-generally more flexible and powerful. 

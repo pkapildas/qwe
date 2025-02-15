@@ -554,10 +554,255 @@ for col in df_num:
 
 # -------------------- (C) Feature Engineering --------------------
 df = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
-
+Remove Insignificant Variables
+df_cust = df_cust.drop('Cust_Number',axis=1)
+Outlier Analysis and Treatment
+Check the outliers in all the variables and treat them using appropriate techniques.
 --------------------------------
 Choosing the number of clusters 
 The first step is to define the K number of clusters in which we will group the data. Let’s select K=3.
+# consider the numeric variables
+df_num = df_cust.drop(['Sex'], axis = 1)
+fig, ax = plt.subplots(nrows = 1, ncols = 3, figsize=(15, 4))
+for variable, subplot in zip(df_num.columns, ax.flatten()):  
+    # use boxplot() to plot the graph
+    # pass the axes for the plot to the parameter, 'ax'
+    sns.boxplot(df_cust[variable], ax = subplot)
+# display the plot
+plt.show()
+# missing value & presence of missing values and their percentage for each column.
+#Scale the Data
+# consider the features 'Cust_Spend_Score' and 'Yearly_Income'
+X_filtered = df_cust[['Cust_Spend_Score', 'Yearly_Income']]
+
+# print top 5 observations of X
+X_filtered.head()
+# initialize the StandardScaler
+X_norm = StandardScaler()
+num_norm = X_norm.fit_transform(X_filtered)
+X = pd.DataFrame(num_norm, columns = X_filtered.columns)
+#K-Means Clustering
+Optimal Value of K Using Elbow Plot
+Elbow plot is plotted with the value of K on the x-axis and the WCSS (Within Cluster Sum of Squares) on the y-axis. The value of K corresponding to the elbow point represents the optimal value for K.
+# create several cluster combinations ranging from 1 to 20 and observe the wcss (Within Cluster Sum of Squares) for each cluster
+# consider an empty list to store the WCSS
+wcss  = []
+
+# use for loop to perform K-means with different values of K
+# set the 'random_state' to obtain the same centroid initialization for each code run
+# fit the model on scaled data
+# append the value of WCSS for each K to the list 'wcss'
+# the 'inertia_' retuns the WCSS for specific value of K
+for i in range(1,21):
+    kmeans = KMeans(n_clusters = i, random_state = 10)
+    kmeans.fit(X)
+    wcss.append(kmeans.inertia_)
+Let us plot the elbow plot and identify the elbow point.
+# visualize the elbow plot to get the optimal value of K
+plt.plot(range(1,21), wcss)
+
+# set the axes and plot labels
+# set the font size using 'fontsize'
+plt.title('Elbow Plot', fontsize = 15)
+plt.xlabel('No. of clusters (K)', fontsize = 15)
+plt.ylabel('WCSS', fontsize = 15)
+
+# display the plot
+plt.show()
+# visualize the elbow plot to get the optimal value of K
+plt.plot(range(1,21), wcss)
+
+# set the axes and plot labels
+# set the font size using 'fontsize'
+plt.title('Elbow Plot', fontsize = 15)
+plt.xlabel('No. of clusters (K)', fontsize = 15)
+plt.ylabel('WCSS', fontsize = 15)
+
+# plot a vertical line at the elbow
+plt.axvline(x = 5, color = 'red')
+
+# display the plot
+plt.show()
+Interpretation: We can see that the for K = 5, there is an elbow in the plot. Before this elbow point, the WCSS is decreasing rapidly and after K = 5, the WCSS is decreasing slowly.
+Now, let us use the silhouette score method to identify the optimal value of K.
+#Optimal Value of K Using Silhouette Score
+The Silhouette score can also be used to identify the optimal number of clusters. We plot the Silhouette score for different values of K. The K with the highest Silhouette score represents the optimal value for the number of clusters (K).
+
+# create a list for different values of K
+n_clusters = [2, 3, 4, 5, 6]
+# use 'for' loop to build the clusters
+# 'random_state' returns the same sample each time you run the code  
+# fit and predict on the scaled data
+# 'silhouette_score' function computes the silhouette score for each K
+for K in n_clusters:
+    cluster = KMeans (n_clusters= K, random_state= 10)
+    predict = cluster.fit_predict(X)
+    score = silhouette_score(X, predict, random_state= 10)
+    print ("For {} clusters the silhouette score is {})".format(K, score))
+
+##Visualize the silhouette scores
+# consider the number of clusters
+n_clusters = [2, 3, 4, 5, 6]
+
+# consider an array of the data
+X = np.array(X)
+
+# for each value of K, plot the silhouette plot the clusters formed
+for K in n_clusters:
+    
+    # create a subplot with 1 row and 2 columns
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    
+    # set the figure size
+    fig.set_size_inches(18, 7)
+
+    # the 1st subplot is the silhouette plot
+    # initialize the cluster with 'K' value and a random generator
+    model = KMeans(n_clusters = K, random_state = 10)
+    
+    # fit and predict on the scaled data
+    cluster_labels = model.fit_predict(X)
+
+    # the 'silhouette_score()' gives the average value for all the samples
+    silhouette_avg = silhouette_score(X, cluster_labels)
+    
+    # Compute the silhouette coefficient for each sample
+    sample_silhouette_values = silhouette_samples(X, cluster_labels)
+
+    y_lower = 10
+    for i in range(K):
+        
+        # aggregate the silhouette scores for samples belonging to cluster i, and sort them
+        ith_cluster_silhouette_values = sample_silhouette_values[cluster_labels == i]
+        
+        # sort the silhouette coefficient
+        ith_cluster_silhouette_values.sort()
+        
+        # calculate the size of the cluster
+        size_cluster_i = ith_cluster_silhouette_values.shape[0]
+        y_upper = y_lower + size_cluster_i
+
+        # color each cluster 
+        color = cm.nipy_spectral(float(i) / K)
+        ax1.fill_betweenx(np.arange(y_lower, y_upper),
+                          0, ith_cluster_silhouette_values,
+                          facecolor=color, edgecolor=color, alpha=0.7)
+
+        # label the silhouette plots with their cluster numbers at the middle
+        ax1.text(-0.05, y_lower + 0.5 * size_cluster_i, str(i))
+
+        # compute the new y_lower for next plot
+        y_lower = y_upper + 10 
+
+    # set the axes and plot label
+    ax1.set_title("Silhouette Plot")
+    ax1.set_xlabel("Silhouette coefficient")
+    ax1.set_ylabel("Cluster label")
+
+    # plot the vertical line for average silhouette score of all the values
+    ax1.axvline(x=silhouette_avg, color="red", linestyle="--")
+
+    # clear the y-axis ticks
+    ax1.set_yticks([])  
+    
+    # set the ticks for x-axis 
+    ax1.set_xticks([-0.1, 0, 0.2, 0.4, 0.6, 0.8])
+
+    
+    # 2nd plot showing the actual clusters formed
+    # consider different color for each cluster
+    colors = cm.nipy_spectral(cluster_labels.astype(float) / K)
+    
+    # plot a scatter plot to visualize the clusters
+    ax2.scatter(X[:, 0], X[:, 1], marker='.', s=30, lw=0, alpha=0.7, c=colors, edgecolor='k')
+
+    # label the cluster centers
+    centers = model.cluster_centers_
+    
+    # display the cluster center with cluster number
+    for i, c in enumerate(centers):
+        ax2.scatter(c[0], c[1], marker='$%d$' % i, alpha=1, s=50, edgecolor='k')
+    
+    # add the axes and plot title
+    ax2.set_title("Clusters")
+    ax2.set_xlabel("Spending Score")
+    ax2.set_ylabel("Annual Income")
+    
+    # set the common title for subplots
+    plt.suptitle(("Silhouette Analysis for K-Means Clustering with n_clusters = %d" % K), fontsize=14, 
+                 fontweight='bold')
+
+# display the plot
+plt.show()
+
+Interpretation: The above plot shows the silhouette plot and the clusters formed for each value of K. The plot shows that there are outliers (where the silhouette coefficient is less than 0) for K = 2,3,4. Also for K = 6, the 6th cluster has the silhouette score less than the average silhouette score. Thus we can not consider the K values as 2,3,4 and 6.
+
+Also from the above output, we can see that the silhouette score is maximum for k = 5 and from the plot, we can see that there are no outliers for 5 clusters and all the clusters have silhouette coefficients greater than the average silhouette score. Thus we choose K = 5 as the optimal value of k.
+3.3 Build the Clusters
+Let us build the 5 clusters using K-menas clustering.
+
+# build a K-Means model with 5 clusters
+new_clusters = KMeans(n_clusters = 5, random_state = 10)
+
+# fit the model
+new_clusters.fit(X)
+
+# append the cluster label for each point in the dataframe 'df_cust'
+df_cust['Cluster'] = new_clusters.labels_
+# head() to display top five rows
+df_cust.head()
+Check the size of each cluster
+df_cust.Cluster.value_counts()
+Plot a barplot to visualize the cluster sizes
+
+# use 'seaborn' library to plot a barplot for cluster size
+sns.countplot(data= df_cust, x = 'Cluster')
+
+# set the axes and plot labels
+# set the font size using 'fontsize'
+plt.title('Size of Cluster', fontsize = 15)
+plt.xlabel('Clusters', fontsize = 15)
+plt.ylabel('Number of Customers', fontsize = 15)
+
+# add values in the graph
+# 'x' and 'y' assigns the position to the text
+# 's' represents the text on the plot
+plt.text(x = -0.05, y =39, s = np.unique(new_clusters.labels_, return_counts=True)[1][0])
+plt.text(x = 0.95, y =24, s = np.unique(new_clusters.labels_, return_counts=True)[1][1])
+plt.text(x = 1.95, y =37, s = np.unique(new_clusters.labels_, return_counts=True)[1][2])
+plt.text(x = 2.95, y =22, s = np.unique(new_clusters.labels_, return_counts=True)[1][3])
+plt.text(x = 3.95, y =81, s = np.unique(new_clusters.labels_, return_counts=True)[1][4])
+
+# display the plot
+plt.show()
+The 5th cluster is the largest cluster containing 80 observations
+3.4 Analyze the Clusters
+Let us visualize the clusters by considering the variables 'Cust_Spend_Score' and 'Yearly_Income'.
+# plot the lmplot to visualize the clusters
+# pass the different markers to display the points in each cluster with different shapes
+# the 'hue' parameter returns colors for each cluster
+sns.lmplot(x = 'Cust_Spend_Score', y = 'Yearly_Income', data = df_cust, hue = 'Cluster', 
+                markers = ['*', ',', '^', '.', '+'], fit_reg = False, size = 10)
+
+# set the axes and plot labels
+# set the font size using 'fontsize'
+plt.title('K-means Clustering (for K=5)', fontsize = 15)
+plt.xlabel('Spending Score', fontsize = 15)
+plt.ylabel('Annual Income', fontsize = 15)
+
+# display the plot
+plt.show()
+Cluster 1
+Check the size of the cluster
+# size of a cluster 1
+len(df_cust[df_cust['Cluster'] == 0])
+Compute the statistical summary for the customers in this cluster
+# statistical summary of the numerical variables
+df_cust[df_cust.Cluster==0].describe()
+
+# summary of the categorical variable
+df_cust[df_cust.Cluster==0].describe(include = object)
+
 
 Initializing centroids
 Centroid is the center of a cluster but initially, the exact center of data points will be unknown so, we select random data points and define them as centroids for each cluster.

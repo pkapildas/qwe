@@ -854,3 +854,75 @@ link_mat = linkage(features_scaled, method = 'ward')
 # print first 10 observations of the linkage matrix 'link_mat'
 print(link_mat[0:10])
 
+5. DBSCAN
+DBSCAN is a density-based clustering method. It can create non-linear clusters. This method considers a high-density region as a cluster and the low-density points are considered as outliers. We do not need to provide the required number of clusters to the algorithm.
+
+Let us cluster the scaled data.
+
+# instantiate DBSCAN with epsilon and minimum points 
+# pass the epsilon radius for neighbourhood
+# pass the number of minimum points
+model = DBSCAN(eps = 0.8, min_samples = 15)
+
+# fit the model on the scaled data
+model.fit(features_scaled)
+# display the unique clusters formed by DBSCAN
+(set(model.labels_)
+interpretation: From the above output we can see that the DBSCAN algorithm has created 3 clusters. The data points labeled as -1 are the outliers identified by DBSCAN.
+# add a column containing cluster number to the original data
+df_prod['Cluster_DBSCAN'] = model.labels_
+
+# print head() of the newly formed dataframe
+df_prod.head()
+
+# check the size of each cluster
+df_prod['Cluster_DBSCAN'].value_counts()
+
+# plot the countplot for the cluster size
+sns.countplot(data = df_prod, x = 'Cluster_DBSCAN')
+
+# set the axes and plot labels
+# set the font size using 'fontsize'
+plt.title('Size of Cluster', fontsize = 15)
+plt.xlabel('Cluster', fontsize = 15)
+plt.ylabel('No. of Products', fontsize = 15)
+
+# display the plot
+plt.show()
+nterpretation: From the above output we can see that a cluster with 4875 is the largest cluster and other clusters are very small.
+
+Now let us visualize the clusters. As we have more than 2 features, we consider only the variables Sales and Profit to visualize the clusters.
+ plot the lmplot to visualize the clusters
+# pass the 'Cluster_DBSCAN' to the hue parameter to display each cluster in a different color
+# pass the different marker styles to visualize each cluster with a different marker
+sns.lmplot(x = 'Sales', y = 'Profit', data = df_prod, hue = 'Cluster_DBSCAN', markers = ['o','+','^',','], 
+           fit_reg = False, size = 12)
+
+# set the axes and plot labels
+# set the font size using 'fontsize'
+plt.title('DBSCABN (eps = 0.8, min_samples = 15) ', fontsize = 15)
+plt.xlabel('Sales', fontsize = 15)
+plt.ylabel('Profit', fontsize = 15)
+
+# display the plot
+plt.show()
+
+nterpretation: The above plot shows the clusters created by DBSCAN. The blue circles correspond to the outliers and the observations in the largest cluster are denoted by the orange '+'. Other clusters are too small compared to the largest cluster.
+
+We can see some of the points are overlapped. This is because the dimension of the original data is greater than 2 and we have considered only 2 variables to plot the clusters.
+
+Now let us check the products belonging to each cluster.
+
+Cluster 1
+Let us identify the products in the cluster 1.
+
+# check the count of different products belonging to cluster_1
+df_prod[df_prod.Cluster_DBSCAN==0].index.value_counts()
+
+Outliers identified by DBSCAN
+# check the count of different products identified as outliers
+Interpretation: We can see that the algorithm has identified most of the technical products as the outliers.
+
+Here we can see that the DBSCAN algorithm has not grouped the product like hierarchical clustering. Thus we can conclude that the DBSCAN algorithm is working poorly on this dataset.
+
+df_prod[df_prod.Cluster_DBSCAN==-1].index.value_counts()

@@ -595,3 +595,22 @@ plt.ylabel('Features', fontsize = 15)
 
 # display the plot
 plt.show()
+#Print the classification report of the model builded in the above step and check that increasing or reducing the probability threshold will lead to model’s better performance.
+def get_model_report(threshold = 0.5):
+    pred_prob = base_model.predict_proba(X_test)
+    pred = [1 if x[1] > threshold else 0 for x in pred_prob]
+    return accuracy_score(y_test, pred), precision_score(y_test, pred), recall_score(y_test, pred), cohen_kappa_score(y_test, pred)
+
+accuracy_list = list()
+precision_list = list()
+recall_list = list()
+cohen_score_list = list()
+threshold = list()
+for i in  [0.5, 0.6, 0.7, 0.8, 0.9,0.94, 0.96]:
+    accuracy, precision, recall, cohen = get_model_report(i)
+    accuracy_list.append(accuracy)
+    threshold.append(i)
+    precision_list.append(precision)
+    recall_list.append(recall)
+    cohen_score_list.append(cohen)
+pd.DataFrame({"Threshold":threshold, "Accuracy":accuracy_list, "Precision":precision_list, "CohenScore":cohen_score_list, "Recall":recall_list})

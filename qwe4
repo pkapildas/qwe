@@ -148,6 +148,38 @@ func_wcss(df,  'Cluster_Ward', inp_df_pc_90)
 func_wcss(df, 'Cluster_Agglo', inp_df_pc_90)
 
 
+-----------------------clusturing -------------------------------------------------
+
+from sklearn.cluster import AgglomerativeClustering
+from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.spatial.distance import pdist
+
+lm = linkage(inp_df_pc_90, method='ward')  
+cluster_labels = fcluster(lm, 4, criterion='maxclust')  
+df['Cluster_Ward'] = cluster_labels  
+
+ac = AgglomerativeClustering(n_clusters=4, linkage='ward')
+df['Cluster_Agglo'] = ac.fit_predict(inp_df_pc_90) 
+
+
+def func_wcss(df, cluster_labels_col, data):
+    x = []  # List to store WCSS values
+
+    for j in np.unique(df[cluster_labels_col]):
+        a = data[df[cluster_labels_col] == j]
+        b = a.mean(axis=0)
+        c = ((a - b) ** 2).sum().sum()
+        x.append((j, c))  
+
+    x_sort = sorted(x, key=lambda x: x[1])  # Sort based on WCSS value
+
+    print("\n\n ----Cluster WCSS (Ordered by Quality):")
+    for cluster_label, wcss in x_sort:  # Use x_sort instead of wcss_per_cluster_sorted
+        print(f"Cluster {cluster_label}: WCSS = {wcss:.2f}")
+
+# Call the function for Ward and Agglomerative clustering
+func_wcss(df,  'Cluster_Ward', inp_df_pc_90)
+func_wcss(df, 'Cluster_Agglo', inp_df_pc_90)
 
 
 <<<Cheat Sheet>

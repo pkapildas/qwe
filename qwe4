@@ -1468,3 +1468,70 @@ print(f'Movies near to {movie_near} is : ')
 print()
 for i in nindex[:,1:].tolist()[0]:
     print(df_inp.index[i])
+---
+Need for Linkage Methods:
+•	Used in Hierarchical Clustering to determine how clusters are merged.
+•	Different methods affect the shape and size of final clusters.
+Types of Linkage Methods:
+1.	Single Linkage: Distance between closest points in clusters.
+o	Can form long chains of clusters.
+2.	Complete Linkage: Distance between farthest points in clusters.
+o	Forms compact clusters.
+3.	Average Linkage: Average distance between all points in clusters.
+o	Balanced between single and complete linkage.
+4.	Centroid Linkage: Distance between the centroids of clusters.
+o	Less sensitive to outliers.
+
+Supervised Learning:
+1.	Definition: Uses labeled data where input-output pairs are known.
+2.	Objective: Learns a function to map inputs to outputs.
+3.	Common Algorithms: Decision Trees, SVM, Neural Networks.
+4.	Example: Email classification (spam or not spam).
+5.	Training Required: Needs labeled data for training.
+6.	Accuracy: Usually more accurate as it learns from explicit labels.
+7.	Use Case: Fraud detection, image recognition.
+Unsupervised Learning:
+1.	Definition: Works with unlabeled data to find patterns.
+2.	Objective: Groups similar data points into clusters.
+3.	Common Algorithms: K-Means, DBSCAN, PCA.
+4.	Example: Customer segmentation in marketing.
+5.	Training: No explicit labels are given.
+6.	Accuracy: May be lower but useful for exploratory analysis.
+7.	Use Case: Anomaly detection, recommendation systems.
+
+SVD vs PCA
+SVD is a factorization method that decomposes a matrix into three other matrices: U, Σ (sigma), and V^T (transpose of V). Here’s a simplified breakdown:
+
+Matrix A (m x n) is decomposed into U (m x m), Σ (m x n), and V^T (n x n).
+U contains orthogonal columns that represent the left singular vectors.
+Σ is a diagonal matrix containing the singular values.
+V^T contains orthogonal rows representing the right singular vectors.
+Applications of SVD
+Matrix Approximation: SVD is used to approximate a matrix with lower rank, retaining the most significant singular values.
+Recommendation Systems: Collaborative filtering in recommendation systems leverages SVD to find latent factors that describe user preferences and item characteristics.
+Image Compression: SVD can compress images by capturing the most significant singular values and vectors.
+Principal Component Analysis (PCA)
+PCA is a statistical procedure that aims to transform data into a new coordinate system where the axes are the principal components. These components are orthogonal and capture the maximum variance in the data. Here’s a simplified overview:
+
+Standardize the Data: Normalize the data to have zero mean and unit variance.
+Calculate Covariance Matrix: Compute the covariance matrix of the standardized data.
+Compute Eigenvectors and Eigenvalues: Compute the eigenvectors and eigenvalues of the covariance matrix.
+Select Principal Components: Sort eigenvalues in descending order and choose the top-k eigenvalues to form principal components.
+Transform Data: Project the original data onto the principal components to create a lower-dimensional representation.
+Applications of PCA
+Data Visualization: PCA helps visualize high-dimensional data in 2D or 3D plots while retaining important patterns.
+Noise Reduction: By focusing on the principal components, PCA can reduce noise and redundancy in the data.
+Dimensionality Reduction: PCA transforms data into a lower-dimensional space, preserving most of the variability.
+Comparing PCA and SVD
+Mathematical Relationship: PCA can be seen as a specific application of SVD. The principal components obtained through PCA are essentially the left singular vectors of the data matrix.
+Purpose: PCA is primarily used for dimensionality reduction and visualization, while SVD has broader applications, including matrix approximation and recommendation systems.
+Orthogonality: Both PCA and SVD produce orthogonal vectors (components) that capture uncorrelated directions of maximum variance.
+Eigenvalues vs. Singular Values: PCA involves computing eigenvectors and eigenvalues of the covariance matrix, while SVD directly deals with singular values.
+* silhouette score
+The silhouette score is specialized for measuring cluster quality when the clusters are convex-shaped, and may not perform well if the data clusters have irregular shapes or are of varying sizes. The silhouette can be calculated with any distance metric, such as the Euclidean distance or the Manhattan distance.
+
+Most clustering approaches use distance measures to assess the similarities or differences between a pair of objects, the most popular distance measures used are:
+Euclidean Distance: ...
+Manhattan Distance: ...
+Jaccard Index: ...
+Minkowski distance: ..

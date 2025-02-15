@@ -1,3 +1,282 @@
+<<<Cheat Sheet>
+ import pandas as pd
+ import numpy as np
+ import matplotlib.pyplot as plt
+ import seaborn as sns
+ from sklearn.preprocessing import StandardScaler
+ from sklearn.decomposition import PCA
+ from sklearn.cluster import KMeans,AgglomerativeClustering,DBSCAN
+ from sklearn.metrics import silhouette_score
+ from scipy.cluster.hierarchy import linkage , dendrogram, fcluster,cophenet
+ from scipy.spatial.distance  import pdist
+ #from sklearn.model_selection import train_test_split
+ from sklearn.ensemble import RandomForestClassifier
+ from sklearn.metrics import classification_report
+ from sklearn.decomposition import TruncatedSVD
+ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+ from surprise import KNNWithMeans,SVDpp
+ from surprise import Dataset
+ from surprise import accuracy
+ from surprise import Reader
+ from surprise.model_selection import train_test_split,cross_validate
+ from mlxtend.frequent_patterns import apriori
+ from mlxtend.frequent_patterns import association_rules
+ from surprise import KNNBasic
+ import warnings
+ warnings.filterwarnings("ignore")
+
+
+#  df['sex'].value_counts() #-------Check ? or.
+ #  df['CREDIT_LIMIT'].sort_values(ascending=False).head()
+ #  df['MINIMUM_PAYMENTS'].sort_values(ascending=False).head()
+ df['CREDIT_LIMIT'].replace(to_replace='?',value=np.nan,inplace=True)
+ df['MINIMUM_PAYMENTS'].replace(to_replace='?',value=np.nan,inplace=True)
+ print(df.columns)
+ #d  f['cul']=df['culmen_length_mm'].fillna(df['cul'].median())
+ #   df1=pd.get_dummies(df,drop_first=True)
+ #   df.isnull().sum()/df.shape[0]*100
+ df = df.dropna()
+ df = df.reset_index(drop = True)
+ df.head(2)
+ # df.isnull().sum()
+
+df['CREDIT_LIMIT']    =df['CREDIT_LIMIT'].astype('float64')
+ df['MINIMUM_PAYMENTS']=df['MINIMUM_PAYMENTS'].astype('float64')
+
+snc=StandardScaler()
+ df_snc=pd.DataFrame(snc.fit_transform(df),columns=df.columns,index=df.index)
+ df_snc.head(2)
+
+pc1=PCA()
+ inp_pc1=pc1.fit_transform(df_snc)
+ print('Top 5 Eigen values: \n' , pc1.explained_variance_[:5])
+ print('Top 5 Eigen vectors:\n' ,pc1.components_[:2])
+
+cum_var=np.cumsum(pc1.explained_variance_ratio_)
+ num_pc=np.sum((cum_var<0.9).astype('int'))+1;
+ print(num_pc)
+
+#10 till 90
+ inp_red_pc_90=pd.DataFrame(inp_pc1[:,:num_pc],
+                           columns=[f'PCA{i+1}' for i in range(num_pc)])
+ inp_red_pc_90.head(2)
+
+# 2. (b).Find the optimal number of clusters for the K-means clustering model 
+#        [Note: Use the PCs, which are explaining the 90% variance].  (6 marks)
+ wcss =[]
+ sc   =[]
+ for i in range(2,20):
+    kmeans1=KMeans(n_clusters=i,random_state=48)
+    kmeans1.fit(inp_red_pc_90)
+    wcss.append(kmeans1.inertia_)
+    sc.append(silhouette_score(inp_red_pc_90,kmeans1.labels_))
+ plt.figure(figsize=(6,3))
+ plt.plot(range(2,20),wcss,marker='o',c='r',label='wcss')
+ plt.legend(loc=1)
+ plt.twinx()
+ plt.plot(range(2,20),sc,marker='*',c='b',label='silhouette_score')
+ plt.legend(loc=3)
+ plt.axvline(3,c='orange')
+ plt.show()
+ kmeans2=KMeans(n_clusters=3,random_state=48)
+ kmeans2.fit(inp_red_pc_90)
+ df2=inp_red_pc_90.copy()
+ df2['Cluster_Labels']=kmeans2.labels_
+ df2.head(2)
+
+ # 2. (c). Plot the dendrograms using 4 linkage methods for the PCA transformed d
+ #         [Note: Use the PCs, which are explaining the 90% variance] (6 marks)
+ #         Hint:Use the following functions and create the dendrograms for 100 no
+ #              linkage(pca_df, method='single',metric='euclidean')
+ #              dendrogram(mergings,truncate_mode='lastp',p=100)
+ linkage1=['ward']   #'single','complete','average','centroid','ward']
+ for lk in linkage1:
+    link1=linkage(inp_red_pc_90,method=lk)
+    c,_=cophenet(link1,pdist(inp_red_pc_90))
+    print(f'Cophenet correlation for linkage method {lk} is {c}')
+    plt.figure(figsize=(10,1))
+    dendrogram(link1,truncate_mode='lastp',p=100)
+    plt.show()
+
+# 2 (d)Cluster the data into 4 groups and order the cluster quality in terms of 
+#      [Use ward linkage metric] (6 marks)
+ df3=inp_red_pc_90.copy()
+ agg1=AgglomerativeClustering(n_clusters=4)
+ agg1.fit(inp_red_pc_90)
+ df3['Cluster_Labels']=agg1.labels_
+ df3.head(2)
+
+# Extracting clusters
+ df_clus0 = df3[df3['Cluster_Labels'] == 0].drop(columns='Cluster_Labels')
+ df_clus1 = df3[df3['Cluster_Labels'] == 1].drop(columns='Cluster_Labels')
+ df_clus2 = df3[df3['Cluster_Labels'] == 2].drop(columns='Cluster_Labels')
+# Converting to arrays
+ df_clus0_ar = np.array(df_clus0)
+ df_clus1_ar = np.array(df_clus1)
+ df_clus2_ar = np.array(df_clus2)
+
+# Calculating centroids
+ df_clust_cent0 = df_clus0.mean(axis=0).values
+ df_clust_cent1 = df_clus1.mean(axis=0).values
+ df_clust_cent2 = df_clus2.mean(axis=0).values
+
+ # Calculating WCSS for each cluster
+ wcss1 = []
+ wcss1.append(np.sum((df_clus0_ar - df_clust_cent0) ** 2))  # WCSS for cluster 0
+ wcss1.append(np.sum((df_clus1_ar - df_clust_cent1) ** 2))  # WCSS for cluster 1
+ wcss1.append(np.sum((df_clus2_ar - df_clust_cent2) ** 2))  # WCSS for cluster 2
+
+for i, wcss in enumerate(wcss1):                 # Display WCSS for each cluster
+    print(f"Cluster {i}: WCSS = {wcss:.2f}")
+ print(np.argsort(wcss1))
+
+ 2 (e)Compare the quality of clusters for K-means clustering algorithm on origi
+ #      data and PCA transformed data. (8 marks)
+wcss=[]
+ sc=[]
+ for i in range(2,20):
+    kmeans3=KMeans(n_clusters=i,random_state=48)
+    kmeans3.fit(df_snc)
+    wcss.append(kmeans3.inertia_)
+    sc.append(silhouette_score(df_snc,kmeans3.labels_))
+ plt.figure(figsize=(6,3))
+ plt.plot(range(2,20),wcss,marker='o',c='r',label='wcss')
+ plt.legend(loc=1)
+ plt.twinx()
+ plt.plot(range(2,20),sc,marker='*',c='b',label='silhouette_score')
+ plt.legend(loc=3)
+ plt.axvline(3,c='orange')
+ plt.show()
+ kmeans4=KMeans(n_clusters=3,random_state=48)
+ kmeans4.fit(df_snc)
+ var_2e1 = silhouette_score(df_snc,kmeans4.labels_)
+ var_2e2 = silhouette_score(inp_red_pc_90,kmeans2.labels_)
+ print(f'Silhouette_score of Kmeans clustering with PCA is {var_2e1}')
+ print(f'Silhouette_score of Kmeans clustering without PCA is {var_2e2}')
+
+# 3 (a) Develop a popularity-driven recommendation system, 
+# print Total no of ratings,Total No of Users,Total No of products
+ # and recommend the top 5 items. (10 marks )
+ # Use the dataset: Book_ratings.csv
+ # Variables:
+ # book_id - ID of the book.
+ # user_id - ID of the user rated
+ # ratings - ratings of the book by the user.
+ df_p=pd.read_csv(path18)   #'Book_ratings.csv')
+ df_p=df_p.drop(columns=['Unnamed: 0', 'Unnamed: 0.1'])
+ df_p=df_p[['user_id','book_id','rating']]
+ df_p.head()
+ df_r=df_p.groupby('book_id')['rating'].agg(['count','mean'])
+ df_r.columns=['Rating_count','Average_Rating']
+df_r.sort_values('Rating_count',ascending=False).head()
+ print(f'Total no of ratings: {df_r.Rating_count.count()}')
+ print(f'Total No of Users: {df_p.user_id.nunique()}')
+ print(f'Total No of products: {df_p.book_id.nunique()}')
+
+## Recommendation Engine
+df_c=df_p.copy()                                                          
+# Load the dataset
+ reader1=Reader(rating_scale=(df_c['rating'].min(),df_c['rating'].max()))  
+# Create a Reader object
+ dataset=Dataset.load_from_df(df_c,reader=reader1)                         
+# Load the dataset into Surprise's Dataset format
+ [trainset,testset]=train_test_split(dataset,test_size=0.2,random_state=48) 
+# Split the data into training and testing sets
+ #svd1=SVD() ; svd1.fit(trainset)
+ model=KNNBasic(sim_options={'name':'cosine','user_based':True})            
+# Build the collaborative filtering model (user-based in this case)
+ model.fit(trainset)                                  # Train the model
+ ypred_knn=model.test(testset)                        # Make predictions on the t
+ print(accuracy.rmse(ypred_knn) )                     # Calculate RMSE
+ # Perform cross-validation
+ cv_km = cross_validate(model, dataset, measures=['RMSE'], cv=5)
+ np.mean(cv_km['test_rmse']) # Print the average RMSE across folds
+
+ df_p.head(2)
+
+ user1='116'
+ item_visited=set(df_p[df_p['user_id']==user1]['book_id'])
+ item_all=set(df_p['book_id'])
+ item_not_visted=list(item_all.difference(item_visited))
+ ls=[]
+ for i in item_not_visted:
+ #   ls.append({'book_id':i,'rating':cv_knn.predict(uid=user1,iid=i).est})
+    ls.append({'book_id':i,'rating': model.predict(uid=user1,iid=i).est})
+ df_pred=pd.DataFrame(ls)
+ df_pred.sort_values('rating',ascending=False); df_pred.head(2)
+
+ #3 (c) Create association rule mining using apriori algorithm.
+ #             Perform basic pre-processing operations required by algorithm
+ #            (drop missing values, drop unnecessary columns). 
+#      Create the basket only for France. Run algorithm
+ #             with minimum support 0.07, tune with lift. (3 marks)
+ #             Use Dataset:Online Retail.csv
+ import pandas as pd
+ import numpy as np
+ from mlxtend.frequent_patterns import apriori
+ from mlxtend.frequent_patterns import association_rules
+ df_ap=pd.read_csv(path19) #'Online Retail.csv')
+ df_ap.head()
+ df=df_ap[df_ap['Country']=='France']
+ df1=df[['InvoiceNo','Description','Quantity']]
+ df2=df1[~df1['InvoiceNo'].str.startswith('C')]
+ df3=df2.groupby(['InvoiceNo','Description'])['Quantity'].sum()
+ df3.head(3)
+
+df4=df3.unstack()
+ df5=df4.reset_index()
+ df6=df5.fillna(0)
+ df7=df6.set_index('InvoiceNo')
+ df7.head(2)
+
+def encode(x):
+    return 1 if x>0.0 else 0
+ df8=df7.applymap(encode)
+ df8.head()
+ frequent_itemsets=apriori(df8,min_support=0.07,use_colnames=True)
+ rules=association_rules(frequent_itemsets,metric='lift',min_threshold=1)
+ rules=rules.sort_values(by='lift',ascending=False)
+ rules.head(2)
+
+## APIORI 2nd Example
+ #3 (c) dataset for stores - apiori
+ df_ap=pd.read_csv(path20) #'Online Retail.csv')
+ df_ap.head(2)
+ df_ap=df_ap.fillna(0)
+ df_ap.head(3)
+ # Convert the dataset to a list of transactions
+ transactions = []
+ for i in range(0, df_ap.shape[0]):
+    transaction = df_ap.iloc[i].dropna().tolist()  # Remove NaN values and conve
+    filtered_transaction = [str(item) for item in transaction if not str(item).i
+    transactions.append(frozenset(filtered_transaction))  # Use frozenset to mak
+ # Remove duplicates by converting to a set and back to a list
+
+
+unique_transactions = [set(map(str, transaction)) for transaction in list(set(tr
+ # One-hot encode the list of transactions
+ from mlxtend.preprocessing import TransactionEncoder
+ te = TransactionEncoder()
+ te_array = te.fit(unique_transactions).transform(unique_transactions)
+ df8 = pd.DataFrame(te_array, columns=te.columns_).astype(int)  # Convert True/Fa
+ # Display the one-hot encoded dataframe
+ print("One-Hot Encoded Data (0/1):")
+ df8.head(1)
+
+# Apply the Apriori algorithm with a minimum support threshold of 0.01
+ frequent_itemsets = apriori(df8, min_support=0.01, use_colnames=True)
+ # Generate association rules using lift as the metric
+ rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1.0)
+ rules=rules.sort_values(by='lift',ascending=False)
+ # Display frequent itemsets
+ print("\nFrequent Itemsets:") ; print(frequent_itemsets.head(10))
+ # Display the top 10 rules
+ print("\nAssociation Rules:")
+ rules[['antecedents', 'consequents', 'support', 'confidence', 'lift']].head(10)
+
+
+---------------------
+
 
 # Step 1: Import Required Libraries
 import pandas as pd
@@ -291,8 +570,4 @@ Next, we will re-initialize the centroids by calculating the average of all data
 Repeat steps 3 and 4
 We will keep repeating steps 3 and 4 until we have optimal centroids and the assignments of data points to correct clusters are not changing anymore.
 Merits:○Easy to understand ○Simple implementation●Demerits:○Finding the optimal value of K can be computationally expensive○Initial centroid assignment affects the final output○Not efficient in presence of outliers
-
-
-
-
 

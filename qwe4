@@ -276,3 +276,23 @@ for col in df_num:
 # -------------------- (C) Feature Engineering --------------------
 df = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
 
+--------------------------------
+Choosing the number of clusters 
+The first step is to define the K number of clusters in which we will group the data. Let’s select K=3.
+
+Initializing centroids
+Centroid is the center of a cluster but initially, the exact center of data points will be unknown so, we select random data points and define them as centroids for each cluster.
+Assign data points to the nearest cluster
+Now that centroids are initialized, the next step is to assign data points Xn to their closest cluster centroid C
+In this step, we will first calculate the distance between data point X and centroid C using Euclidean Distance metric.
+And then choose the cluster for data points where the distance between the data point and the centroid is minimum. 
+Re-initialize centroids 
+Next, we will re-initialize the centroids by calculating the average of all data points of that cluster.
+Repeat steps 3 and 4
+We will keep repeating steps 3 and 4 until we have optimal centroids and the assignments of data points to correct clusters are not changing anymore.
+Merits:○Easy to understand ○Simple implementation●Demerits:○Finding the optimal value of K can be computationally expensive○Initial centroid assignment affects the final output○Not efficient in presence of outliers
+
+
+
+
+

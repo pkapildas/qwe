@@ -1279,3 +1279,40 @@ print(f'Silhouette_score of Kmeans clustering with PCA is {silhouette_score(inp_
 print(f'Silhouette_score of Kmeans clustering without PCA is {silhouette_score(df_snc,kmeans5.labels_)}')
 print(f'Silhouette_score of hierarchal clustering with PCA is {silhouette_score(inp_df_pc,agg2.labels_)}')
 print(f'Silhouette_score of  hierarchal clustering without PCA is {silhouette_score(df_snc,agg1.labels_)}')
+====
+#Content Based Recommendation system
+df_cb=pd.read_csv('movie_metadata-2.csv')
+df_cb.head()
+
+df_cb1=df_cb[['imdb_score','movie_title','genres']]
+geners=df_cb['genres'].str.split('|',expand=True)
+geners.head()
+
+## Now I choose only first 3 columns of geners
+geners1=geners.iloc[:,:3]
+geners1.head()
+
+geners1.columns=['genre1','genre2','genre3']
+geners1.head()
+
+df_cb2=pd.concat([df_cb1,geners1],axis=1)
+df_cb2.drop(columns='genres',inplace=True)
+df_cb2.head()
+
+df_cb3=df_cb2.set_index('movie_title')
+df_cb3.head()
+
+df_cb3.index=df_cb3.index.str.strip()
+df_inp=pd.get_dummies(df_cb3,drop_first=True,dtype='int')
+df_inp.head()
+
+from sklearn.neighbors import NearestNeighbors
+rknn=NearestNeighbors()
+rknn.fit(df_inp)
+vie_near='The Dark Knight Rises'
+input1=df_inp.loc[movie_near].to_numpy().reshape(1,-1)
+ndist,nindex=rknn.kneighbors(input1,n_neighbors=6)
+print(f'Movies near to {movie_near} is : ')
+print()
+for i in nindex[:,1:].tolist()[0]:
+    print(df_inp.index[i])

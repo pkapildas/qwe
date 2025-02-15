@@ -1,3 +1,155 @@
+df = df17.copy()
+#---------------------1 eda ----------------------------------------------
+df = df.drop(columns='CUST_ID')
+# df['MINIMUM_PAYMENTS'].sort_values(ascending = False).head()
+df['MINIMUM_PAYMENTS'].replace(to_replace = '?' , value = np.nan, inplace = True) #, regex = True)
+df['CREDIT_LIMIT'].replace(to_replace = '?' , value = np.NaN, inplace = True)  #, regex = True)
+df['CREDIT_LIMIT'] = df['CREDIT_LIMIT'].astype('float64')
+df['MINIMUM_PAYMENTS'] = df['MINIMUM_PAYMENTS'].astype('float64')
+df = df.dropna()
+df = df.reset_index(drop = True)
+df.head(2)
+
+#---------------------2 scale & pca ----------------------------------------------
+snc = StandardScaler()
+df_snc = pd.DataFrame( snc.fit_transform(df) , columns = df.columns, index = df.index)
+df_snc.head(2)
+
+pc1=PCA()
+inp_pc1=pc1.fit_transform(df_snc)
+
+#print(  'Top 5 Eigen values :                 ' , pc1.explained_variance_[:5] )
+#print(  'Top 5 Eigen Vectors:                 ' , pc1.components_[:5]         )
+#print("Principal Component Covariance Matrix:\n",  np.cov(pc1.components_) )
+
+#---------------------2 90% variance ----------------------------------------------
+explained_variance = np.cumsum(pc1.explained_variance_ratio_)
+num_components_90 = np.argmax(explained_variance >= 0.90) + 1
+print(f"Number of components to explain 90% variance: {num_components_90}")
+
+#---------------------3 PCA with 90% Variance -------------------------------------
+pca_90      = PCA(n_components = num_components_90)
+pca_data_90 = pca_90.fit_transform(df_snc)
+inp_df_pc_90   = pd.DataFrame(pca_data_90, columns=[f"PC{i+1}" for i in range(num_components_90)])
+inp_df_pc_90.head(2)
+
+#inp_df_pc_90=pd.DataFrame(inp_pc1[:,:num_pc],columns=[f'PCA{i+1}' for i in range(num_pc)])
+inp_df_pc_90.head(2)
+
+#---------------------4 K means -------------------------------------
+
+# - - #### 2. (b).Find the optimal number of clusters for the K-means clustering model [Note: Use the PCs, which are explaining the 90% variance].  (6 marks)
+wcss=[]
+sc=[]
+for i in range(2,9):
+    kmeans1=KMeans(n_clusters=i,random_state=48)
+    kmeans1.fit(inp_df_pc_90)
+    wcss.append(kmeans1.inertia_)
+    sc.append(silhouette_score(inp_df_pc_90,kmeans1.labels_))
+
+plt.figure(figsize=(4,4))
+plt.plot(range(2,9),wcss,c='r',marker='o')   # 2 to 20 is clusture si
+plt.twinx()
+plt.plot(range(2,9),sc,marker='*')
+plt.axvline(3,c='orange')
+plt.show()
+
+# Final K-Means Model with 3 Clusters ------------------ only if wcss asked
+optimal_k = 3
+kmeans_final = KMeans(n_clusters=3, random_state=42)
+kmeans_final.fit(pca_data_90)
+df["Cluster"] = kmeans_final.labels_
+
+# Business Inferences from Clusters
+cluster_summary = df.groupby("Cluster").mean()
+print("Cluster Summary Statistics:\n")
+cluster_summary
+
+# cluster_summary
+# Cluster 0 (High Balance, Frequent Cash Advances):  Balance: Very high average balance ($4020), suggesting customers with high credit utilization
+# Cluster 1 (Moderate Purchases, Low Cash Advances): Balance: Low average balance ($841), implying better control over credit utilization.
+# Cluster 2 (High Purchases, High Credit Utilization): Balance: Moderate-high balance ($2236) with extremely high purchases ($4273), including a mix of one-off and installment-based purchases.
+
+#Key Business Insights:
+#Cluster 0: High-risk customers—monitor for potential credit defaults.
+#Cluster 1: Balanced, low-risk customers—ideal for standard offers.
+#Cluster 2: High-value customers—target for premium services and rewards.
+
+#---------------------5 SilhouetteVisualizer -------------------------------------
+# do only if asked
+from yellowbrick.cluster import SilhouetteVisualizer
+from sklearn.metrics import silhouette_score
+#for i in range(3,4):
+i = 3
+kmeans = KMeans(n_clusters=i, random_state=48)
+kmeans.fit(inp_df_pc_90)
+silhouette_avg = silhouette_score(inp_df_pc_90, kmeans.labels_)
+print('Silhouette Score:', silhouette_avg)
+model = SilhouetteVisualizer(kmeans)
+model.fit(inp_df_pc_90)
+#model.show()
+
+#--------------------- 6 # Plot the dendrograms [ Hierarchical Clustering ]
+#Hint:Use the following functions and create the dendrograms for 100 nodes only
+# linkage(pca_df, method='single',metric='euclidean')
+# dendrogram(mergings,truncate_mode='lastp',p=100)
+from scipy.cluster.hierarchy import dendrogram, linkage, cophenet
+from scipy.spatial.distance import pdist
+#  ['single','complete','average','centroid']
+
+# Plot Dendrogram for Ward Linkage
+linkage_matrix = linkage(inp_df_pc_90, method='ward')
+plt.figure(figsize=(6, 2))
+dendrogram(linkage_matrix, truncate_mode='lastp', p=100)
+plt.title("Dendrogram (Ward Linkage)")
+plt.xlabel("Data Points")
+plt.ylabel("Distance")
+#plt.show()
+
+# Compute Cophenetic Correlation Coefficient
+c, _ = cophenet(linkage_matrix, pdist(pca_data_90))
+print(f"Cophenetic Correlation Coefficient: {c:.2f}")
+
+
+#------------------------7 # Aglo clusturing
+from sklearn.cluster import AgglomerativeClustering
+from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.spatial.distance import pdist
+
+# Ward linkage clustering and get the cluster labels
+# # Cluster to 4 groups. Then Predict clusters and add labels to DataFrame
+
+lm = linkage(inp_df_pc_90, method='ward')  
+cluster_labels = fcluster(lm, 4, criterion='maxclust')  
+df['Cluster_Ward'] = cluster_labels  
+
+# AgglomerativeClustering
+ac = AgglomerativeClustering(n_clusters=4, linkage='ward')
+df['Cluster_Agglo'] = ac.fit_predict(inp_df_pc_90) 
+
+
+def func_wcss(df, cluster_labels_col, data):
+    x = []  # List to store WCSS values
+
+    for j in np.unique(df[cluster_labels_col]):
+        a = data[df[cluster_labels_col] == j]
+        b = a.mean(axis=0)
+        c = ((a - b) ** 2).sum().sum()
+        x.append((j, c))  
+
+    x_sort = sorted(x, key=lambda x: x[1])  # Sort based on WCSS value
+
+    print("Cluster WCSS (Ordered by Quality):")
+    for cluster_label, wcss in x_sort:  # Use x_sort instead of wcss_per_cluster_sorted
+        print(f"Cluster {cluster_label}: WCSS = {wcss:.2f}")
+
+# Call the function for Ward and Agglomerative clustering
+func_wcss(df,  'Cluster_Ward', inp_df_pc_90)
+func_wcss(df, 'Cluster_Agglo', inp_df_pc_90)
+
+
+
+
 <<<Cheat Sheet>
  import pandas as pd
  import numpy as np

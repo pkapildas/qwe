@@ -848,5 +848,9 @@ Apllication PCA is mainly used in image compression, facial recognition modelsâ—
 
 
 
+# instantiate linkage object with scaled data and consider 'ward' linkage method 
+link_mat = linkage(features_scaled, method = 'ward')     
 
+# print first 10 observations of the linkage matrix 'link_mat'
+print(link_mat[0:10])
 

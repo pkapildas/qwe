@@ -815,4 +815,38 @@ Next, we will re-initialize the centroids by calculating the average of all data
 Repeat steps 3 and 4
 We will keep repeating steps 3 and 4 until we have optimal centroids and the assignments of data points to correct clusters are not changing anymore.
 Merits:○Easy to understand ○Simple implementation●Demerits:○Finding the optimal value of K can be computationally expensive○Initial centroid assignment affects the final output○Not efficient in presence of outliers
+Dendrogram●It is a very useful technique to visualize the clusters
+●It is a tree-based hierarchical structure that can be used to decide the required number of clusters
+Different linkage methods result in the formation of different dendrograms
+●Observations linked at a low height represents more similar observations
+●Dissimilar observations fuse at a higher level in the dendrogram
+Dendrogram●X-axis of the dendrogram represents the data point, each considered as a single cluster and the distance is given on the Y-axis
+Each single cluster is known as ‘leaf’, The horizontal line is known as ‘clade’ which represents the merging of cluster
+
+●DBSCAN (Density-Based Spatial Clustering of Applications with Noise) is mostly used density-based clustering algorithm
+●This technique can form clusters of non-linear shapes
+●It considers a cluster as a continuous region of high density
+●Regions of low density are identified as noise/ outliers
+Dimensio Reduction 
+The real-life dataset may contain a large number of features under study
+●For example, while estimating the price of a mobile phone we need to consider various features like screen size, internal storage, camera quality, battery backup and so on
+●The dataset with a large number of features needs more time for training the model. Also, it can cause the overfitting 
+To avoid such issues, one can reduce the dimension of the dataset●The dimension reduction techniques remove the redundant variables/ noise in the original data, which reduces the training time●Reducing the dataset to 2 or 3 dimensions helps in visualization of the data●Various dimension reduction techniques:○Principal Component Analysis (PCA)○Linear Discriminant Analysis (LDA) ○Factor Analysis
+●Two different approaches can be used for dimension reduction: Projection, Manifold learning●In the projection approach, the original dataset is projected onto the lower-dimensional plane●PCA uses the projection approach for dimension reduction
+●This method is not effective if the dataset has different layers in the higher dimensions●In manifold learning, a manifold is created on which the dataset lies
+PCA
+It is one of the dimensionality reduction techniques that is used to reduce the dimensions of the large datasets●It transforms the large set of features into a small set such that it will contain the maximum information in the original data●The number of components is less than or equal to the number of independent variables●PCA projects the original dataset on the lower dimensional plane●It transoms the original data to a new set of uncorrelated variables
+
+The first principal component (PC1) exhibits the direction of maximum variance in the data●It is used to remove the redundancy in the data●PCA reduces the multicollinearity (if present) in the original data●Principal components are always orthogonal to each other 
+PCA steps 
+1. Standardize the data
+2. Compute the covariance matrix
+3. Calculate the eigenvalues and eigenvectors
+4. Sort the eigenvalues in the descending order 
+5. Select the eigenvectors that explains the maximum variance in the data
+Apllication PCA is mainly used in image compression, facial recognition models●It is also used in the exploratory analysis to reduce the dimension of data before applying machine learning methods●Used in the field of psychology, finance to identify the patterns high dimensional data
+
+
+
+
 

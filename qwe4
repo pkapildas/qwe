@@ -1831,3 +1831,268 @@ plt.axvline(x = 11, color = 'red')
 
 # display the plot
 plt.show()
+
+2. (b).Find the optimal number of clusters for the K-means clustering model [Note: Use the PCs, which are explaining the 90% variance]. (6 marks)
+
+pca_90= PCA(n_components=0.9)
+pca_df=pca_90.fit_transform(df_scaled)
+
+sse=[]
+
+for i in range(1,11):
+  Kmeans=KMeans(n_clusters=i,init='k-means++',random_state=42)
+  Kmeans.fit(pca_df)
+  sse.append(Kmeans.inertia_)
+
+# Plot the elbow curve
+plt.figure(figsize=(10, 6))
+plt.plot(range(1,11), sse, marker='o')
+plt.xlabel('Number of Clusters')
+plt.ylabel('Sum of Squared Errors (SSE)')
+plt.title('Elbow Method for Optimal Number of Clusters')
+plt.show()
+
+--
+silhouette_scores = []
+max_k = 10  # Maximum number of clusters to try
+
+for k in range(2, max_k + 1):
+    kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+    kmeans.fit(pca_df)
+    labels = kmeans.labels_
+    silhouette_scores.append(silhouette_score(pca_df, labels))
+
+best_k = np.argmax(silhouette_scores) + 2
+
+print(f"Optimal k (Silhouette Score): {best_k}")
+
+# Plotting Silhouette Scores
+plt.figure(figsize=(8, 6))
+plt.plot(range(2, max_k + 1), silhouette_scores, marker='o')
+plt.xlabel('Number of Clusters (k)')
+plt.ylabel('Silhouette Score')
+plt.title('Silhouette Analysis for Optimal k')
+plt.xticks(range(2, max_k + 1))
+plt.grid(True)
+plt.show()
+
+
+linkage_methods = ['single', 'complete', 'average', 'ward']
+plt.figure(figsize=(20, 15))
+
+for i, method in enumerate(linkage_methods, 1):
+    plt.subplot(2, 2, i)
+    mergings = linkage(pca_df, method=method, metric='euclidean')
+    dendrogram(mergings, truncate_mode='lastp', p=100)
+    plt.title(f'Dendrogram ({method} linkage)')
+plt.show()
+
+2 (d)Cluster the data into 4 groups and order the cluster quality in terms of the inertia (WCSS) of each cluster. [Use ward linkage metric] (6 marks)
+
+from sklearn.cluster import AgglomerativeClustering
+
+# Cluster the data into 4 groups using ward linkage
+agg_clustering = AgglomerativeClustering(n_clusters=4, linkage='ward')
+df['Cluster'] = agg_clustering.fit_predict(pca_df)
+
+# Calculate WCSS for each cluster
+wcss = []
+for i in range(4):
+    cluster_data = df[df['Cluster'] == i]
+    wcss.append(np.sum(((cluster_data - cluster_data.mean(axis=0)).values)**2))
+
+# Order clusters by WCSS
+ordered_clusters = sorted(range(4), key=lambda k: wcss[k])
+print("Ordered Clusters by WCSS (Inertia):")
+print(ordered_clusters)
+#### 2 (e)Compare the quality of clusters for K-means clustering algorithm on original data and PCA transformed data. (8 marks)
+
+# K-means clustering on original data
+kmeans_original = KMeans(n_clusters=3, random_state=42)
+clusters_original = kmeans_original.fit_predict(df_scaled)
+wcss_original = kmeans_original.inertia_
+
+# K-means clustering on PCA transformed data
+kmeans_pca = KMeans(n_clusters=3, random_state=42)
+clusters_pca = kmeans_pca.fit_predict(pca_df)
+wcss_pca = kmeans_pca.inertia_
+
+# Compare the quality of clusters
+print("WCSS for Original Data:", wcss_original)
+print("WCSS for PCA Transformed Data:", wcss_pca)
+2. (c). Plot the dendrograms using 4 linkage methods for the PCA transformed data and identify which one is the best. [Note: Use the PCs, which are explaining the 90% variance] (6 marks)
+linkage_methods = ['single', 'complete', 'average', 'ward']
+plt.figure(figsize=(20, 15))
+
+ince the WCSS for the PCA transformed data (100496.43030580929) is lower than that for the original data (112609.01071221931), the clustering on the PCA transformed data is better. This suggests that reducing the dimensionality using PCA has helped in creating more compact and well-defined clusters.
+
+#### 3 (a) Develop a popularity-driven recommendation system, print Total no of ratings,Total No of Users,Total No of products  and recommend the top 5 items. (10 marks )
+
+Use the dataset: Book_ratings.csv
+Variables:
+book_id - ID of the book.
+user_id - ID of the user rated
+ratings - ratings of the book by the user.
+df=pd.read_csv('/content/drive/MyDrive/ML3 ESA/ML3 ESA/Question-ML3-Mar2024/Question/Book_ratings.csv')
+Build collaborative recommendation engine. Use KNNBasic library with cosine similarity and measure the model quality by performing cross validation in terms of RMSE.
+Use the dataset: Book_ratings.csv (20 Marks)
+reader= Reader(rating_scale=(1,10))
+data=Dataset.load_from_df(df[['user_id','book_id','rating']],reader)
+trainset, testset= train_test_split(data,test_size=0.2,random_state=42)
+
+sim_options = {
+    'name': 'cosine',
+    'user_based': True
+}
+model= KNNBasic(sim_options=sim_options)
+model.fit(trainset)
+predictions=model.test(testset)
+
+rmse = accuracy.rmse(predictions)
+print("RMSE:", rmse)
+
+
+3 (c) Create association rule mining using apriori algorithm.Perform basic pre-processing operations required by algorithm ( drop missing values, drop unnecessary columns). (7 marks)
+
+Create the basket only for France. Run algorithm with minimum support 0.07, tune with lift. (3 marks)
+Use Dataset:Online Retail.csv
+df = df.drop(columns=['Country', 'CustomerID', 'InvoiceDate'])
+basket = df.groupby(['InvoiceNo', 'Description'])['Quantity'].sum().unstack().reset_index().fillna(0).set_index('InvoiceNo')
+basket = basket.applymap(lambda x: 1 if x > 0 else 0)
+
+# Run Apriori algorithm with minimum support 0.07
+frequent_itemsets = apriori(basket, min_support=0.07, use_colnames=True)
+
+# Create association rules and tune with lift
+rules = association_rules(frequent_itemsets, metric='lift')
+
+print("Frequent Itemsets:")
+print(frequent_itemsets)
+print("Association Rules:")
+print(rules)
+
+---Sept21--
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans,AgglomerativeClustering,DBSCAN
+from sklearn.metrics import silhouette_score
+from scipy.cluster.hierarchy import linkage , dendrogram, fcluster,cophenet
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+from sklearn.decomposition import TruncatedSVD
+from surprise import KNNWithMeans,SVDpp
+from surprise import Dataset
+from surprise import accuracy
+from surprise.model_selection import train_test_split,cross_validate
+from mlxtend.frequent_patterns import apriori
+from mlxtend.frequent_patterns import association_rules
+from surprise import KNNBasic
+from sklearn.metrics import silhouette_score
+from yellowbrick.cluster import SilhouetteVisualizer
+from csv import reader
+import warnings
+
+corr_matrix = df.corr()
+
+# 3. Find pairs of variables with correlation greater than 0.8
+correlation_pairs = np.sum(np.triu(np.abs(corr_matrix) > 0.8, k=1))
+
+print(f"Number of variable pairs with correlation > 0.8: {correlation_pairs}")
+---PCA 90%--
+pca= PCA(n_components=90)
+pca_scaled= pca.fit_transform(df_scaled)
+print("Eigenvalues",pca.explained_variance_[:5])
+print("Eigenvectors",pca.components_[:5])
+
+Build the K-means clustering model with reduced PCA features (PCs which are explaining 90 percent variance) and compute the optimal value of clusters. Make the business inferences using the cluster groups.
+---Build the K-means clustering model with reduced PCA features-----
+inertia = []
+for k in range(1, 11):  # Test for 1 to 10 clusters
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(pca_scaled)
+    inertia.append(kmeans.inertia_)
+
+plt.figure(figsize=(8, 6))
+plt.plot(range(1, 11), inertia, marker='o')
+plt.title('Elbow Method for Optimal K')
+plt.xlabel('Number of Clusters')
+plt.ylabel('Inertia')
+plt.show()
+
+---silhouette_scores---
+silhouette_scores = []
+for k in range(2, 11):  # Silhouette score requires at least 2 clusters
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(pca_scaled)
+    score = silhouette_score(pca_scaled, kmeans.labels_)
+    silhouette_scores.append(score)
+
+plt.figure(figsize=(8, 6))
+plt.plot(range(2, 11), silhouette_scores, marker='o')
+plt.title('Silhouette Score for Optimal K')
+plt.xlabel('Number of Clusters')
+plt.ylabel('Silhouette Score')
+plt.show()
+--Build/Plot the top 100 cluster dendogram using 4 different linkages and compare its performance.--
+linkages = ['ward', 'complete', 'average', 'single']
+plt.figure(figsize=(15, 10))
+
+for i, method in enumerate(linkages):
+    plt.subplot(2, 2, i+1)
+    Z = linkage(pca_scaled[:100], method=method)
+    dendrogram(Z,p=100)
+    plt.title(f'Dendrogram ({method} linkage)')
+
+plt.tight_layout()
+plt.show()
+
+--Cluster kmeans--- 
+kmeans = KMeans(n_clusters=5, random_state=42)
+kmeans.fit(pca_scaled)
+inertia = kmeans.inertia_
+print(f"Inertia (WCSS) of the clusters: {inertia}")
+clusters_ordered_by_inertia = sorted(range(len(kmeans.cluster_centers_)), key=lambda k: kmeans.inertia_) # Sort by inertia of the model
+print(f"Clusters ordered by inertia (WCSS): {clusters_ordered_by_inertia}")
+from sklearn.preprocessing import LabelEncoder
+LableEncoder 
+label_encoder= LabelEncoder()
+y=label_encoder.fit_transform(df['activity'])
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=42)
+--train_evaluate_model--
+def train_evaluate_model(X_train, X_test, y_train, y_test):
+    model = RandomForestClassifier(random_state=42)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    return accuracy_score(y_test, y_pred)
+
+from sklearn.metrics import accuracy_score
+accuracy_original = train_evaluate_model(X_train, X_test, y_train, y_test)
+
+pca = PCA(n_components=0.95)
+X_train_pca = pca.fit_transform(X_train)
+X_test_pca = pca.transform(X_test)
+accuracy_pca = train_evaluate_model(X_train_pca, X_test_pca, y_train, y_test)
+
+n_components= pca.n_components_
+svd = TruncatedSVD(n_components=n_components)
+X_train_svd = svd.fit_transform(X_train)
+X_test_svd = svd.transform(X_test)
+accuracy_svd = train_evaluate_model(X_train_svd, X_test_svd, y_train, y_test)
+
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+lda = LDA(n_components=1)
+X_train_lda = lda.fit_transform(X_train, y_train)
+X_test_lda = lda.transform(X_test)
+accuracy_lda = train_evaluate_model(X_train_lda, X_test_lda, y_train, y_test)
+
+
+print(f"Accuracy with original data: {accuracy_original}")
+print(f"Accuracy with PCA data: {accuracy_pca}")
+print(f"Accuracy with SVD data: {accuracy_svd}")
+print(f"Accuracy with LDA data: {accuracy_lda}")

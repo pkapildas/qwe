@@ -130,5 +130,13 @@ df_chk
 
 #Dynamic Inference pending
 
+## imputing using rolling mean
+daily = df4.fillna(df4.rolling(6,min_periods=1).mean())
+
+
+## imputing using interpolation
+df4_imputed= df4.interpolate(method = 'linear')
+
+
 
 

@@ -1,1 +1,206 @@
-f
+import pandas as pd
+import numpy as np
+from sklearn.utils import shuffle
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize 
+from nltk.stem import LancasterStemmer
+from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.tokenize import RegexpTokenizer
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn import metrics
+ 
+from textblob import TextBlob
+import matplotlib.pyplot as pltm
+from tensorflow.keras import backend
+
+nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('punkt')
+A word cloud is a visual representation of data where the size of each word corresponds to its frequency or importance in the dataset. it helps quickly identify frequently occuring words, or patterns in textual data.
+
+Word cloud used for sentiment analysis to identify common words for positive or negative reviews or comments. And also used in Topic analysis highlighting keywords or more frequent words from text data. Alo used in providing Social Media insights by understanding trending words, comments.
+
+Drawbacks of Wordcloud
+
+Word cloud ignore the relationships between words,
+Since words are treated individualy without considering relation grammer or structre of sentence
+Its bais towards common words.
+Word cloud will show high frequency words and ignoring important words , ie. stop words like is, the, and might appear if not removed properly.
+
+
+N-grams are a type of tokenization when individual sentences are split into multiple word string or characters. Its a continous sequence of N words from a given sample of source text(corpus). N-gram is a continous sequence of N items(tokens) from text or speech in NLP.
+N-grams are used in applicaions like text analysis machine learning and predictive search input etc. N-grams are different types
+
+Unigram(1-gram ) A sequence of one item ( eg., cat, dog
+Bigram (2-gram) a sequence of two items ( eg., deep learning, national language,)
+Trigram(3-gram) s sequence of three items. (eg., Machine learning model, data science approach)
+4-gram, 5-gram longer sequences of items, for or more consecutive words.
+  
+Applications of N-grams in NLP
+
+Speech recognition - N-grams play crucial role in modeling and recognizing spoken language patterns, Improving the accuracy of speech recognition systems
+Machine Translation - unerstanding and translating phrases with in a broader context.
+Predictive Input - N-gram used to suggest next word based of the context of sequence
+Named Entity Recognition (NER) - N-grams aid in identifying and extracting named entities from text.
+Search Engine Algorithm - Search engine use N-grams to index and retrieve relavant documents based on User Queries and improves the quality of search results.
+##Use the data_set.csv data.The “review” column contains the review of several e-shopping items and the “Star” column contains the rating given by the customers.
+data = pd.read_csv('data_set.csv')
+data.head()
+Add a column named ‘Emotion’. If the “Star” (i.e the rating) column is more than 3, mention Emotion as ‘positive’ otherwise ‘negative’ (Marks – 2)¶
+data['Emotion']= ['positive' if x>3 else 'negative' for x in data['Star']]
+Tokenize (based on space) (1 Marks)
+2. Convert to lower Case (1 marks)
+3. Remove Punctuations (2 Marks)
+4. Remove Stopwords (2 marks)
+5. Perform Lemitization (2 Marks)
+
+#1. Tokenise based on space
+review_text = data.Review
+data_list = list()
+for txt in review_text:
+    data_list.append(word_tokenize(txt))
+print(data_list)
+
+def clean_text(text):
+    # tokenizaition 
+    words = word_tokenize(text)
+    # remove puctuations
+    words = [word for word in words if word.isalnum()]
+    # remove stop words 
+    stop_words = set(stopwords.words('english'))
+    tokens = [word for word in words  if word not in stop_words]
+    # lemmatization 
+    lemmatizer = WordNetLemmatizer()
+    tokens = [lemmatizer.lemmatize(word, pos ='v') for word in tokens]
+    return  " ".join(tokens)
+
+# apply Text cleaning 
+data["Clean_review"] = data['Review'].apply( lambda x : clean_text(str(x)))
+data.head(10)
+df = data.copy()
+df = df.drop(columns = "Review")
+df.head()
+
+df['Review'] = df['Clean_review']
+df = df.drop(columns = "Clean_review")
+df.head(10)
+df['Review'].value_counts()
+
+4.i. Find out the 10 most frequent words used while providing the review for `Refrigerator` & `Mobile`.  (2 +2 )
+from collections import Counter
+
+def get_top_N_words(reviews, n=10):
+    all_words = " ".join(reviews).split()
+    word_counts = Counter(all_words)
+    return word_counts.most_common(n);
+refrigerator_review = df[df["Item_Review"] =='refrigerator']['Review']
+top_refrigerator_words = get_top_N_words(refrigerator_review, 10)
+mobile_review = df[df["Item_Review"] =='Mobile']['Review']
+print(f'10 Most frequent Word used in Review For Mobile ') 
+print(top_mobile_words)
+4. ii. Find out the essential/meaningfull words (top 5) which were used in the review for both Refrigerator & Mobile
+refrigerator_words = [word for tokens in  refrigerator_review for word in tokens]
+mobile_words = [word for tokens in  mobile_review for word in tokens]
+
+
+refrigerator_set = set(refrigerator_words)
+mobile_set = set(mobile_words)
+common_words = refrigerator_set.intersection(mobile_set)
+common_word_counts = [ (word , refrigerator_words.count(word) + mobile_words.count(word))
+                      for word in common_words ]
+common_word_counts.sort( key=lambda x:x[1], reverse=True )
+top_essential_words = common_word_counts[:5]
+print('Top 5 essential/meaningfull words  common to both  Refrigerator & Mobile : \n' , top_essential_words)
+5. Build a basic logistic regression model which will categorise the review as per Item_Review
+hint:Steps to use
+Encode Item_Review  to numeric
+Set cleaned text as feature
+Segreegate train and test set
+vectorize text using count-vectorizer
+Build logistic regression model on train set
+Measure accuracy on test set
+df['label'] = df['Item_Review'].apply(lambda x: 1 if x=='Mobile' else 0)
+df['label'].value_counts()
+cnt_vct = CountVectorizer(max_features=1000)
+cv = cnt_vct.fit_transform(df.Review)
+df2 = pd.DataFrame(cv.todense(), columns= cnt_vct.get_feature_names_out())
+df2['label'] = df['label']
+df2.head()
+X = df2.drop(columns='label')
+Y = df2['label']
+X.shape,Y.shape
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+X_train.shape, X_test.shape, y_train.shape, y_test.shape
+lr = LogisticRegression()
+model = lr.fit(X_train, y_train)
+lr.score(X_train,y_train)
+lr.score(X_test,y_test)
+pred = lr.predict(X_test)
+from sklearn.metrics import classification_report, confusion_matrix
+print(confusion_matrix(y_test, pred))
+print(classification_report(y_test, pred))
+5. ii. Categorise the following review into categories using the model prepared above
+processed_review1 = clean_text(Review1[0])
+processed_review2 = clean_text(Review2[0])
+processed_review3 = clean_text(Review3[0])
+processed_review4 = clean_text(Review4[0])
+reviews_vec = cnt_vct.transform(
+[ processed_review1,
+ processed_review2,
+ processed_review3,
+ processed_review4 
+])
+predicted_labels = model.predict(reviews_vec)
+predicted_cat = [df['Item_Review'].astype('category').cat.categories[label] for label in predicted_labels]
+print('Category for Reviews ')
+print(f'Review1 : {predicted_cat[3]}' )
+print(f'Review2 : {predicted_cat[2]}' )
+print(f'Review3 : {predicted_cat[0]}' )
+print(f'Review4 : {predicted_cat[1]}' )
+
+
+# Question 6 : Sentiment Analysis 
+### 6.i. : Assign the subjetivity response to the content
+review_df = pd.DataFrame()
+review_df['Review'] = df['Review']
+review_df.head(5)
+
+def getTextSubjectivity(text):
+    return TextBlob(text).sentiment.subjectivity
+
+review_df['subjectivity'] = review_df['Review'].transform(lambda x: getTextSubjectivity(str(x)))
+review_df['subjectivity']
+### 6.ii : Assign the polarity response to the content 
+def getTextPolarity(text):
+    return TextBlob(text).sentiment.polarity
+
+review_df['polarity'] = review_df['Review'].transform(lambda x: getTextPolarity(str(x)))
+review_df['polarity'
+### 6. iii. : Assing sentiment to each of the Review 
+hint : 
+- if polarity <  0 then sentiment ->"Negative"
+- if polarity == 0 then sentiment ->"Neutral"
+- if polarity >  0 then sentiment ->"Neutral"
+
+def getTextAnalysis(a):
+    if a< 0:
+        return 'Negative'
+    elif a == 0:
+        return 'Neutral'
+    else:
+        return 'Positive'
+    
+review_df['sentiment'] = review_df['polarity'].apply(getTextAnalysis)
+positive = review_df[review_df['sentiment']== 'Positive']
+positivePercentage = (positive.shape[0]/review_df.shape[0])*100
+print(f'{positivePercentage}% of Positive Review') 
+plt.figure(figsize=(10,6))
+labels = review_df.groupby('sentiment').count().index.values
+values = review_df.groupby('sentiment').size().values
+plt.bar(labels, values)
+plt.show()
+

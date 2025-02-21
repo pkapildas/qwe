@@ -805,4 +805,16 @@ plt.show()
 print("Classification Report:")
 print(classification_report(ytest, ypred_pr, target_names=label_encoder.classes_.astype(str)))
 
+-----
+LSTM Drawbacks & Need for Transformer
 
+LSTMs when combined with an input Neural Word Embedding mechanism such as Word2Vec, were  able to achieve the best performance across various NLP tasks upto 2016-17 
+- with comfortably  better performance than the earlier statistical text encoding ideas such as TF-IDF. LSTMs and their  variants were used by every major industry player, 
+for applications ranging from Alexa’s Voice  Assistant, to Google Search, Google Translate, and even the Autosuggest in Smartphone Keyboards.
+
+However, LSTMs also had some key limitations - especially relating to their Sequential Text  Processing mechanism - processing one word at a 
+time could not computationally scale well to  large documents and corpuses of text, and there was a need for a more parallelizable computing  
+architecture that could accept an entire corpus at once and send each word / token of text through its own pathway independent of the rest.
+ There was also a realization that despite the smart hack of  creating a Gated Mechanism, LSTMs still couldn’t resolve the fundamental RNN problem of 
+ remembering the very long-range dependencies that are common in flowing paragraphs of text
+ 

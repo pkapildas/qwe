@@ -557,3 +557,252 @@ dnn_model.fit(data_sequence_padded,target,
           epochs=5,
           batch_size=32, validation_split=0.2, callbacks= my_callbacks)
 Looks like TF-IDF model performance is better than DNN 
+=========================
+
+df17 = pd.read_csv(path17) ; 
+df1 = df17.copy()
+df1 = df1.rename(columns=({'Text':'Review'}))
+df1=df1.drop(columns=['Id', 'Unnamed: 0'] , axis=1)
+#df1 = df1.drop_duplicates(())
+df1.head(2)
+
+############## STEP 0 : Clean Text, Preprocessing  ################
+
+############# 1 Clean the Text ##################
+stop_words=set(stopwords.words('english'))
+stop_words.discard('no')
+stop_words.discard('not')
+def func_clean_text(text):
+    text   = text.lower()
+    text   = unicodedata.normalize('NFKD',text).encode('ascii','ignore').decode('utf-8')
+    text   = re.sub(r'http\S+|www\S+', '', text)  # Remove URLs
+    text   = re.sub(r'\d','',text)                # Remove digits
+    text   = text.translate(str.maketrans('','',string.punctuation))    # Remove punctuation
+    tokens = [word for word in nltk.word_tokenize(text)                            if word not in stop_words]
+    #tokens = [nltk.PorterStemmer().stem(word) for word in nltk.word_tokenize(text) if word not in stop_words]
+    #tokens = [nltk.stem.WordNetLemmatizer().lemmatize(word) for word in nltk.word_tokenize(text)         if word not in stop_words]
+    text   = ' '.join(tokens)                     
+    text   = re.sub(r'\s+',' ',text).strip()       # Eliminate multiple spaces
+    return text
+df1['Clean_text']=df1['Review'].apply(func_clean_text)
+
+
+################# 2  Polarity & Subjectivity & Sentiment #####
+def getTextSubjectivity(txt):
+    return TextBlob(txt).sentiment.subjectivity
+
+def getTextPolarity(txt):
+    return TextBlob(txt).sentiment.polarity
+
+def getTextSentiment(a):
+    if a < 0:
+        return "Negative"
+    elif a == 0:
+        return "Neutral"
+    else:
+        return "Positive"
+
+df1['Polarity'    ]   = df1['Clean_text'].transform(lambda x: getTextPolarity(str(x)))
+df1['Subjectivity']   = df1['Clean_text'].transform(lambda x: getTextSubjectivity(str(x)))
+df1['Sentiment'   ]   = df1['Polarity'].apply(getTextSentiment)
+df1['ScoreEncoded']   = df1['Score']-1
+df1['ScoreEncoded']   = df1['ScoreEncoded'].astype(int)
+display(df1.head(2))
+
+
+#df1['Emotion'] = df1['Polarity'].apply(lambda x: 'Positive' if x>3 else 'Negative') ; #data.head()
+
+############ 3 Questions on Sentiment Analysis ########
+a= df1[df1['Sentiment'] == 'Positive']
+b = a.shape[0]/(df1.shape[0])*100
+print(b , " % of positive Review")
+
+#Visualize the frequency distribution of the sentiment on each content
+plt.figure(figsize = (4,2))
+labels = df1.groupby('Sentiment').count().index.values
+values = df1.groupby('Sentiment').size().values
+plt.bar(labels, values); plt.show();
+
+#################### 4 Similar words to food [CBOW, Word to vec] ##########################
+df_tokenize = df1['Clean_text'].apply(nltk.word_tokenize)          ## tokenized words
+# df_tokenize = [text.split() for text in df1['Clean_text']]
+
+model=Word2Vec(df_tokenize, window=5,sg=1,vector_size=100,min_count=1,epochs=300) ;  
+similar_words = model.wv.most_similar(positive=['food'],topn=5) ; print(similar_words)
+
+
+############## STEP 1 : Feature Engineering  ###############
+
+#TF-IDF values are not raw counts but normalized weights,
+############## 5 Count Vectoriser : Top 6 most frequent words  ################
+from sklearn.feature_extraction.text import CountVectorizer
+import pandas as pd
+
+#model          = CountVectorizer()                       # common words dominate    #SPAM/HAM
+model           = TfidfVectorizer()                       # reduce importance common words dominate   
+model_fit       = model.fit_transform(df1['Clean_text'])  # tv.toarray()[:2]
+vocabulary      = model.get_feature_names_out()           # Retrieve the feature names (words)
+term_importance = model_fit.sum(axis=0)                   # Sum the occurrences of each word across all documents
+word_freq_df    = pd.DataFrame({'Word': vocabulary, 'Frequency': term_importance .A1})
+word_freq_df    = word_freq_df.sort_values(by='Frequency', ascending=False)
+
+model_shape     = word_freq_df.shape           ; print(model_shape)      # top 5 word
+top_5_words     = word_freq_df.head(6) ; print(top_5_words)      # top 5 word
+importance_of_food = word_freq_df[word_freq_df['Word'] =='food'] # checking importance of word "food"
+print(importance_of_food)
+
+####################### Section C ################################
+####################### Train Test ###############################
+# Convert text into numerical representations (CountVectorizer & TF-IDF)
+vectorizer_count = CountVectorizer()
+vectorizer_tfidf = TfidfVectorizer()
+
+X_count = vectorizer_count.fit_transform(df1['Clean_text'])
+X_tfidf = vectorizer_tfidf.fit_transform(df1['Clean_text'])
+y = df1['Review']
+
+# Split dataset (Ensuring stratified sampling)
+X_train_count, X_test_count, y_train, y_test = train_test_split(X_count, df1['Sentiment'] , test_size=0.25, stratify= df1['Sentiment'], random_state=42)
+X_train_tfidf, X_test_tfidf,  _     , _      = train_test_split(X_tfidf, df1['Sentiment'] , test_size=0.25, stratify= df1['Sentiment'], random_state=42)
+
+####################### LR, Naive Bayas ###############################
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score
+
+# Logistic Regression Model
+def train_model(model_class, X_train, X_test, y_train, y_test, model_type):
+    model = model_class
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"\n{model_type} {model_class} Accuracy:", accuracy)
+    return model  
+
+# Train & Evaluate Logistic Regression
+train_model(LogisticRegression(), X_train_count, X_test_count, y_train, y_test, "Count-Vectorized")
+train_model(LogisticRegression(), X_train_tfidf, X_test_tfidf, y_train, y_test, "TF-IDF")
+train_model(MultinomialNB()     , X_train_count, X_test_count, y_train, y_test, "Count-Vectorized")
+#train_model(MultinomialNB()    , X_train_tfidf, X_test_tfidf, y_train, y_test, "TF-IDF")
+
+#---------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, Flatten, BatchNormalization, Bidirectional, SpatialDropout1D
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras import regularizers
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# Load dataset
+df  = pd.read_csv('/content/drive/MyDrive/dataset/july24_data_set.csv')
+df = df.rename(columns=({'Text':'Review'}))
+df = df.drop(columns=['Id', 'Unnamed: 0'] , axis=1)
+#df = df.drop_duplicates(())
+
+
+############# 1 Clean the Text ##################
+stop_words=set(stopwords.words('english'))
+stop_words.discard('no')
+stop_words.discard('not')
+def func_clean_text(text):
+    text   = text.lower()
+    text   = unicodedata.normalize('NFKD',text).encode('ascii','ignore').decode('utf-8')
+    text   = re.sub(r'http\S+|www\S+', '', text)  # Remove URLs
+    text   = re.sub(r'\d','',text)                # Remove digits
+    text   = text.translate(str.maketrans('','',string.punctuation))    # Remove punctuation
+    tokens = [word for word in nltk.word_tokenize(text)                            if word not in stop_words]
+    #tokens = [nltk.PorterStemmer().stem(word) for word in nltk.word_tokenize(text) if word not in stop_words]
+    #tokens = [nltk.stem.WordNetLemmatizer().lemmatize(word) for word in nltk.word_tokenize(text)         if word not in stop_words]
+    text   = ' '.join(tokens)
+    text   = re.sub(r'\s+',' ',text).strip()       # Eliminate multiple spaces
+    return text
+df['Clean_text']=df['Review'].apply(func_clean_text)
+
+# Tokenization
+print("Tokenizing text...")
+tokenizer = Tokenizer(num_words=5000)
+tokenizer.fit_on_texts(df['Clean_text'])
+sequences = tokenizer.texts_to_sequences(df['Clean_text'])
+
+# Sequence Padding
+max_len = max([len(seq) for seq in sequences])
+embed_dim = 100  # Own embedding size
+vocab_size = len(tokenizer.word_index) + 1
+print(f'The max sentence length: {max_len}, Unique words: {vocab_size}')
+
+# Padding Sequences
+padded_sequences = pad_sequences(sequences, maxlen=max_len, padding='pre')
+
+# Label Encoding
+y = df['Score']
+label_encoder = LabelEncoder()
+y_encoded = label_encoder.fit_transform(y)
+
+# Splitting Data
+xtrain, xtest, ytrain, ytest = train_test_split(padded_sequences, y_encoded, test_size=0.3, random_state=48, stratify=y_encoded)
+
+# Encoding Labels for LSTM
+ytrain_en = to_categorical(ytrain, num_classes=len(np.unique(y_encoded)))
+ytest_en = to_categorical(ytest, num_classes=len(np.unique(y_encoded)))
+
+# Building LSTM Model
+print("Building LSTM Model...")
+model = Sequential()
+model.add(Embedding(input_dim=vocab_size, output_dim=embed_dim, input_length=max_len))
+
+model.add(SpatialDropout1D(0.2))
+model.add(Bidirectional(LSTM(100, dropout=0.2, recurrent_dropout=0.2)))
+
+#model.add(LSTM(64, activation='tanh', kernel_regularizer=regularizers.l2(0.01), return_sequences=True))
+#model.add(Dropout(0.2))
+#model.add(LSTM(32, activation='tanh'))
+#model.add(Flatten())
+
+model.add(Dense(64, activation='relu'))
+model.add(BatchNormalization())
+model.add(Dropout(0.2))
+model.add(Dense(32, activation='relu'))
+model.add(Dense(len(np.unique(y_encoded)), activation='softmax'))
+
+
+# Compile Model
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.summary()
+
+# Train Model with Early Stopping
+early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
+history = model.fit(xtrain, ytrain_en, batch_size=32, epochs=10, validation_data=(xtest, ytest_en), callbacks=[early_stopping])
+
+# Predict
+test_predictions = model.predict(xtest)
+ypred_pr = np.argmax(test_predictions, axis=1)
+
+# Model Evaluation
+print(f"Length of X_test: {len(xtest)}")
+print(f"Length of y_test: {len(ytest)}")
+print(f"Length of predictions: {len(ypred_pr)}")
+print(f"Model Accuracy: {accuracy_score(ytest, ypred_pr) * 100:.2f}%")
+
+# Confusion Matrix & Classification Report
+plt.figure(figsize=(6, 5))
+sns.heatmap(confusion_matrix(ytest, ypred_pr), annot=True, fmt='d', cmap='Blues', xticklabels=label_encoder.classes_.astype(str), yticklabels=label_encoder.classes_.astype(str))
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+plt.show()
+
+print("Classification Report:")
+print(classification_report(ytest, ypred_pr, target_names=label_encoder.classes_.astype(str)))
+
+

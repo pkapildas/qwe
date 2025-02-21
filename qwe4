@@ -771,3 +771,61 @@ Conclusion
 Understanding the differences between RNN, LSTM, and   is crucial for selecting the right model for sequential data tasks. 
 Each type has unique strengths and challenges, making them suitable for different applications. By mastering these architectures, 
 
+
+#stemming and lemmatization
+stemming and lemmatization are two essential techniques used to transform words into their base or root forms. These processes aid in reducing the dimensionality of text data and are employed in various NLP applications such as information retrieval, sentiment analysis, and machine learning. Despite sharing the common goal of reducing words to their base forms, stemming and lemmatization have distinct approaches and outcomes. In this article, we will delve into the dissimilarities between stemming and lemmatization, along with illustrative examples.
+
+Stemming: Stemming is a technique where words are reduced to their base or root form by removing suffixes or prefixes. The resulting stem may not necessarily be a valid word on its own, but it can represent multiple related words. The process is relatively simple and involves applying predefined rules to trim common affixes. Stemming is generally faster than lemmatization due to its rule-based nature.
+Example: Consider the following words: “running,” “runner,” and “runs.” After stemming, they would all be reduced to the common stem “run.”
+
+Original Words: running, runner, runs
+
+Stemmed Words: run, run, run
+
+2. Lemmatization: Lemmatization, on the other hand, is a more sophisticated technique that transforms words to their base forms, known as lemmas, considering the word’s meaning and context. Unlike stemming, lemmatization ensures that the resulting lemma is a valid word, and it typically involves using a vocabulary or dictionary to map a word to its lemma.
+
+Example: Let’s consider the same words as before: “running,” “runner,” and “runs.” After lemmatization, they will be reduced to different lemmas based on their respective parts of speech and context.
+
+Original Words: running, runner, runs
+
+Lemmatized Words: run, runner, run
+
+In this example, “running” remains unchanged, as it is already in its base form (a verb in the present participle form). “Runner” remains “runner” since it is a noun, and the plural form “runs” becomes “run,” the base form of the verb.
+
+Lemmatization is computationally expensive since it involves look-up tables and what not. If you have large dataset and performance is an issue, go with Stemming. Remember you can also add your own rules to Stemming. If accuracy is paramount and dataset isn't humongous, go with Lemmatization.
+
+
+
+Word2Vec (word to vector) is a technique used to convert words to vectors, thereby capturing their meaning, semantic similarity, and relationship with surrounding text. This method helps computers learn the context and connotation of expressions and keywords from large text collections such as news articles and books.
+
+The basic idea behind Word2Vec is to represent each word as a multi-dimensional vector, where the position of the vector in that high-dimensional space captures the meaning of the word.
+Word2Vec’s meaningful embedding goes beyond traditional word vectorization methods like latent semantic analysis (LSA), singular value decomposition (SVD), or global vectors for word representation (GloVe), which existed before its introduction in 2013. Here’s why.
+
+Word2Vec creates numerical vectors in a high-dimensional space while preserving the semantic and syntactic relationships between them.
+This concept is more effective than any of its predecessors, as it simplifies the representation of relationships by encoding them into fixed-sized vectors and reducing the dimensionality of the space involved. This simplification makes mathematical analysis easier.
+This technique can be applied to textual data and non-textual data, providing a tool to compare different things and identify similarities, whether it be goods, chemical compounds, gene sequences, or business concepts.
+Word2Vec enables training contextualized models using open-source code optimized for speed and efficiency on specific data sets. For example, if your target data is in finance, you can use a model trained on the finance corpus
+Has difficulty handling unknown words
+Doesn’t have shared representations at sub-word levels
+
+Difficult to scale to new languages
+
+Word Embedding is an approach for representing words and documents. Word Embedding or Word Vector is a numeric vector input that represents a word in a lower-dimensional space. It allows words with similar meanings to have a similar representation.
+
+Word Embeddings are a method of extracting features out of text so that we can input those features into a machine learning model to work with text data. They try to preserve syntactical and semantic information. The methods such as Bag of Words (BOW), 
+CountVectorizer and TFIDF rely on the word count in a sentence but do not save any syntactical or semantic information. 
+In these algorithms, the size of the vector is the number of elements in the vocabulary.
+Need for Word Embedding?
+To reduce dimensionality
+To use a word to predict the words around it.
+Inter-word semantics must be captured.
+How are Word Embeddings used?
+They are used as input to machine learning models.
+Take the words —-> Give their numeric representation —-> Use in training or inference.
+To represent or visualize any underlying patterns of usage in the corpus that was used to train them
+
+Modern Natural Language Processing (NLP) uses word embeddings that have been previously trained on a large corpus of text and are hence called 
+‘Pre-trained Word Embeddings.’ Pre-trained word embeddings are a type of Transfer Learning.
+They are trained on large datasets that can enhance the performance of a Natural Language Processing (NLP) model because they capture both 
+the connotative and syntactic meaning of a word. 
+All of these word embeddings are useful during hackathons and in real-world scenarios.

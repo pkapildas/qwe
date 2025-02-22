@@ -135,6 +135,989 @@ df_chk
 daily = df4.fillna(df4.rolling(6,min_periods=1).mean())
 
 
+if time series has seasonality, then test data must include atleast one seasonal period.
+train_end=datetime(1958,12,31)
+test_end=datetime(1960,12,31)
+train             = df[:train_end] 
+test              = df[train_end + timedelta(days=1):test_end]
+
+
 ## imputing using interpolation
 df4_imputed= df4.interpolate(method = 'linear')
 
+
+
+import pandas                          as      pd
+import numpy                           as      np
+import matplotlib.pyplot               as      plt
+import statsmodels.tools.eval_measures as      em
+from   sklearn.metrics                 import  mean_squared_error
+from   statsmodels.tsa.api             import ExponentialSmoothing, SimpleExpSmoothing, Holt
+from   IPython.display                 import display
+from   pylab                           import rcParams
+from   datetime                        import  datetime,timedelta
+from math import sqrt
+import warnings
+
+
+import matplotlib.pyplot               as      plt
+from statsmodels.tsa.stattools         import  adfuller
+from statsmodels.tsa.stattools         import  pacf
+from statsmodels.tsa.stattools         import  acf
+from statsmodels.graphics.tsaplots     import  plot_pacf
+from statsmodels.graphics.tsaplots     import  plot_acf
+from   IPython.display                 import  display
+from   pylab                           import  rcParams 
+import warnings
+warnings.filterwarnings('ignore')
+%matplotlib inline
+
+Double Exponential Smoothing / Holt's linear Method
+model_DES = Holt(train,exponential=True, initialization_method='estimated')
+training the double exponential model
+model_DES_fit1 = model_DES.fit(optimized=True)
+model_DES_fit1.summary()
+
+Predicting forecast
+DES_predict1 = model_DES_fit1.forecast(steps=len(test))
+Lets plot the forecast for SES and DES
+plt.plot(train, label='Train')
+plt.plot(test, label='Test')
+
+plt.plot(DES_predict1, label='DES forecast')
+plt.legend(loc='best')
+plt.grid()
+
+Triple Exponential Smoothing / Holt-Winters Method
+model_TES_add = ExponentialSmoothing(train,trend='additive',seasonal='additive',initialization_method='estimated')
+training the model
+model_TES_add = model_TES_add.fit(optimized=True)
+model_TES_add.summary()
+
+predicting forecast
+TES_add_predict =  model_TES_add.forecast(len(test))
+lets plot foecast results
+plt.plot(train, label='Train')
+plt.plot(test, label='Test')
+
+plt.plot(TES_add_predict, label='TES forecast')
+plt.legend(loc='best')
+plt.grid()
+Evaluating Model Performance
+mean_squared_error(test.values,TES_add_predict.values,squared=False)
+35.75882010853071
+def MAPE(y_true, y_pred):
+    return np.mean((np.abs(y_true-y_pred))/(y_true))*100
+MAPE(test['Pax'],TES_add_predict)
+lets build model uaing 'multiplicative' forecast
+
+model_TES_mul = ExponentialSmoothing(train,trend='multiplicative',seasonal='multiplicative',initialization_method='estimated')
+training the model
+model_TES_mul = model_TES_mul.fit(optimized=True)
+model_TES_mul.summary()
+predicting forecast
+TES_mul_predict =  model_TES_mul.forecast(len(test))
+lets plot foecast results for H-W model with multiplicative seasonality
+plt.plot(train, label='Train')
+plt.plot(test, label='Test')
+plt.plot(TES_mul_predict, label='TES forecast')
+plt.legend(loc='best')
+plt.grid()
+Evaluating Model Performance
+mean_squared_error(test.values,TES_mul_predict.values,squared=False)
+Defining Mean Absolute Percentage error
+def MAPE(y_true, y_pred):
+    return np.mean((np.abs(y_true-y_pred))/(y_true))*100
+Mean Absolute Percentage Error for simple forecasting model
+MAPE(test['Pax'],TES_mul_predict)
+forecasting
+model_TES_mul = ExponentialSmoothing(df,trend='multiplicative',seasonal='multiplicative',initialization_method='estimated')
+model_TES_mul = model_TES_mul.fit(optimized=True)
+model_TES_mul.summary()
+
+Reading time series data
+df = pd.read_csv('oil.csv',parse_dates=['date'],dayfirst=True)
+df.head()
+
+date=pd.date_range(start="01/01/1981",end="31/12/1993",freq='M')
+date
+df['Month']=date
+df=df.drop('Year',axis=1)
+df=df.set_index('Month')
+
+lag plot 
+pd.plotting.lag_plot(df, lag=1)
+
+pd.plotting.lag_plot(df, lag=2)
+plot_acf(df1,lags=10);
+
+plot_pacf(df1,lags=10);
+
+1st order Differencing
+df_1=df.diff().dropna()
+df_1.plot(title='1st oder differencing')
+Seasonal differencing
+df2.plot()
+df2_12=df2.diff(periods=12).dropna()
+df2_12.plot()
+df4_1=df4.diff(periods=1).dropna()
+df4_1.plot()
+
+from statsmodels.graphics.gofplots     import qqplot
+As stock price data is available for buisness days only, time series might be discontinuos on daily basis. We should update the time series considering business days
+from pandas.tseries.offsets import BDay
+date = pd.date_range(start='05/01/2017', end='01/31/2019', freq=BDay())
+adding business dates to time series as a new column
+df['TimeStamp']=pd.DataFrame(date,columns=['Date'])
+df['TimeStamp'] = pd.to_datetime(df['TimeStamp'])
+df_model = df.set_index('TimeStamp')
+df_model.head()
+df_model=df_model.drop('Date',axis=1)
+
+df_model.plot(grid=True);
+
+Lets plot mean across the months to check whether the time series is stationary or not
+monthly_mean = df_model.resample('M').mean()
+monthly_mean.plot.bar()
+applying Adfuller test to confirm the same
+observations= df_model.values
+test_result = adfuller(observations)
+print('ADF Statistic: %f' % test_result[0])
+print('p-value: %f' % test_result[1])
+print('Critical Values:')
+for key, value in test_result[4].items():
+	print('\t%s: %.5f' % (key, value))
+
+plot_acf(df_model);
+plot_pacf(df_model);
+ACF plot is clearly showing, time series observations are heavily impacted by past values. While PACF is showing limited number of spikes before cut-off
+Can select AR(1) and MA(0) process to build ARMA model
+splittng time series into training and testing sets
+rain_end=datetime(2018,10,30)
+test_end=datetime(2019,1,31)
+train             = df_model[:train_end] 
+test              = df_model[train_end + timedelta(days=1):test_end]
+test.shape
+model=ARIMA(train )
+model_fit=model.fit()
+print(model_fit.summary())
+predicting forecasts using the model
+pred_start=test.index[0]
+pred_end=test.index[-1]
+pred_end
+forecast=model_fit.forecast(10)
+predictions=model_fit.predict(start=pred_start, end=pred_end)
+lets plot actual series and forecast
+plt.plot(train,label='Training Data')
+plt.plot(test,label='Test Data')
+plt.plot(test.index,predictions,label='Predicted Data - ARMA(1,0)')
+plt.legend(loc='best')
+plt.grid();
+finding residuals
+residuals = test.Close - predictions
+plt.plot(residuals)
+plt.show()
+
+accuracy matrix
+from sklearn.metrics import mean_squared_error
+mean_squared_error(test.values,predictions.values,squared=False)
+5.0526743669583905
+def MAPE(y_true, y_pred):
+    return np.mean((np.abs(y_true-y_pred))/(y_true))*100
+MAPE(test.values,predictions.values)
+#residual q-q plot for to check model performance
+qqplot(residuals,line="s");
+forecast
+model=ARIMA(df_model)
+model_fit=model.fit()
+forecast=model_fit.forecast(15)
+forecasting=pd.DataFrame(forecast)
+date = pd.date_range(start='01/09/2019', periods=15, freq=BDay())
+forecasting['timestamp']=date
+forecasting=forecasting.set_index('timestamp')
+forecasting
+
+plt.plot(df_model,label='Data')
+plt.plot(forecasting,label='forecast')
+plt.legend(loc='best')
+plt.grid();
+
+----
+
+import pandas                             as      pd
+import numpy                              as      np
+import matplotlib.pyplot                  as      plt
+import seaborn                            as      sns
+from   IPython.display                    import  display
+from   pylab                              import  rcParams 
+from   datetime                           import  datetime, timedelta
+from statsmodels.tsa.stattools            import  adfuller
+from statsmodels.tsa.stattools            import  pacf
+from statsmodels.tsa.stattools            import  acf
+from statsmodels.graphics.tsaplots        import  plot_pacf
+from statsmodels.graphics.tsaplots        import  plot_acf
+from statsmodels.graphics.gofplots        import  qqplot
+from statsmodels.tsa.seasonal             import  seasonal_decompose
+#from statsmodels.tsa.arima_model          import  ARIMA
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.statespace.sarimax   import  SARIMAX
+import warnings
+df = pd.read_csv('MaunaLoa.csv',parse_dates=['Year-Month'],index_col='Year-Month')
+df.head(15)
+
+df.plot();
+plt.grid()
+boxplot 
+sns.boxplot(x=df.index.month,y=df['CO2 ppm'])
+
+
+monthly_co2ppm_across_years = pd.pivot_table(df, values = 'CO2 ppm', columns = df.index.year, index = df.index.month_name())
+monthly_co2ppm_across_years
+
+monthly_co2ppm_across_years.plot()
+plt.grid()
+plt.legend(loc='best');
+
+Decompose the Time Series to understand the various components.
+decomposition = seasonal_decompose(df,model='additive')
+decomposition.plot();
+stationarity test
+sns.boxplot(x=df.index.year,y=df['CO2 ppm'])
+plt.grid();
+
+observations= df.values
+test_result = adfuller(observations)
+test_result
+
+applying differencing
+df_diff = df.diff(periods=1).dropna()
+observations= df_diff.values
+test_result = adfuller(observations)
+test_result
+Check the ACF and PACF of the training data.
+plot_acf(df,lags=30);
+plot_pacf(df);
+plot_acf(df_diff);
+plot_pacf(df_diff);
+
+Train-Test split
+train_end=datetime(1978,12,1)
+test_end=datetime(1980,12,1)
+train             = df[:train_end] 
+test              = df[train_end + timedelta(days=1):test_end]
+
+Selecting an order of ARIMA model for data with the lowest Akaike Information Criteria (AIC).
+import itertools
+p = q = range(0, 4)
+d= range(1,2)
+pdq = list(itertools.product(p, d, q))
+print('parameter combinations for the Model')
+for i in range(1,len(pdq)):
+    print('Model: {}'.format(pdq[i]))
+
+for param in pdq:
+            try:
+                mod = ARIMA(train, order=param)
+                results_Arima = mod.fit()
+                print('ARIMA{} - AIC:{}'.format(param, results_Arima.aic))
+                dfObj1 = dfObj1.append({'param':param, 'AIC': results_Arima.aic}, ignore_index=True)
+
+            except:
+                continue
+
+dfObj1.sort_values(by=['AIC'])
+
+model = ARIMA(train, order=(2,1,3))
+
+results_Arima = model.fit()
+
+print(results_Arima.summary())
+
+Predict on the Test Set using this model and evaluate the model on the test set using RMSE and MAPE
+pred_start=test.index[0]
+pred_end=test.index[-1]
+
+ARIMA_predictions=results_Arima.predict(start=pred_start, end=pred_end)
+ARIMA_predictions
+
+ARIMA_pred=ARIMA_predictions.cumsum()
+
+plt.plot(train,label='Training Data')
+plt.plot(test,label='Test Data')
+plt.plot(test.index,ARIMA_predictions,label='Predicted Data - ARIMA')
+plt.legend(loc='best')
+plt.grid();
+
+test.columns
+test.head()
+ARIMA_predictions.head()
+ARIMA_predictions_df = pd.DataFrame(ARIMA_predictions)
+ARIMA_predictions_df.head()
+ARIMA_predictions_df['predicted_mean']
+residuals = test['CO2 ppm'] - ARIMA_predictions_df['predicted_mean']
+qqplot(residuals,line="s");
+
+from sklearn.metrics import  mean_squared_error
+
+rmse = mean_squared_error(test['CO2 ppm'],ARIMA_predictions_df['predicted_mean'], squared=False)
+ 
+print(rmse)
+
+def MAPE(y_true, y_pred):
+    return np.mean((np.abs(y_true-y_pred))/(y_true))*100
+mape=MAPE(test['CO2 ppm'].values,ARIMA_predictions_df['predicted_mean'].values)
+print(mape)
+
+SARIMA Model
+
+import itertools
+p = q = range(0, 3)
+d= range(1,2)
+pdq = list(itertools.product(p, d, q))
+
+model_pdq = [(x[0], x[1], x[2], 12) for x in list(itertools.product(p, d, q))]
+print('Examples of parameter combinations for Model...')
+print('Model: {}{}'.format(pdq[1], model_pdq[1]))
+print('Model: {}{}'.format(pdq[1], model_pdq[2]))
+print('Model: {}{}'.format(pdq[2], model_pdq[3]))
+print('Model: {}{}'.format(pdq[2], model_pdq[4]))
+
+Creating an empty Dataframe with column names only where the model and AIC scores will be saved
+dfObj2 = pd.DataFrame(columns=['param','seasonal', 'AIC'])
+dfObj2
+
+mport statsmodels.api as sm
+for param in pdq:
+    for param_seasonal in model_pdq:
+        mod = sm.tsa.statespace.SARIMAX(train,
+                                            order=param,
+                                            seasonal_order=param_seasonal,
+                                            enforce_stationarity=False,
+                                            enforce_invertibility=False)
+            
+        results_SARIMA = mod.fit()
+        print('SARIMA{}x{}12 - AIC:{}'.format(param, param_seasonal, results_SARIMA.aic))
+        dfObj2 = dfObj2.append({'param':param,'seasonal':param_seasonal ,'AIC': results_SARIMA.aic}, ignore_index=True)
+
+dfObj2.sort_values(by=['AIC'])
+
+model = sm.tsa.statespace.SARIMAX(train,
+                                order=(1,1,0),
+                                seasonal_order=(1,1,2,12),
+                                )
+model_Sarima = model.fit()
+print(model_Sarima.summary())
+
+SARIMA_predictions=model_Sarima.predict(start=pred_start, end=pred_end)
+
+plt.plot(train,label='Training Data')
+plt.plot(test,label='Test Data')
+plt.plot(test.index,SARIMA_predictions,label='Predicted Data - SARIMA')
+plt.legend(loc='best')
+plt.grid();
+
+inding RSMA and MAPE
+from sklearn.metrics import  mean_squared_error
+rmse = mean_squared_error(test['CO2 ppm'],SARIMA_predictions, squared=False)
+print(rmse)
+0.8213789499910458
+mape = MAPE(test['CO2 ppm'],SARIMA_predictions)
+print(mape)
+0.18461311230296018
+model_Sarima.plot_diagnostics(figsize=(16, 8))
+plt.show()
+fitting model on whole data
+model = sm.tsa.statespace.SARIMAX(df,
+                                order=(1,1,0),
+                                seasonal_order=(1,1,2,12),
+                                enforce_stationarity=False,
+                                enforce_invertibility=False)
+model_Sarima = model.fit()
+print(model_Sarima.summary())
+
+Forecast with confidence interval
+forecast = model_Sarima.forecast(steps=24)
+forecast
+
+pred95 = model_Sarima.get_forecast(steps=24)
+pred95=pred95.conf_int()
+pred95
+
+axis = df.plot(label='Observed', figsize=(15, 8))
+forecast.plot(ax=axis, label='Forecast', alpha=0.7)
+axis.fill_between(forecast.index, pred95['lower CO2 ppm'], pred95['upper CO2 ppm'], color='k', alpha=.15)
+axis.set_xlabel('Year-Months')
+axis.set_ylabel('CO2 ppm')
+plt.legend(loc='best')
+plt.show()
+
+
+
+----
+
+Explain the concept of seasonality in time series analysis. How can seasonality be 
+detected and accounted for in a time series model? Provide examples where applicabl
+
+range of techniques to detect seasonality in time series data. These include statistical analysis techniques like autocorrelation function (ACF) analysis,
+ seasonal subseries plots, and visualizations to identify patterns effectively.
+ They include decomposition techniques, autocorrelation analysis, and seasonal time series (STL) decomposition.
+ 
+ Effect of Seasonality on Forecasting Accuracy: Ignoring seasonality can cause variations in data patterns, making forecasting more difficult. 
+ Inaccurate estimates can then affect resource allocation and business decisions.
+Adding Seasonality to Forecasting Models: To make better predictions, you should include patterns of the seasons in your models.
+Methods like seasonal exponential smoothing, seasonal ARIMA, and the Prophet
+
+ACF analysis measures the correlation between a time series and its lagged values. It helps identify seasonal patterns.
+
+ locally weighted regression, STL decomposition decomposes the time series into its trend, seasonal, and residual components.
+ 
+ 
+ ACF and PACF
+We can calculate the correlation for time-series observations with observations from previous time steps, called lags. Since the correlation of the time series observations
+ is calculated with values of the same series at previous times, this is called a serial correlation, or an autocorrelation.
+
+A plot of the autocorrelation of a dataset of a time series by lag is called the AutoCorrelation Function, or the acronym ACF.
+ This plot is sometimes called a correlogram or an autocorrelation plot.
+
+ A partial autocorrelation or PACF is a summary of the relationship between an observation in a time series with observations at prior time steps with the relationships of 
+ 
+ in between observations removed.
+ 
+ time series data is not always random. Often, patterns or structures are hiding within. These structures can be broken down into three key components:
+
+Trend
+Seasonality
+Residual (or noise)
+Components of Time Series
+Level
+Trend
+Seasonality
+Noise
+Level
+Level is the baseline value of the series if it were a straight line. It is the baseline value that the pattern would be if there were not trend, seasonality, or noise. This is what the forecast would be if the value of the outcome variable was stable over time.
+
+Trend
+In time series forecasting, trend refers to the overall direction and shape of the data. As you now have a brief introduction to MLR, you know that data can be linear or nonlinear. The trend in a time series dataset is seen as an overall pattern to the data that represents the change that occurs from one observation to the next. The video below demonstrates how to visualize trend in time series data.
+
+Seasonality
+Seasonality is seen in time series as a pattern within a given year that repeats itself on an annual basis. Examples of seasonality include quarterly trends, monthly trends, or trends having to do with the actual season of the year (i.e. Fall, Spring, Summer, etc.). Another common seasonal pattern occurs around holidays, such as an increase in spending around Christmas time.
+Noise
+Noise refers to the random variation inherently present in time series, due to causes that are not accounted for, and perhaps should not be accounted for in your model. Noise is seen in a plot of your model’s residuals. If there is a pattern to the residuals, this means that there is still pattern or meaning that should be modeled. However, if there is no pattern to the residuals, then it is likely noise.
+
+The image below shows a time series dataset, Jobs, broken down into the various components. The top graph is simply the data plotted over time, or a line plot of the time series data. The details of the seasonal ups and downs in the top line do not stand out because of the long length of the line. The second graph shows just the trend of the data, with the seasonal pattern removed. The third graph then shows the seasonal pattern, with the trend removed. And finally, the fourth graph shows the residuals. Do they look like noise to you?
+
+An  Autocorrelation  function  (ACF)  determines  the  average correlation between time series observations and its past values for different lag.
+ ●Example,  the  correlation  at  lag  1  is  the  correlation  between observations  of  the  time  series  measured  at  time  t  with  all  the observations at 
+ time period t − 1. 
+ ●The correlation at lag 2 is the correlation between observations of the time series measured at time t with all of the observations at time period  t − 2.
+
+Time series is said to be stationary, when its statistical properties does not change with respect to time
+
+Stationary implies statistical equilibrium or stability in the data.
+
+Time  series  components  like  trend  affects  the  values  of  time series  at  different  time  steps  and  therefore  make  the  series non-stationary.
+
+Stationary time series does not have pronounced trend.
+
+he mean and variance does not change with respect to time.
+
+Correlation depends on the lag only.
+
+There are many methods to check whether a time series is stationary or not.
+●Time series plot:○Time series can be checked for stationarity by visually inspecting the time series plot.
+●Statistical test: ○Statistical tests can be used to check the stationarity of time series
+
+from statsmodels.tsa.statespace.sarimax import  SARIMAX
+from sklearn.metrics                   import  mean_squared_error, mean_absolute_percentage_error
+import warnings
+data = pd.read_csv("retail_sales.csv", parse_dates=['ds'], index_col='ds')
+data = pd.read_csv('data_set (1).csv')
+df1 = data.copy()
+print("-------------Dataset Overview----------------")
+print(data.info())
+print('\n---------- Sample data ----\n')
+print(df1.head(2))
+
+#------------ (2) fix the date column -------------------------
+#Monthly data : date range, sat, sun holiday
+df1['Date'] = pd.to_datetime(df1['Date'], format = '%d-%m-%Y' , errors = 'coerce') 
+df1 = df1.sort_values('Date')
+df1 = df1.set_index('Date')
+
+#------------ (3) Check for missing values --------------------
+print("\n-------Missing Values-------")
+print(df1.isnull().sum())
+----------(4) Copy the cleaned data ----------------------
+df3 = df1.copy()  # to be used later
+
+#------------ (4) # Section B - Decompose the time series -----------
+print(df1.head())
+model_add = seasonal_decompose(df1, model = 'add')  ;
+model_add.plot();
+
+model_mul = seasonal_decompose(df1, model = 'mul')  ;
+model_mul.plot();
+
+#------------ (4) # Section B - # Perform Dickey-Fuller Test
+def adf_test(series):
+    result = adfuller(series)
+    print('ADF Statistic:', result[0])
+    print('p-value:', result[1])
+    if result[1] > 0.05:
+        print("The series is non-stationary.")
+        return 0
+    else:
+        print("The series is stationary.")
+        return 1
+a = adf_test(df1)
+
+
+if a == 0: 
+    # If non-stationary, take first difference
+    df1_diff = df1.diff().dropna()
+    adf_test(df1_diff)
+
+#------------ (4) # Section B - # Plot ACF and PACF
+plot_acf(df1,lags=20)
+plt.show();
+
+plot_pacf(df1,lags=20)
+plt.show();
+# MODEL BUILDING
+xtrain = df1[~((df1.index.month>7) & (df1.index.year == 2020))]
+xtest = df1[ ((df1.index.month>7) &  (df1.index.year == 2020))]
+print('train data\n',xtrain.head())
+print('test data\n',xtest.head())
+
+# Define possible values for p, d, q    #GRID SEARCH
+p = range(1,3) #10  # Autoregressive terms
+d = range(1,2)  # Differencing terms
+q = range(1,3) #10 # Moving Average terms
+
+# Create all possible combinations
+pdq = list(itertools.product(p, d, q))
+print('\n----------the possible combinations------\n',pdq[:3])
+
+ls_a = []
+for i in pdq:
+    model = ARIMA(xtrain, order=i)
+    model_fit = model.fit()
+    ls_a.append({'pdq': i, 'AIC' : model_fit.aic })
+df_model = pd.DataFrame(ls_a)
+
+#print('\n----------Check which is lowest to fit in xtrain------')
+#df_model.sort_values('AIC').head()
+
+# Select the best model based on the lowest AIC
+best_order = df_model.sort_values('AIC').iloc[0]['pdq']
+#print(f"Best ARIMA order based on AIC: {best_order}")
+
+# Fit the best ARIMA model
+best_model = ARIMA(xtrain, order=  best_order) #(8,1,9)
+best_model_fit_arima = best_model.fit()
+#print(best_model_fit_arima.summary() ) 
+forecast = best_model_fit_arima.forecast(steps=len(xtest))   # predict for mothly
+a = np.sqrt(mean_squared_error(xtest,forecast)) ; 
+b = (mean_absolute_percentage_error(xtest, forecast)) * 100 
+print("ARIMA Model RMSE:", a)
+print("ARIMA Model MAPE:", b)
+
+# NOT ASKED -----------Convert forecast to DataFrame
+# forecast_df = pd.DataFrame(forecast, index=xtest.index, columns=['Forecast'])
+# print(forecast_df.head()) # Display forecasted values
+For arima model analyse residual -------------------------------------------
+--------- 3.C Forecast the Average Spending for next 1 months using the final model? 
+print('---------  For arima model analyse residual -------------------------------------------')
+arima_model_train  = ARIMA(df1,order=(3,1,3))
+a = arima_model_train.fit()
+#display(a.summary())
+a.plot_diagnostics();
+
+print('--------- 3.C Forecast the Average Spending for next 1 months using the final model? (5 MARKS)-----')
+predict_next_1=best_model_fit_arima.forecast(steps=len(xtest))
+plt.figure(figsize=(12,2))
+plt.plot(xtrain,label='Train')
+plt.plot(xtest,label='Test')
+plt.plot(predict_next_1,label='Forecast')
+plt.legend()
+plt.show()
+
+
+Section C Total 30 Marks
+3.A Fit exponential smoothing model and observe the residuals, RMSE and MAPE values of the model for test data. (10 MARKS) 3.A Fit exponential smoothing model and observe the residuals, RMSE and MAPE values of the model for test data. (10 MARKS) 3.B.i How would you improve the exponential smoothing model? Make the changes and Fit the final exponential smoothing model. (10 MARKS) 3.B.ii Analyze the residuals of this final model. Feel free to use charts or graphs to explain. (5 MARKS) 3.C Forecast the Average Spending for next 1 months using the final model? (5 MARKS)
+
+xtrain = df1[~((df1.index.month>7) & (df1.index.year == 2020))] xtest = df1[ ((df1.index.month>7) & (df1.index.year == 2020))] print('train data\n',xtrain.head()) print('test data\n',xtest.head()) mul add, mul mul, add mul, add add
+
+xtrain = df1[~((df1.index.month>7) & (df1.index.year == 2020))]
+xtest = df1[ ((df1.index.month>7) & (df1.index.year == 2020))]
+def fun_seasionality(t, s , df_chk):
+    print(f'\n-------------------------------------------------------------{t}, {s}-------------------\n')
+    exp_1=ExponentialSmoothing(xtrain,trend= t ,seasonal= s ,seasonal_periods=7)
+    result_1 =    exp_1.fit(optimized=True)    ; 
+    y_pred   = result_1.predict(start=len(xtrain),end=len(xtrain)+len(xtest)-1)
+    display(result_1.summary())
+    #result_1.plot_diagnostics();
+    qqplot(result_1.resid,line='45',fit=True)  ; plt.show()
+    a = np.sqrt(mean_squared_error(xtest,y_pred)) ; 
+    b = (mean_absolute_percentage_error(xtest, y_pred)) * 100 
+
+    new_row = pd.DataFrame({
+        "Model": ["EXPONENTIAL"],
+        "Trend": [t],
+        "Seasonality": [s],
+        "RMSE": [a],
+        "MAPE (%)": [b]
+    })
+    df_chk = pd.concat([df_chk, new_row], ignore_index=True)
+    return df_chk
+    #result_1.summary()
+
+
+df_chk=pd.DataFrame()
+df_chk = fun_seasionality('mul', 'add', df_chk);
+
+
+---
+df_chk = fun_seasionality('mul', 'mul', df_chk);
+df_chk = fun_seasionality('add', 'add', df_chk);
+df_chk = fun_seasionality('add', 'mul', df_chk);
+df_chk
+
+#----------------------SARIMAX-------------------------------------------can ignore----------------------------------------
+xtrain = df1[~((df1.index.month>7) & (df1.index.year == 2020))]
+xtest = df1[ ((df1.index.month>7) & (df1.index.year == 2020))]
+print('train data\n',xtrain.head())
+print('test data\n',xtest.head())
+
+# Define possible values for p, d, q
+p = range(1,3) #10  # Autoregressive terms
+d = range(1,2)  # Differencing terms
+q = range(1,3) #10 # Moving Average terms
+sp = 7             #seasonal period                 #A1
+
+# Create all possible combinations
+pdq = list(itertools.product(p, d, q))
+PDQ=[(x[0],x[1],x[2],  sp  ) for x in pdq]          #A2
+print('\n----------the possible combinations------\n',pdq[:3])
+
+ls_a = []
+for i in pdq:
+    for j in PDQ:
+        model = SARIMAX(xtrain, order=i, seasonal_order = j)      #A3
+        model_fit = model.fit()
+        ls_a.append({'pdq': i, 'PDQ': j, 'AIC' : model_fit.aic })
+
+print('\n----------Check which is lowest to fit in xtrain------')
+df_model = pd.DataFrame(ls_a)
+df_model.sort_values('AIC').head()
+
+# Select the best model based on the lowest AIC
+best_order = df_model.sort_values('AIC').iloc[0]['pdq']     #(2,1,2)
+seasonal_best_order = df_model.sort_values('AIC').iloc[0]['PDQ']  #(21,2,7)
+print(f"Best ARIMA order based on AIC: {best_order}")
+
+# Fit the best SARIMA model                   #A4
+best_model = SARIMAX(xtrain, order= best_order , seasonal_order = seasonal_best_order ) # best_order)
+best_model_fit = best_model.fit()
+print(best_model_fit.summary() ) 
+
+
+-----------------------
+from pandas.tseries.offsets import BDay
+date = pd.date_range(start='12/04/2020', end='12/01/2021', freq=BDay())
+date[0:263]
+date = pd.date_range(start='1/1/2018', end='4/10/2019', freq='D')
+date
+df['TimeStamp'] = pd.to_datetime(df['Date'], format='%d-%m-%Y')
+
+#df['TimeStamp']=pd.DataFrame(date,columns=['date'])
+df = df.set_index('TimeStamp')
+df=df.drop('Date',axis=1)
+df
+
+from pylab import rcParams
+rcParams['figure.figsize'] = 15,8
+df.plot()
+
+#Base Model using ARIMA
+from statsmodels.tsa.arima_model import  ARIMA
+import itertools
+p = q = range(0, 4)
+d= range(0,2)
+pdq = list(itertools.product(p, d, q))
+print('parameter combinations for the Model')
+for i in range(1,len(pdq)):
+    print('Model: {}'.format(pdq[i]))
+dfObj1 = pd.DataFrame(columns=['param', 'AIC'])
+dfObj1
+for param in pdq:
+            try:
+                mod = ARIMA(train, order=param)
+                results_Arima = mod.fit()
+                print('ARIMA{} - AIC:{}'.format(param, results_Arima.aic))
+                dfObj1 = dfObj1.append({'param':param, 'AIC': results_Arima.aic}, ignore_index=True)
+
+            except:
+                continue
+
+dfObj1.sort_values(by=['AIC'])
+
+import statsmodels.api as sm
+
+model = sm.tsa.arima.ARIMA(train, order=(2,1,3))
+results_Arima = model.fit()
+print(results_Arima.summary())
+
+
+ARIMA_predictions=results_Arima.forecast(len(test))
+
+plt.plot(train,label='Training Data')
+plt.plot(test,label='Test Data')
+plt.plot(test.index,ARIMA_predictions,label='Predicted Data - ARIMA')
+plt.legend(loc='best')
+
+from sklearn.metrics import  mean_squared_error
+rmse = mean_squared_error(test['Avg spending'],ARIMA_predictions, squared=False)
+print(rmse)
+
+def MAPE(y_true, y_pred):
+    return np.mean((np.abs(y_true-y_pred))/(y_true))*100
+
+mape=MAPE(test['Avg spending'].values,ARIMA_predictions[0])
+print(mape)
+
+Model Improvement
+Will use Exponential Smoothing model¶
+
+from statsmodels.tsa.api                  import  ExponentialSmoothing
+
+model_TES = ExponentialSmoothing(train,trend='additive',seasonal='additive',initialization_method='estimated')
+model_TES = model_TES.fit(optimized=True)
+model_TES.summary()
+
+TES_predictions =  model_TES.forecast(len(test))
+
+plt.plot(train,label='Training Data')
+plt.plot(test,label='Test Data')
+plt.plot(test.index,TES_predictions,label='Predicted Data - TES')
+plt.legend(loc='best')
+plt.grid();
+
+rmse = mean_squared_error(test['Avg spending'],TES_predictions.values, squared=False)
+print(rmse)
+
+mape=MAPE(test['Avg spending'].values,TES_predictions.values)
+print(mape)
+
+Model Tuning
+model_TES = ExponentialSmoothing(train,trend='additive',seasonal='additive',initialization_method='estimated')
+model_TES = model_TES.fit(smoothing_level=0.9542595,smoothing_trend=0.00607340,smoothing_seasonal=0.00158913,optimized=False)
+model_TES.summary()
+
+TES_predictions =  model_TES.forecast(len(test))
+
+plt.plot(train,label='Training Data')
+plt.plot(test,label='Test Data')
+plt.plot(test.index,TES_predictions,label='Predicted Data - TES')
+plt.legend(loc='best')
+plt.grid();
+rmse = mean_squared_error(test['Avg spending'],TES_predictions.values, squared=False)
+print(rmse)
+
+mape=MAPE(test['Avg spending'].values,TES_predictions.values)
+print(mape)
+
+### Residual Analysis
+residuals = test['Avg spending'].values-TES_predictions.values
+
+from statsmodels.graphics.gofplots        import  qqplot
+qqplot(residuals,line="s");
+Forecast Using Final Model
+model_TES = ExponentialSmoothing(df,trend='additive',seasonal='additive',initialization_method='estimated')
+
+model_TES = model_TES.fit(smoothing_level=0.9542595,smoothing_trend=0.00607340,smoothing_seasonal=0.00158913,optimized=False)
+model_TES.summary()
+
+forecast= model_TES.forecast(30)
+
+plt.plot(df,label='Data')
+plt.plot(forecast,label='forecast - TES')
+plt.legend(loc='best')
+plt.grid();
+
+trend = decomposition.trend
+seasonality = decomposition.seasonal
+residual = decomposition.resid
+print('Trend , \n ', trend.head(12), '\n')
+print('Sesonality ', '\n' , seasonality.head(12), '\n')
+print('Residual' , '\n' , residual.head(12), '\n')
+
+deaseasonlized_ts = trend+residual 
+deaseasonlized_ts.head(12)
+
+df.plot()
+deaseasonlized_ts.plot()
+plt.legend(['Original TimeSeries ', 'Timeseries without Seasonality Component'])
+
+dec = seasonal_decompose(df)
+dec.plot()
+servations = df.y
+test_result = adfuller(observations)
+test_resuly
+print(f'ADF statistics : {test_result[0]}')
+print(f'n_lags : {test_result[1]}')
+print(f' p-values  : {test_result[2]}')
+
+for key, value in test_result[4].items():
+    print('critical values :')
+    print(f' {key }, {value}')
+P-value  is obtained is greater than signifcant level of 0.05 
+#### Timeseries is non stationary applying 1st order differencing 
+
+df_diff = df.diff(periods =1 ).dropna()
+observations = df_diff.values
+test_result = adfuller(observations)
+test_result
+
+ Split dataset into 80-20 train and test sets.
+train = df[0:int(len(df)*0.8)]
+test = df[int(len(df)*0.8):]
+
+train['y'].plot(figsize=(13,5), fontsize =14)
+test['y'].plot(figsize=(13,5), fontsize =14)
+plt.grid()
+plt.legend(['Training Data ', 'Test Data '])
+plt.show()
+
+for i in range(10):
+    for j in [10,20, 30, 40]:
+        ar_mod = ARIMA(train, order=(i,1,j))
+        ar_mod = ar_mod.fit()
+        print(i, j, ar_mod.aic)
+
+ar_mod = ARIMA(train, order = (9,1,10), enforce_stationarity=False)
+ar_mod = ar_mod.fit()
+ar_mod.aic
+
+len(test)
+
+test_pred = ar_mod.forecast(len(test))
+mean_squared_error(test['y'], test_pred, squared=False)
+
+plt.plot(train, label = 'Training Data ')
+plt.plot(test, label= 'Test Data')
+plt.plot(test.index, ARIMA_predictions, label='ARIMA Predicted Value')
+plt.legend(loc='best')
+
+metrics.mean_absolute_percentage_error(test['y'], test_pred)
+
+
+p = q  = range(0,4)
+d= range(0,2)
+pdq = list(itertools.product(p,d,q))
+print('Parameter combinations for the model')
+for i in range(1, len(pdq)):
+    print('Model {}'.format(pdq[i]))
+
+fObj1 = pd.DataFrame(columns = ['param', 'AIC'])
+dfObj1
+for param in pdq:
+    mod = ARIMA(train, order =param)
+    arima_results = mod.fit()
+    print(' ARIMA {} - AIC {}'.format(param, arima_results.aic))
+    dfObj1.loc[len(dfObj1)] = {'param':param, 'AIC': arima_results.aic}
+    warnings.filterwarnings('ignore')
+
+dfObj1.sort_values(by=['AIC'])
+
+ARIMA (2, 0, 3) - AIC 5348.31675136 is lowest AIC score
+
+model = sm.tsa.arima.ARIMA(train, order =(2,0,3))
+results_arima = model.fit()
+results_arima.summary()
+
+ARIMA_predictions =results_arima.forecast(len(test))
+
+plt.plot(train, label = 'Training Data ')
+plt.plot(test, label= 'Test Data')
+plt.plot(test.index, ARIMA_predictions, label='ARIMA Predicted Value')
+plt.legend(loc='best')
+plt.grid()
+rmse = mean_squared_error(test['y'], ARIMA_predictions, squared=False)
+print(rmse)
+
+test['y']
+def MAPE(y_true, y_pred):
+    return np.mean((np.abs(y_true-y_pred)) / (y_true)) *100
+mape = MAPE(test['y'].values, ARIMA_predictions[0])
+print('Mape :', mape)
+plt.grid()
+
+dfObj1 = pd.DataFrame(columns = ['param', 'Seasonal', 'AIC'])
+dfObj1
+
+
+for param in pdq:
+    for param_seasonal in model_pdq:
+        mod = SARIMAX(train, order =param,  seasonal_order=param_seas, 
+                      enforce_stationarity=False, enforce_invertibility=False)
+    results = mod.fit()
+    print(' SARIMAX x{}6 - AIC {}'.format(param,param_seasonal, results.aic))
+    dfObj1.loc[len(dfObj1)] = {'param':param,  'Seasonal :'param_seasonal ,'AIC': results.aic}
+    warnings.filterwarnings('ignore')
+
+
+d = SARIMAX(train, order=(9,1,10), enforce_stationarity=False, seasonal_order= (1,1,1,14))
+mod = mod.fit()
+mod.aic
+
+ How would you improve the model? What changes you will make in the base model. Fit the final model. (10 marks)
+
+d. Analyze the residuals of final model. Feel free to use charts or graphs to explain. (2 marks)
+
+e. Forecast the sales for next 6 months using the final model? (3 marks)
+
+sari_pred = mod.predict(start= test.index[0], end = test.index[-1])
+#test_pred = ar_mod.forecast(len(test))
+mean_squared_error(test['y'], sari_pred, squared=False)
+
+plt.plot(train, label = 'Training Data ')
+plt.plot(test, label= 'Test Data')
+plt.plot(test.index, sari_pred, label='SARIMAX Predicted Value')
+plt.legend(loc='best')
+plt.grid()
+
+
+metrics.mean_absolute_percentage_error(test['y'], test_pred)
+from statsmodels.tsa.api import ExponentialSmoothing
+ex_mod = ExponentialSmoothing(train, trend= 'additive', seasonal='additive', initialization_method='estimated')
+ex_mod = ex_mod.fit()
+
+ex_mod.aic
+
+ex_pred = ex_mod.forecast(len(test))
+
+mean_squared_error(test['y'], ex_pred, squared=False)
+
+plt.plot(train, label = 'Training Data ')
+plt.plot(test, label= 'Test Data')
+plt.plot(test.index, ex_pred, label='Exponention SmoothingValue')
+plt.legend(loc='best')
+plt.grid()
+
+residuals = test['y'].values - ex_pred.values
+
+ex_mod = ExponentialSmoothing(train, trend= 'additive', seasonal='additive', initialization_method='estimated')
+ex_mod = ex_mod.fit()
+
+ex_mod.summary()
+ex_pred = ex_mod.forecast(59)
+ex_pred
+#plt.plot(train, label = 'Training Data ')
+plt.plot(test, label= 'Test Data')
+plt.plot(test.index, ex_pred, label='Prediction for 44 months')
+plt.legend(loc='best')
+plt.grid()
+# forcast for 60 months 
+
+ex_pred = ex_mod.forecast(60)

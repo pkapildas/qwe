@@ -817,4 +817,270 @@ time could not computationally scale well to  large documents and corpuses of te
 architecture that could accept an entire corpus at once and send each word / token of text through its own pathway independent of the rest.
  There was also a realization that despite the smart hack of  creating a Gated Mechanism, LSTMs still couldn’t resolve the fundamental RNN problem of 
  remembering the very long-range dependencies that are common in flowing paragraphs of text
- 
+ import re
+import unicodedata
+import nltk
+import string
+import gensim
+from nltk.corpus import stopwords
+from collections import Counter
+from gensim.models import Word2Vec
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Embedding, SpatialDropout1D
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.text import Tokenizer
+import numpy as np
+import pandas as pd
+from sklearn.metrics import confusion_matrix, accuracy_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+from keras.utils import to_categorical
+
+nltk.download('stopwords')
+nltk.download('punkt')
+
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score
+from sklearn import preprocessing
+from sklearn.preprocessing import LabelEncoder
+from nltk.tokenize import word_tokenize
+
+import unicodedata
+from nltk.corpus import stopwords
+from gensim.parsing.preprocessing import remove_stopwords
+import pandas as pd
+import numpy as np
+import string
+
+from time import time
+from gensim.models import Word2Vec
+
+from transformers import pipeline
+
+# Load the dataset
+df = pd.read_csv('reviews.csv')
+print(df.head())
+# Remove duplicates
+# Remove duplicate reviews
+df.drop_duplicates(subset=['Review'], keep='first')
+df.head()
+
+# Get English stopwords
+stop_words = set(stopwords.words('english'))
+
+# Function to clean text
+def clean_text(text):
+    # Remove punctuation
+    #use translate function
+    # hint: refer string.punctuation to fetch all punctuations
+    
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Remove punctuation
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    
+    # Remove stopwords
+    words = text.split()
+    text = ' '.join([word for word in words if word not in stop_words])
+    
+    # you need to import word_tokenize
+    from nltk.tokenize import word_tokenize # import word_tokenize
+    return text
+
+# Apply the cleaning function
+
+df['Cleaned_Review'] = df['Review'].apply(clean_text)
+df.head()
+
+# Word Embedding
+# Initialize TF-IDF Vectorizer
+vectorizer = TfidfVectorizer()
+
+tfidf_matrix = vectorizer.fit_transform(df['Cleaned_Review'])
+# Display the shape of the TF-IDF matrix
+tfidf_shape = tfidf_matrix.shape
+# tfidf vocabulaory
+#Hint: get feature names
+tfidf_vocabulary = vectorizer.get_feature_names_out()
+# Display results
+tfidf_shape, tfidf_vocabulary[:10]  # Showing first 10 words from the vocabulary for preview
+# Split the dataset
+X_train, X_test, y_train, y_test = train_test_split(tfidf_matrix, df['Sentiment'], test_size=0.2, random_state=42)
+# Train Naive Bayes classifier
+nb_classifier = MultinomialNB()
+nb_classifier.fit(X_train, y_train)
+
+# Evaluate the model
+y_pred = nb_classifier.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+# Display the accuracy
+accuracy
+
+# Tokenize the text
+tokenizer = Tokenizer(num_words=5000)
+tokenizer.fit_on_texts(df['Cleaned_Review'])
+
+#Hint : Use texts_to_sequences function
+
+# Convert texts to sequences
+X_seq = tokenizer.texts_to_sequences(df['Cleaned_Review'])
+
+# Pad sequences to ensure equal length
+X_padded = pad_sequences(X_seq, maxlen=100, padding='post')
+# Encode the labels
+encoder = LabelEncoder()
+y_encoded = encoder.fit_transform(df['Sentiment'])
+
+
+# Split the dataset
+X_train, X_test, y_train, y_test = train_test_split(X_padded, y_encoded, test_size=0.2, random_state=42)
+
+# Build the LSTM model
+model = Sequential([
+    Embedding(input_dim=5000, output_dim=128, input_length=100),
+    SpatialDropout1D(0.2),
+    LSTM(100, dropout=0.2, recurrent_dropout=0.2),
+    Dense(1, activation='softmax')  # 3 classes: Positive, Neutral, Negative
+])
+
+# Compile the model
+model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+# Train the model
+model.fit(X_train, y_train, epochs=5, batch_size=16, validation_data=(X_test, y_test), verbose=1)
+
+# Evaluate the model
+loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
+# Display the accuracy
+accuracy
+
+----
+# Load english language model
+nlp = spacy.load('en_core_web_sm')
+
+# Define custom tokenizer (remove stop words and punctuation and apply lemmatization)
+def custom_tokenizer(doc):
+    return [t.lemma_ for t in nlp(doc) if (not t.is_punct) and (not t.is_stop)]
+The tokenizer is then passed as a callback function inside the count vectorizer. We also set binary equal to true to produce a binary bag-of-words.
+
+# Pass tokenizer as callback function to countvectorizer
+vectorizer = CountVectorizer(tokenizer=custom_tokenizer, binary=True)
+
+# Fit vectorizer to corpus
+bow = vectorizer.fit_transform(corpus)
+We can view the resulting vocabulary and matrix the same way as before.
+
+# Vocabulary
+vectorizer.vocabulary_
+
+# Dense matrix representation
+bow.toarray()
+# Sparse slice
+print(bow[:,0:4])
+# Cosine similarity using numpy
+def cosine_sim(a,b):
+    return np.dot(a,b)/(np.linalg.norm(a)*np.linalg.norm(b))
+# Similarity between two documents
+print(corpus[1])
+print(corpus[3])
+print(f'Similarity score: {cosine_sim(bow[1].toarray().squeeze(),bow[3].toarray().squeeze()):.3f}')
+# Similarity between two documents
+print(corpus[0])
+print(corpus[2])
+print(f'Similarity score: {cosine_sim(bow[0].toarray().squeeze(),bow[2].toarray().squeeze()):.3f}')
+# cosine_similarity takes either array-likes or sparse matrices
+print(cosine_similarity(bow))
+
+Finally, we will build a bag-of-words matrix using n-grams. To do this, we can pass the ngram_range parameter in countvectorizer. It takes in a tuple, with the first entry indicating the minimum chunk size and the second entry indicating the maximum chunk size.
+
+# Unigrams and bigrams with ngram_range=(1,2)
+vectorizer = CountVectorizer(tokenizer=custom_tokenizer, lowercase=False, binary=True, ngram_range=(1,2))
+
+# Fit vectorizer to corpus
+unibigrams = vectorizer.fit_transform(corpus)
+
+# Print vocabulary size
+print(f'Size of vocabulary: {len(vectorizer.get_feature_names_out())}')
+
+# Print vocabulary
+print(vectorizer.vocabulary_
+
+ Only bigrams with ngram_range=(2,2)
+vectorizer = CountVectorizer(tokenizer=custom_tokenizer, lowercase=False, binary=True, ngram_range=(2,2))
+
+# Fit vectorizer to corpus
+bigrams = vectorizer.fit_transform(corpus)
+
+# Print vocabulary size
+print(f'Size of vocabulary: {len(vectorizer.get_feature_names_out())}')
+
+# Print vocabulary
+print(vectorizer.vocabulary_)
+
+
+==============
+#Hugging Face Pipeline
+pipelines provides a high-level, easy to use,API for doing inference over a variety of downstream-tasks, including:
+Sentence Classification _(Sentiment Analysis)_: Indicate if the overall sentence is either positive or negative, i.e. binary classification task or logitic regression task.
+Token Classification (Named Entity Recognition, Part-of-Speech tagging): For each sub-entities (*tokens*) in the input, assign them a label, i.e. classification task.
+Question-Answering: Provided a tuple (question, context) the model should find the span of text in content answering the question.
+Mask-Filling: Suggests possible word(s) to fill the masked input with respect to the provided context.
+Summarization: Summarizes the input article to a shorter article.
+Feature Extraction: Maps the input to a higher, multi-dimensional space learned from the data.
+Pipelines encapsulate the overall process of every NLP process:
+
+Tokenization: Split the initial input into multiple sub-entities with ... properties (i.e. tokens).
+Inference: Maps every tokens into a more meaningful representation.
+Decoding: Use the above representation to generate and/or extract the final output for the underlying task.
+The overall API is exposed to the end-user through the pipeline() method with the following structure:
+from transformers import pipeline
+#Initialize Sentiment analysis pipeline
+model_id = "cardiffnlp/twitter-roberta-base-sentiment-latest"
+nlp_sentence_classif = pipeline('sentiment-analysis',model=model_id)
+nlp_sentence_classif('Such a nice weather outside !')
+#Feed the text for classification
+import time
+start_time = time.time()
+print(nlp_sentence_classif('Such a nice weather outside !'))
+print('Time taken', time.time() - start_time)
+
+#Feed the text for classification
+nlp_sentence_classif('The audio was good. But camera was not so good')
+
+#Feed the text for classification
+nlp_sentence_classif('That was not a nice movie')
+
+#Initialize Sentiment analysis pipeline
+#nlp_sentence_classif = pipeline('sentiment-analysis', model='cardiffnlp/twitter-roberta-base-sentiment')
+#Initialize the pipeline for NER
+nlp_token_class = pipeline('ner')
+nlp_token_class.model
+#Feed the text for NER
+nlp_token_class('Hugging Face is a French company based in New-York.')
+
+#Initialize pipeline for Question Answering
+nlp_qa = pipeline('question-answering')
+#Feed a Paragraph and ask questions from the same
+paragraph = 'Hugging Face is a French company based in New-York.'
+question = 'Where is Hugging Face based?'
+nlp_qa(context=paragraph, question=question)
+nlp_qa(context=article, question='Who is the CEO of Google?')
+Text Generation - Mask Filling
+#Initialize the pipeline
+nlp_fill = pipeline('fill-mask')
+#Provide a text with MASKed words that need to be filled up
+nlp_fill('Hugging Face is a French company based in ' + nlp_fill.tokenizer.mask_token)
+nlp_fill('In Machine Learning, Machine learns ' + nlp_fill.tokenizer.mask_token + ' and biases.')
+#initialize pipeline
+summarizer = pipeline('summarization')
+summarizer(LONG_BORING_TENNIS_ARTICLE)
+text_generator = pipeline("text-generation")
+output = text_generator("The main reason for India's loss is ", )
+print(output[0]['generated_text'])
+import numpy as np
+nlp_features = pipeline('feature-extraction')
+output = nlp_features('Hugging Face is a French company based in Paris')
+np.array(output).shape   # (Samples, Tokens, Vector Size)

@@ -1084,3 +1084,63 @@ import numpy as np
 nlp_features = pipeline('feature-extraction')
 output = nlp_features('Hugging Face is a French company based in Paris')
 np.array(output).shape   # (Samples, Tokens, Vector Size)
+----
+Generative AI focuses on generating new data instances that resemble a given dataset. It learns the underlying data distribution to create new, realistic data points. Prominent generative AI models include Generative Adversarial Networks (GANs) and Variational Autoencoders (VAEs).
+
+Core principles of generative AI
+Generative AI models aim to learn the joint probability distribution of input data. They generate new data samples by modelling the entire data distribution, often requiring extensive computational resources and handling unlabeled data effectively.
+
+How generative AI works
+Generative AI works by training on existing data and learning its underlying distribution. For instance, GANs consist of two neural networks, a generator and a discriminator, which work together to create realistic images. VAEs, on the other hand, encode input data into a latent space and then decode it back to generate new data points.
+
+
+What is discriminative AI?
+Discriminative AI focuses on classifying existing data by learning the boundaries between different classes. It models the conditional probability distribution, making accurate predictions based on input data. Examples include Logistic Regression and Support Vector Machines (SVMs).
+
+
+Core principles of discriminative AI
+Discriminative models concentrate on the decision boundary between different data classes. They excel in supervised machine learning tasks, such as classification and regression, by focusing on labelled data to make predictions.
+
+How discriminative AI works
+Discriminative AI works by learning from labelled training data to identify patterns and make predictions. For example, SVMs find the optimal hyperplane that separates different classes, while logistic regression models the probability of a data point belonging to a particular class. While discriminative AI focuses on classifying data, the future of generative AI is advancing by enabling models to create new data based on learned patterns.
+
+Applications of generative AI
+Art and music creation
+Generative AI creates unique artworks and music compositions. Tools like Jukedeck and Amper Music use these models to produce innovative and creative content, transforming artistic processes.
+
+Synthetic data generation
+Generative models create synthetic data for training other AI models, enhancing both the diversity and quantity of training datasets, which improves model robustness and performance.
+
+Content creation
+Generative AI generates text, images, and videos, revolutionising content creation in industries such as marketing and entertainment by automating and enhancing creative processes.
+
+
+Applications of discriminative AI
+Spam filtering
+Discriminative AI models are crucial for email spam filtering systems. For example, Gmail uses these models to accurately classify and filter out spam emails, ensuring a cleaner inbox.
+
+Facial recognition
+Facial recognition systems utilise discriminative AI to identify individuals, enhancing security across various applications, from unlocking devices to surveillance systems in public spaces.
+
+Credit scoring
+In finance, discriminative AI models assess credit scores and loan eligibility, providing accurate and fair decision-making, which is vital for financial institutions and customers.
+
+Creativity and innovation
+Generative AI drives creativity by producing new and unique data, fostering innovation in fields like art and design, and pushing the boundaries of traditional creative processes.
+
+Data augmentation
+Generative models enhance training datasets, improving the performance of other AI models through increased data diversity, which is crucial for developing robust and accurate AI systems.
+
+Handling unlabeled data
+Generative AI excels at learning from unlabeled data, making it versatile for various unsupervised learning tasks, thus expanding its applicability across different domains.
+
+
+Advantages of discriminative AI
+High accuracy
+Discriminative AI provides high accuracy in classification tasks, making it reliable for applications that require precise predictions, such as medical diagnoses and fraud detection.
+
+Simplicity and speed
+These models are simpler and faster to train compared to generative models, offering efficiency in practical applications and quicker deployment in real-world scenarios.
+
+Robustness
+Discriminative AI models are robust against outliers and noisy data, ensuring reliable performance across diverse environments and maintaining accuracy in challenging conditions

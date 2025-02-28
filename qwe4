@@ -1,1 +1,312 @@
-a
+ Section B: Question No:2 (10 marks)
+This dataset has images from 8 different classes of household garbage; battery, biological, clothes, green-glass, metal, paper, plastic and shoes.
+Garbage Recycling is a key aspect of preserving our environment. To make the recycling process possible/easier, the garbage must be sorted to groups that have similar recycling process
+Dataset_Folder Name: Garbage classes 120 images are there in every train grabage class folder.
+Conditions to consider:
+--Parameters should not cross 300000
+--Should not use more than 4 layers (except input and output, including convolution and dense layers)
+--Use Adam Optimizer
+---
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPool2D, Flatten, Dense, GlobalAveragePooling2D, Dropout, BatchNormalization
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
+!ls /content/drive/MyDrive/dl_oct24/oct24data/garbage_classes/
+train_dir= '/content/drive/MyDrive/dl_oct24/oct24data/garbage_classes/train'
+test_dir= '/content/drive/MyDrive/dl_oct24/oct24data/garbage_classes/test'
+
+#CNN = Convolution Neural Network
+train_datagen=ImageDataGenerator(rescale=1/255.,validation_split=0.2)
+test_datagen=ImageDataGenerator(rescale=1/255.)
+
+# part 2 --------------------------------------------------------------------# Load training and validation datasets using subset split
+train_data = train_datagen.flow_from_directory( train_dir , target_size=(128, 128), batch_size=32, class_mode='categorical', subset='training')
+valid_data = train_datagen.flow_from_directory( train_dir , target_size=(128, 128), batch_size=32, class_mode='categorical', subset='validation')  # Validation set (20% of data)
+test_data  =  test_datagen.flow_from_directory(   test_dir, target_size=(128, 128), batch_size=32, class_mode='categorical')
+
+# part 3 ----------------------------------------------------------------------------- Build Model
+model1=Sequential()
+model1.add(Conv2D(64,kernel_size=(3,3),padding='same',activation='relu',input_shape=(128,128,3)))
+model1.add(Conv2D(32,kernel_size=(3,3),padding='same',activation='relu'))
+model1.add(GlobalAveragePooling2D())
+model1.add(Dense(32,activation='relu'))
+model1.add(Dense(8,activation='softmax'))       #because 8 class of garbage we have to find
+#model1.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
+#Infer the model summary
+model1.summary()
+
+
+ part 3 -----------------------------------------------------------------------------Compile the model
+model1.compile(  optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
+# model1.compile(optimizer='adam',loss='binary_crossentropy'     ,metrics=['accuracy']) # Changed loss to binary_crossentropy
+
+# part 3 ---------------------------------------------------------------------------- fit the model for train data and run it for 5 epoch
+history = model1.fit(train_data,batch_size=32,epochs=2,validation_data=valid_data)  #32 batch size # epoch 500 in realtime   # 32*24 = 768
+
+# evaluate the model for test data # Justify whether the model is overfitting or underfitting
+model1.evaluate(test_data)   # accuracy: 0.2237 - loss: 1.8832 #running good because we accuracy & loss are almost same
+'''
+# Step 4 ---------------------------------------------------------------------------- Evaluate the model on test data
+test_loss, test_acc = model1.evaluate(test_data)
+print(f"Test Accuracy: {test_acc:.4f}")
+
+# Justify Overfitting or Underfitting
+train_acc = history.history['accuracy'][-1]
+val_acc = history.history['val_accuracy'][-1]
+
+if train_acc > val_acc + 0.1:
+    print("The model may be overfitting.")
+elif val_acc > train_acc:
+    print("The model may be underfitting.")
+else:
+    print("The model has a good balance between bias and variance.")
+
+# plot to see overfitting or underfitting
+#plt.plot(history.history['accuracy'], label='accuracy')
+#plt.plot(history.history['val_accuracy'], label='val_accuracy')
+import matplotlib.pyplot as plt
+train_loss = history.history['loss']
+val_loss = history.history.get('val_loss', None)
+train_acc = history.history['accuracy']
+val_acc = history.history.get('val_accuracy', None)
+
+# Plot Loss Curve
+import matplotlib.pyplot as plt
+plt.figure(figsize=(12, 4))  # Increased figure height
+plt.subplot(1, 2, 1)  # Create subplots for accuracy and loss
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.xlabel('Epoch') ; plt.ylabel('Accuracy') ; plt.legend() ; plt.title('Accuracy')
+plt.subplot(1, 2, 2)
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel('Epoch'); plt.ylabel('Loss'); plt.legend(); plt.title('Loss')
+plt.tight_layout() # Adjust layout to prevent overlapping
+plt.show()'''
+
+
+---
+Section B: Question No:3 (20 marks)
+Improve the baseline model (model build in question2) performance and save the weights of improved model
+
+Conditions to consider:
+Apply Data Augmentation if required
+No parameter limit
+Can use any number of layers
+Use any optimizers of your choice
+Use early stopping and save best model callbacks
+
+---
+#Section B: Question No:3 (20 marks)
+#Improve the baseline model (model build in question2) performance and save the weights of improved model
+#Conditions to consider:
+#Apply Data Augmentation if required
+#No parameter limit
+#Can use any number of layers
+#Use any optimizers of your choice
+#Use early stopping and save best model callbacks
+
+#augment only the train
+train_datagen1=ImageDataGenerator(rescale=1/255.,rotation_range=45,width_shift_range=0.2,height_shift_range=0.2,
+                                  shear_range=0.2,zoom_range=0.2,horizontal_flip=True,fill_mode='reflect',validation_split=0.2)
+train_data1=train_datagen1.flow_from_directory(train_dir,target_size=(128,128),batch_size=32,class_mode='categorical',subset='training')
+valid_data1=train_datagen1.flow_from_directory(train_dir,target_size=(128,128),batch_size=32,class_mode='categorical',subset='validation')
+#same test data
+model2=Sequential()
+model2.add(Conv2D(128,kernel_size=(3,3),padding='same',activation='relu',input_shape=(128,128,3)))
+model2.add(BatchNormalization())
+model2.add(MaxPool2D())
+model2.add(Dropout(0.3))
+model2.add(Conv2D(64,kernel_size=(3,3),padding='same',activation='relu',input_shape=(128,128,3)))
+model2.add(BatchNormalization())
+model2.add(MaxPool2D())
+model2.add(Dropout(0.3))
+model2.add(Conv2D(32,kernel_size=(3,3),padding='same',activation='relu'))
+model2.add(BatchNormalization())
+model2.add(MaxPool2D())
+#model2.add(Dropout(0.3))
+
+model2.add(GlobalAveragePooling2D())
+#model2.add(Dropout(0.3))
+model2.add(Dense(32,activation='relu'))
+model2.add(BatchNormalization())
+model2.add(Dropout(0.5))
+model2.add(Dense(8,activation='softmax'))
+model2.summary()
+#sgd - STOCHASTIC GRADIENT DESCENT
+#SGD=tf.keras.optimizers.SGD(learning_rate=0.01,momentum=0.05)
+#model2.compile(optimizer=SGD,loss='categorical_crossentropy',metrics=['accuracy'])
+model2.compile('adam',loss='categorical_crossentropy',metrics=['accuracy'])
+#keras_callback=[EarlyStopping(monitor='val_loss',mode='min',patience=5,min_delta=0.01), ModelCheckpoint('garbage_best_transfer_model',monitor='val_loss',save_best_only=True)]
+keras_callback=[EarlyStopping(monitor='val_loss',mode='min',patience=5,min_delta=0.01), ModelCheckpoint('garbage_best_transfer_model.keras',monitor='val_loss',save_best_only=True)]
+#Infer the model summary
+# fit the model for train data
+model2.fit(train_data1,batch_size=32,epochs=2,validation_data=valid_data1,callbacks=keras_callback)
+# evaluate the model for test data
+# Justify whether the model is improved then the earlier model
+model2.evaluate(test_data)
+##plot PUTTING IN HISTORY
+
+
+train_datagen1=ImageDataGenerator(rescale=1/255.,rotation_range=45,width_shift_range=0.2,height_shift_range=0.2,
+                                  shear_range=0.2,zoom_range=0.2,horizontal_flip=True,fill_mode='reflect',validation_split=0.2)
+train_data1=train_datagen1.flow_from_directory(train_dir,target_size=(128,128),batch_size=32,class_mode='categorical',subset='training')
+valid_data1=train_datagen1.flow_from_directory(train_dir,target_size=(128,128),batch_size=32,class_mode='categorical',subset='validation')
+
+test_datagen=ImageDataGenerator(rescale=1/255.)
+test_data=test_datagen.flow_from_directory(test_dir,target_size=(128,128),batch_size=32,class_mode='categorical')
+
+# load the model and add 2 layers
+#(1. do global Average pooling, 2. add the output layer )
+# add the input layer with image size (224,224,3) and then add the pre-trained model (Hint: Base_model(inputs,training=False))
+# do global Average pooling (Hint: tf.keras.layers.GlobalAveragePooling2D()(previous layer o/p))
+# add output layer
+# Create the model with [tf.keras.Model(inputs,outputs)]
+# Infer the model summary
+
+base_model_path = '/content/drive/MyDrive/dl_oct24/base_model' #Corrected path
+cust_model=tf.keras.models.load_model(base_model_path)
+cust_model.summary()
+
+
+inputs=tf.keras.Input((224,224,3))
+x=cust_model(inputs,training=False)                            # add the pre-trained model
+x=GlobalAveragePooling2D()(x)                                  # do global Average pooling
+outputs=Dense(8,activation='softmax')(x)                       # add output layer (since multiple layer -- its softmax)
+cust_model_1=tf.keras.Model(inputs=inputs,outputs=outputs)     # create the model
+cust_model_1.summary() 
+
+
+# compile the model
+# Use model checkpoint to fetch the best model
+# fit the model to train data
+    #epochs=10,
+    #validation_data=test_data,
+    #callbacks=keras_callback
+
+# compile the model
+cust_model_1.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+keras_callback = [EarlyStopping(monitor='val_loss', mode='min', patience=5, min_delta=0.01),
+                  ModelCheckpoint('garbage_best_transfer_model_1', monitor='val_loss', save_best_only=True)]
+
+cust_model_1.fit(train_data1, batch_size=32, epochs=2, validation_data=valid_data1, callbacks=keras_callback)
+
+cust_model_1.evaluate(test_data)
+----
+Section C: Question 5: (15 Marks)
+Develop a Semantic segmentation model using Unet architecture on the given dataset.
+
+Dataset contains the images and the corresponding masks. Find the dataset under the folder “Unet_Dataset”. 1141 Glioma tumor images and its corresponding masks are provided.
+
+Students can make use of pre-trained Unet segmentation model using the library
+!pip install segmentation-models==1.0.1
+!pip install opencv-python
+os.environ["SM_FRAMEWORK"] = "tf.keras"
+
+import numpy as np
+import tensorflow as tf
+import keras
+import segmentation_models as sm
+import cv2 #Import cv2
+
+# Try to import TensorFlow Advanced Segmentation Models (TASM)
+try:
+    import tensorflow_advanced_segmentation_models as tasm
+    tasm_version = tasm.__version__
+except ImportError:
+    tasm_version = "TASM is not installed."
+
+# Print version information
+print("NumPy Version:", np.__version__)
+print("TensorFlow Version:", tf.__version__)
+print("Keras Version:", keras.__version__)
+print("Segmentation Models Version:", sm.__version__)
+print("TASM Version:", tasm_version)
+
+import segmentation_models as sm
+NumPy Version: 1.26.4
+TensorFlow Version: 2.18.0
+Keras Version: 3.8.0
+Segmentation Models Version: 1.0.1
+TASM Version: TASM is not installed.
+# Define paths (adjust if needed)
+image_dir ='/content/drive/MyDrive/dl_oct24/Unet_Dataset/glioma_img/'
+mask_dir = '/content/drive/MyDrive/dl_oct24/Unet_Dataset/glioma_mask/'
+SIZE = 128
+
+# List and filter image and mask files
+images = os.listdir(image_dir)
+filtered_images = [img for img in images if '(1)' not in img]
+
+masks = os.listdir(mask_dir)
+filtered_masks = [m for m in masks if '(1)' not in m]
+
+# Initialize datasets
+img_dataset = []
+mask_dataset = []
+
+# Load and preprocess images
+for image_name in filtered_images:
+#for i,image_name in enumerate(images):
+    if image_name.split('.')[1] == 'jpg':
+        image = cv2.imread(image_dir + image_name, 0)
+        image = Image.fromarray(image) # PIL Image is used.
+        image = image.resize((SIZE, SIZE))
+        img_dataset.append(np.array(image))
+# Load and preprocess masks
+for mask_name in filtered_masks:
+#for i,image_name in enumerate(masks):
+    if mask_name.split('.')[1] == 'jpg':
+        mask = cv2.imread(mask_dir + mask_name, 0)
+        mask = Image.fromarray(mask) # PIL Image is used.
+        mask = mask.resize((SIZE, SIZE))
+        mask_dataset.append(np.array(mask))
+
+img_dataset=np.array(img_dataset)
+img_dataset1=img_dataset/255.
+img_dataset1=np.expand_dims(img_dataset,axis=-1)
+img_dataset2=np.repeat(img_dataset1,3,axis=-1)
+
+mask_dataset=np.array(mask_dataset)
+mask_dataset1=mask_dataset/255.
+mask_dataset2=np.expand_dims(mask_dataset1,axis=-1)
+mask_dataset2=np.where(mask_dataset2>0.5,1.0,0.0) # Converting to binary #maintain float
+
+mask_dataset3=mask_dataset2.copy()
+print(img_dataset2.shape)
+print(mask_dataset2.shape)
+
+from sklearn.model_selection import train_test_split
+xtrain,xtest,ytrain,ytest=train_test_split(img_dataset2,mask_dataset2,test_size=0.2,random_state=0)
+
+#take the pre-trained model as resnet34 and do pre-processing
+BACKBONE = 'resnet34'
+preprocess_input = sm.get_preprocessing(BACKBONE)
+# use the preprocessed train input for model fitting
+X_train_prepr = preprocess_input(xtrain)
+X_test_prepr = preprocess_input(xtest)
+X_train_prepr.shape
+
+#load the Unet model using the below syntax
+model= sm.Unet(BACKBONE, input_shape=(128,128,3),
+                                encoder_weights=None, classes=1, activation='sigmoid')
+# Model compilation with the following specifications
+#Hint: optimizer='Adam'
+#    loss=sm.losses.bce_jaccard_loss
+#    metrics=[sm.metrics.iou_score])
+model.compile(optimizer='adam',loss=sm.losses.bce_jaccard_loss,metrics=[sm.metrics.iou_score])
+# fit the model for X_train_prepr and y_train.
+# use batch_size=2 and epochs=5 (maximum)
+
+model.fit(X_train_prepr,ytrain,batch_size=32,epochs=2,validation_data=(X_test_prepr,ytest))
+
+
+
+import segmentation_models as sm

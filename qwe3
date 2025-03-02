@@ -773,4 +773,5 @@ print("b2 (Bias for Hidden2):\n", b2)
 
 print("W3 (Hidden2 -> Output):\n", W3)
 print("b3 (Bias for Output):\n", b3)
-
+----
+done

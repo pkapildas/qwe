@@ -1,788 +1,120 @@
-+--------------------+-----------------------------------------------------------------------------------------------------
-| Topic              | Notes                      
-+--------------------+-----------------------------------------------------------------------------------------------------
-| UNION vs. UNION ALL| • Duplicates:  UNION     removes duplicate rows (implicit DISTINCT); 
-|                    |                UNION ALL returns all rows, including duplicates.                 
-|                    | • Performance: UNION     incurs sorting or hashing to eliminate duplicates (slower); 
-|                    |                UNION ALL concatenates result sets directly (faster)   
-+--------------------+-----------------------------------------------------------------------------------------------------
-| TRUNCATE vs. ROUND | • TRUNCATE(number, decimals) cuts off digits without rounding. TRUNCATE(3.14159, 3) → 3.141                                               
-|                    | • ROUND(number, decimals) rounds to the specified precision. ROUND(3.14159, 3) → 3.142                              
-+--------------------+-----------------------------------------------------------------------------------------------------
-| ISNULL() IFNULL()  | • ISNULL(expr, replacement): SQL Server syntax.                                                                                        
-                     |   SELECT IFNULL(middle_name, 'N/A') AS middle_name FROM users                                                       
-|                    | • IFNULL(expr, replacement): MySQL/SQLite syntax. Both return expr if not NULL; otherwise replacement.      
-+--------------------+-----------------------------------------------------------------------------------------------------
-| Primary Key        | • Primary Key: one per table; enforces NOT NULL + UNIQUE on the chosen column(s).                                                      
-| vs. Alternate Keys | • Alternate Keys: other candidate keys that also uniquely identify rows but weren’t chosen as the primary key.    
-| vs. Candidate Key  | • Candidate Key: any minimal set of columns that can uniquely identify rows; may be multiple per table; 
-|                    |                  can serve as alternate keys if not chosen as primary.
-|                    | CREATE TABLE employees (
-|  									 |		emp_id INT PRIMARY KEY,
-|                    |    email  VARCHAR(255) UNIQUE,       -- alternate key
-|  									 |		ssn    CHAR(9)     UNIQUE  );     -- alternate key                             
-+--------------------+-----------------------------------------------------------------------------------------------------
-| WHERE              | WHERE    filters before grouping (no aggregates).
-|  vs. HAVING        | HAVING   filters after grouping (can use aggregates).
-|  vs. Grouping      | GROUP BY groups rows by one or more columns, producing summary rows (often with aggregates); 
-|                    |              to filter those groups, use HAVING.
-|                    | SELECT ...... FROM Sales
-|                    | WHERE salary > 50000                -- filter rows first
-|                    | GROUP BY region                     -- aggregate per region
-|                    | HAVING AVG(amount) > 600            -- then filter groups
-|                    | ORDER BY avg_sale DESC;             -- optional ordering
-+--------------------+-----------------------------------------------------------------------------------------------------
-| Shared Lock        | (S) Acquires a shared lock allowing concurrent reads   , multiple transaction can read & write     
-| Exclusive Lock     | (X) Acquires an exclusive lock preventing other access , only 1   transaction can read & write     
-| Update Lock        | (U) Converts shared lock to exclusive for update to avoid deadlocks                                
-| IntentShared       | (IS, IX) Signals intent to acquire shared locks at table level   
-| IntentExclusive    | (Sch-X, Sch-M) Signals intent to acquire exclusive locks at lower level. 
-|                    | protect table definitions during DDL operations.   
-+--------------------+-----------------------------------------------------------------------------------------------------
-| Rank               |  • RANK() : assigns the same rank to tied rows but leaves gaps in the ranking sequence.  
-| vs Dense Rank      |  • DENSE_RANK(): assigns the same rank to tied rows without leaving gaps.  
-|                    | SELECT  score, RANK()       OVER (ORDER BY score DESC) AS rnk,
-|                    | DENSE_RANK() OVER (ORDER BY score DESC) AS drnk
-|                    | FROM (  SELECT 100 AS score UNION ALL SELECT 90           UNION ALL
-|                    |          SELECT 90           UNION ALL SELECT 80          ) AS t;
-+--------------------+-----------------------------------------------------------------------------------------------------
+Process the dataset as questioned below using spark libraries.
+
+# import statements
+
+from pyspark.context import SparkContext
+from pyspark.sql.session import SparkSession
+from pyspark.ml.feature import StringIndexer
+from pyspark.ml.feature import VectorAssembler
+from pyspark.sql.functions import isnull, when, count, col
+from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.feature import VectorAssembler, StandardScaler
+from pyspark.ml.regression import LinearRegression
+
+#prerequisite
+# !pip install pyspark
+
+sc = SparkContext.getOrCreate()
+#spark = SparkSession(sc)
+spark = SparkSession.builder.appName("LogisticRegression").getOrCreate()
+
+#Create Spark Session & Load the provided dataset into spark-dataframe
+#file_location = "/content/drive/MyDrive/sem3bda/Mumbai.csv" 
+file_location =  "/FileStore/tables/Mumbai.csv"
+file_type = "csv"
+
+infer_schema = "True"
+first_row_is_header = "True"
+delimiter = ","
+
+df = spark.read.format(file_type) \
+   .option("inferSchema", infer_schema) \
+   .option("header", first_row_is_header) \
+   .option("sep", delimiter) \
+   .load(file_location)
+
+display(df.limit(10))
+
+
+df.show()
+
+df.display()
+
+1. Show/print schema of the dataframe (1 marks)
+df.printSchema()
+# view 
+df.createOrReplaceTempView("df")
+spark.sql("DESCRIBE df").show()
+
+2. Delete the column - "No. of Bedrooms" from the spark dataframe ( 1 marks)
+df = df.drop("No. of Bedrooms")
+display(df.limit(5))
+
+# list of cols in alphabetic order
+columns = df.columns
+columns.sort()
+print(','.join(columns)
+
+3. Convert string column (i.e. "Location) into numeric values using StringIndexer transformer and make sure now DataFrame does not have any string columns anymore. (3marks)
+
+from pyspark.ml.feature import StringIndexer
  
- 
+indexer = StringIndexer(inputCols=["Location"], outputCols=["Location_indexed"])
+indexer_model = indexer.fit(df)
+df = indexer_model.transform(df).drop("Location")
 
-1] Dropping a table and related objects  
-      When you DROP TABLE tbl:  
-        • All table‐level objects (constraints, indexes, defaults, triggers) defined on tbl are automatically removed.  
-        • Columns obviously go away with the table.  
-        • Views or stored procedures that reference tbl are NOT dropped—but they become invalid (will error until fixed).  
+# Verify that there are no string columns left
+print("DataFrame schema after converting string columns:")
+df.printSchema()
 
-2] Types of constraints:  Levels for CHECK constraints  :  CHECK constraints can be declared:  
-          • **Column‐level** – applies only to that column’s value  
-            1. NOT NULL— disallow NULLs         : ALTER TABLE users ADD COLUMN     phone       VARCHAR(20) NOT NULL;
-            2. DEFAULT — supply a default value : ALTER TABLE users ADD COLUMN     signup_date DATE DEFAULT CURRENT_DATE;
-            3. UNIQUE  — enforce distinct values: ALTER TABLE users ADD CONSTRAINT uq_email    UNIQUE(email);
-            4. CHECK   — enforce a condition    : ALTER TABLE order ADD CONSTRAINT chk_qty_positv CHECK (quantity > 0);
-          • **Table‐level**  – can reference multiple columns in a Boolean expression  
-            1. **PRIMARY KEY** – enforces unique, non‐NULL row identifier  
-            2. **FOREIGN KEY** – enforces referential integrity to a parent table 
-        Applicable data types: any that support comparison or Boolean logic—numeric, date/time, character types.
-        They cannot directly validate LOBs or unsupported types, but you can CHECK on expressions that return these supported types.
-              CREATE TABLE IF NOT EXISTS A (
-                        C1  INT            NOT NULL AUTO_INCREMENT,      -- CREATE Basic + CREATE AutoInc
-                        C2  INT            NOT NULL,                     -- part of composite PK
-                        C3  VARCHAR(255)   NOT NULL UNIQUE,              -- CREATE Unique
-                        C4  TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,    -- CREATE Default
-                        C5  INT            CHECK (C5 >= 0),              -- CREATE Check
-                        C6  INT,                                         -- to reference via FK
-                    PRIMARY KEY (C1, C2),                            -- CREATE Composite (and CREATE PK)
-                    FOREIGN KEY (C6) REFERENCES B(C1)                -- CREATE FK
-                  ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4;
+4. Using vectorAssembler combines all columns (except target column i.e. 'Price') of spark DataFrame into single column (named as features). Make sure DataFrame now contains only two columns features and price. (4 marks)
+from pyspark.ml.feature import VectorAssembler
+features_col = df.columns
+features_col.remove('Price')
+assembler = VectorAssembler(inputCols= features_col, outputCol= "features")
+df_assembled = assembler.transform(df).select("features", "Price")
+df_assembled.printSchema()
 
-3]  View 
-        A virtual table defined by a SQL query;
-        does not store data itself but presents rows from underlying tables.  
-        Simple View:  
-          • Based on a single table  
-          • No GROUP BY, aggregates, DISTINCT, or joins  
-          • Generally updateable (INSERT/UPDATE/DELETE propagate)  
-        Complex View:  
-          • Can reference multiple tables (joins), use aggregates, GROUP BY, DISTINCT, UNION, subqueries  
-          • Not updateable (read-only)  
-        Necessity of creating Views  
-            Simplicity  : encapsulate complex joins/aggregations behind a simple SELECT.  
-            Security    : expose only selected columns or rows to certain users.  
-            Abstraction : decouple physical schema changes from application code.  
-        Example:  
-            CREATE VIEW v_active_customers AS
-              SELECT id, name, email
-              FROM customers
-              WHERE status='active';
-              
-        DROP VIEW view_name  
-          • Removes the view definition from the database; underlying tables and data remain intact.  
-        Updateability of views:  
-          • Simple views are updatable—INSERT/UPDATE/DELETE on the view affect the base table.  
-          • Complex views are not updatable because the DB cannot unambiguously map changes back to the base tables.  
-          
+display(df_assembled.limit(5))
 
-4] Auto-generating primary key values  
-          Use a sequence or identity/auto-increment feature so the DB generates the key on INSERT:  
-          CREATE TABLE Employees (
-            emp_id   INT            NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            name     VARCHAR(100)   NOT NULL,
-            dept_id  INT            NULL
-          ) ENGINE=InnoDB
-            DEFAULT CHARSET = utf8mb4;
+5. Scale the data using StandardScaler. The input columns are the features, and the output column with the rescaled that will be included in the scaled_df will be named "features_scaled". (3 marks)
+standardScaler = StandardScaler(inputCol="features", outputCol="features_scaled")
+scaled_model = standardScaler.fit(df_assembled)
+scaled_df = scaled_model.transform(df_assembled)
+#scaled_df.show(5, truncate=False)
 
-5] Referential integrity
-            Ensures foreign keys in child tables match existing primary/unique keys in parent tables.
-            Example:
-              CREATE TABLE departments (
-                dept_id   INT PRIMARY KEY,
-                name      VARCHAR(100)
-              );
-              CREATE TABLE employees (
-                emp_id    INT PRIMARY KEY,
-                dept_id   INT,
-                name      VARCHAR(100),
-                CONSTRAINT fk_emp_dept
-                  FOREIGN KEY (dept_id)
-                  REFERENCES departments(dept_id)
-                  ON DELETE CASCADE
-              );
+display(scaled_df.limit(5))
 
-6] Count of ‘a’ in “Great Learning”
-		SELECT
-			(LENGTH('Great Learning')
-			 - LENGTH(REPLACE(LOWER('Great Learning'), 'a', '')))
-			AS count_of_a;
- 
-7]EXISTS 
-      Tests for existence of rows in a subquery; returns TRUE if at least one row.
-      Example:
-        SELECT department_name
-        FROM departments d
-        WHERE EXISTS (
-          SELECT 1
-          FROM employees e
-          WHERE e.department_id = d.department_id
-        );
+6. Split the vectorised dataframe into training and test sets with approx one third records being held for testing (2 marks)
+# use randomSplit method
+(training_data, test_data) = scaled_df.randomSplit([0.67, 0.33], seed=42)
+print(f"Training Data Count: {training_data.count()}")
+print(f"Test Data Count: {test_data.count()}")
 
-8] Correlated subquery in HAVING clause
-        Usage & need: a subquery that references columns from the outer query, re-evaluated once per row. 
-        Useful for row-by-row comparisons against aggregated or related data without pre-aggregating.  
-        Example – list employees earning above their department’s average:
-          SELECT department_id, AVG(salary) AS dept_avg
-          FROM employees e1
-          GROUP BY department_id
-          HAVING AVG(salary) > (
-            SELECT AVG(salary)
-            FROM employees e2
-            WHERE e2.department_id = 10
-          );
+training_data.show(5)
 
-9] Merge
-        MERGE INTO A USING B ON (A.C1 = B.C1) WHEN MATCHED THEN UPDATE 
-        SET C2 = B.C2 WHEN NOT MATCHED THEN INSERT (C1,C2) VALUES (B.C1,B.C2);
+test_data.show(5)
 
+7.. Build the LinerRegression object 'lr' by setting the required parameters. (3 marks)
 
-### Category          | Syntax / Example                                                          | Description                                                   |
-### ----------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------- |
-### CREATE Basic      | CREATE TABLE A (C1 INT, C2 VARCHAR(100), C3 INT);                         | Defines a new table with specified columns and types          |
-### CREATE PK         | CREATE TABLE A (C1 INT PRIMARY KEY, C2 ..., ...);                         | Adds primary key constraint ensuring uniqueness and NOT NULL  |
-### CREATE AutoInc    | CREATE TABLE A (C1 INT PRIMARY KEY AUTO\_INCREMENT, C2 ...);              | Auto-increments C1 on insert (MySQL syntax)                            |
-### CREATE Identity   | CREATE TABLE A (C1 INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, C2 ...); | Auto-increments C1 (PostgreSQL 10+, Oracle 12c+, SQL Server analogous) |
-### CREATE Unique      | CREATE TABLE A (C2 VARCHAR(255) UNIQUE, ...);                  | Enforces uniqueness on C2                    |
-### CREATE FK          | CREATE TABLE A (C2 INT, FOREIGN KEY (C2) REFERENCES B(C1));    | Links C2 to B.C1 on another table            |
-### CREATE Composite   | CREATE TABLE A (C1 INT, C2 INT, PRIMARY KEY(C1,C2));           | Composite primary key on C1 and C2           |
-### CREATE Default     | CREATE TABLE A (C3 TIMESTAMP DEFAULT CURRENT\_TIMESTAMP, ...); | Sets default value for C3                    |
-### CREATE Check       | CREATE TABLE A (C3 INT CHECK (C3 >= 0), ...);                  | Adds a CHECK constraint                      |
-### CREATE IfNotExist  | CREATE TABLE IF NOT EXISTS A (C1 INT PRIMARY KEY, C2 TEXT);    | Prevents error if table already exists       |
-### ALTER Add Col      | ALTER TABLE A ADD COLUMN C4 VARCHAR(50);                       | Adds new column C4                           |
-### ALTER Drop Col     | ALTER TABLE A DROP COLUMN C4;                                  | Removes column C4                            |
-### ALTER Modify Col   | ALTER TABLE A MODIFY COLUMN C2 INT;                            | Changes data type of C2 (MySQL)              |
-### ALTER Rename Col   | ALTER TABLE A RENAME COLUMN C2 TO C5;                          | Renames C2 to C5 (PostgreSQL)                |
-### ALTER Rename Tbl   | ALTER TABLE A RENAME TO B;                                     | Renames table A to B                         |
-### ALTER Add Cnst     | ALTER TABLE A ADD CONSTRAINT chk\_C3\_positive CHECK (C3 > 0); | Adds named CHECK constraint                  |
-### ALTER Drop Cnst    | ALTER TABLE A DROP CONSTRAINT chk\_C3\_positive;               | Drops named constraint                       |
-### DML Insert         | INSERT INTO A (C1,C2,C3) VALUES (v1,v2,v3);                    | Inserts new row                              |
-### DML Update         | UPDATE A SET C2 = v WHERE C1 = v1;                             | Updates existing rows                        |
-### DML Delete         | DELETE FROM A WHERE C1 = v1;                                   | Deletes matching rows                        |
-### DML Call           | CALL proc\_A(v1, v2);                                          | Executes stored procedure                    |
-### DCL Grant          | GRANT SELECT, INSERT ON A TO user\_role;                       | Grants privileges                            |
-### DCL Revoke         | REVOKE INSERT ON A FROM user\_role;                            | Revokes privileges                           |
--- Granting typical rights to roles/users
-GRANT SELECT            ON users        TO reporting_role;
-GRANT INSERT, UPDATE    ON orders       TO sales_app;
-GRANT EXECUTE           ON FUNCTION add_order(INT, DECIMAL) TO sales_app;
-GRANT USAGE             ON SEQUENCE invoice_seq TO billing_app;
+# use below LinerRegression method
+#lr = LinearRegression(featuresCol="features_scaled", labelCol="Price")
+lr = LinearRegression(featuresCol="features_scaled", labelCol="Price")
+lr_model = lr.fit(training_data)
 
-### VIEW Create        | CREATE VIEW V AS SELECT C1, C2 FROM A WHERE C3 > 0;            | Defines a virtual table                      |
-### VIEW Drop          | DROP VIEW V;                                                   | Removes view                                 |
-### KEY Super          | --                                                             | Any set of columns uniquely identifying rows |
-### KEY Candidate      | --                                                             | Minimal super key                            |
-### KEY Primary        | C1 INT PRIMARY KEY                                             | Chosen candidate key                         |
-### KEY Alternate      | C2 VARCHAR(255) UNIQUE                                         | Other candidate keys                         |
-### KEY Composite      | PRIMARY KEY(C1,C2)                                             | Composite key                                |
-### KEY Foreign        | FOREIGN KEY (C2) REFERENCES B(C1)                              | Referential integrity                        |
-### KEY Unique         | UNIQUE(C3)                                                     | Unique constraint                            |
-### KEY Surrogate      | C1 INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY                | System-generated key                         |
-### JOIN Inner         | SELECT * FROM A INNER JOIN B ON A.C1 = B.C1;                   | Intersection of A and B                      |
-### JOIN Left          | SELECT * FROM A LEFT JOIN B ON A.C1 = B.C1;                    | All A plus matched B                         |
-### JOIN Right         | SELECT * FROM A RIGHT JOIN B ON A.C1 = B.C1;                   | All B plus matched A                         |
-### JOIN FullOuter     | SELECT * FROM A FULL OUTER JOIN B ON A.C1 = B.C1;              | Union of A and B with null fills             |
-### JOIN Cross         | SELECT * FROM A CROSS JOIN B;                                  | Cartesian product                            |
-### JOIN Self          | SELECT a.*, b.* FROM A a JOIN A b ON a.C2 = b.C2;              | Table joined to itself                       |
-###------------Multi-row operators for subqueries  
-### Operator Exists    | WHERE EXISTS (SELECT 1 FROM A2 WHERE A2.C1 = A.C1);            | True if subquery returns any                 |
-### Operator NotExists | WHERE NOT EXISTS (SELECT 1 FROM A2 WHERE A2.C1 = A.C1);        | True if subquery returns none                |
-### Operator In        | WHERE C1 IN (SELECT C1 FROM A2 WHERE C3 > 100);                | Membership test                              |
-### Operator NotIn     | WHERE C1 NOT IN (SELECT C1 FROM A2 WHERE C3 IS NULL);          | Negative membership                          |
-### Operator Any       | WHERE C3 > ANY (SELECT C3 FROM A2 WHERE C2 = 'X');             | Compare any                                  |
-### Operator All       | WHERE C3 > ALL (SELECT C3 FROM A2 WHERE C2 = 'X');             | Compare all                                  |
-###------------Window Function
-### Window's FirstVal  | FIRST_VALUE(C3) OVER (PARTITION BY C2 ORDER BY C3 DESC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)   |
-### Window's LastVal   | LAST_VALUE(C3)  OVER (PARTITION BY C2 ORDER BY C3      ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)   |
-### Window RowNum      | ROW_NUMBER() OVER (PARTITION BY C2 ORDER BY C3 DESC)        | Sequential numbering within partitions       |
-### Window Rank        | RANK()       OVER (PARTITION BY C2 ORDER BY C3 DESC)        | Rank with gaps                               |
-### Window DenseRank   | DENSE_RANK() OVER (PARTITION BY C2 ORDER BY C3 DESC)        | Rank without gaps                            |
-### Window NTile       | NTILE(4)     OVER (PARTITION BY C2 ORDER BY C3)             | Bucket numbering                             |
-### Window Lag         | LAG(C3,1,0)  OVER (PARTITION BY C2 ORDER BY C1)             | Previous row access                          |
-### Window Lead        | LEAD(C3,1,0) OVER (PARTITION BY C2 ORDER BY C1)             | Next row access                              |
-### Window PercentRank | PERCENT_RANK() OVER (PARTITION BY C2 ORDER BY C3)           | Computes relative rank between 0 and 1       |
-### Agg Count          | SELECT COUNT(\*) FROM A;                      | Total rows aggregation                       |
-### Agg Sum            |        SUM(C3) FROM A;                        | Sum aggregation                              |
-### Agg Avg            |        AVG(C3) FROM A;                        | Average aggregation                          |
-### Agg Min            |        MIN(C3) FROM A;                        | Minimum aggregation                          |
-### Agg Max            |        MAX(C3) FROM A;                        | Maximum aggregation                          |
-### Agg GroupConcat    |        GROUP_CONCAT(C2) FROM A;               | String concatenation aggregation             |
-### Agg StringAgg      |        STRING_AGG(C2,',') FROM A;             | String concatenation aggregation             |
-### Agg Variance       |        VARIANCE(C3) FROM A;                   | Variance aggregation                         |
-### Agg StdDev         |        STDDEV(C3) FROM A;                     | Standard deviation aggregation               |
-### String Length      |        LENGTH(C2) FROM A;                     | Returns length of C2                         |
-### String Substr      |        SUBSTR(C2,1,3) FROM A;                 | Substring extraction                         |
-### String Upper       |        UPPER(C2) FROM A;                      | Converts to uppercase                        |
-### String Lower       |        LOWER(C2) FROM A;                      | Converts to lowercase                        |
-### String Trim        |        TRIM(BOTH ' ' FROM C2) FROM A;         | Trims spaces                                 |
-### String Concat      |        CONCAT(C2,'-',C3) FROM A;              | Concatenates strings                         |
-### String Replace     |        REPLACE(C2,'\n','bar') FROM A;         | Replaces substrings                          |
-###                    |        LPAD(id::TEXT, 6, '0')                        |
-###                    |        RPAD(SPLIT_PART(email,'@',1), 10, '.')        |
-###
-### Date CurrentDate   | SELECT CURRENT_DATE FROM A;                                               | Current date                               |
-### Date CurrentTs     |          CURRENT_TIMESTAMP FROM A;`                                           | Current timestamp                          |
-### Date Now           |         NOW() AS current_timestamp;`                                         | Current date & time                        |
-### Date DateAdd       |         DATE_ADD(C3, INTERVAL 7 DAY) FROM A;`                                | Adds interval                              |
-### Date DateAdd (ex.) |         DATE_ADD(signup_date, INTERVAL 7 DAY) AS one_week_later FROM users;` | One week after signup\_date                |
-### Date DateSub       |         DATE_SUB(C3, INTERVAL 1 MONTH) FROM A;`                              | Subtracts interval                         |
-### Date DateSub (ex.) |         DATE_SUB(signup_date, INTERVAL 1 MONTH) AS last_month FROM users;`   | One month before signup\_date              |
-### Date Diff          |         DATEDIFF(NOW(), signup_date) AS days_since_signup FROM users;`       | Difference in days between two dates       |
-### Date Extract       |         EXTRACT(YEAR FROM C3) FROM A;`                                       | Extracts part from date                    |
-### Date Extract (ex.) |         EXTRACT(YEAR FROM signup_date) AS signup_year FROM users;`           | Year portion of signup\_date               |
-### Date Format        |         DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s') AS fmt_datetime;`            | Formats date/time according to format mask |
-### Date Parse         |         STR_TO_DATE('13th Apr 2024', '%D %b %Y') AS parsed_date;`            | Parses a string into a date                |
-### Date DateTrunc     |         DATE_TRUNC('month', C3) FROM A;`                                     | Truncates date to specified unit (month)   |
+print(f"Coefficients: {lr_model.coefficients}\n")
+print(f"Intercept: {lr_model.intercept}\n")
+print(f"RMSE: {lr_model.summary.rootMeanSquaredError}\n")
+print(f"R-squared: {lr_model.summary.r2}")
 
+8. Find rmse of trained LinearRegression model on test set (3 marks)
 
+# use below RegressionEvaluator method
+# evaluator = RegressionEvaluator(labelCol="Price", predictionCol="prediction", metricName="rmse")
 
+predictions = lr_model.transform(test_data)
 
+evaluator = RegressionEvaluator(labelCol="Price", predictionCol="prediction", metricName="rmse")
+rmse = evaluator.evaluate(predictions)
 
-###################################################################################
-YEAR(STR_TO_DATE(`Date`, '%Y-%m-%d')) AS yr,
-AVG(Humidity9am + Humidity3pm)           AS AvgTotalHumidity
-AVG(CAST(Evaporation AS DECIMAL(10,2))) AS avg_evaporation
-COALESCE(SUM(r.points), 0) as total_points
-CREATE VIEW V1 AS select ....   WITH NO DATA;
-add few details when driver details is written not only the id
-SELECT  (LENGTH('Great Learning') - LENGTH(REPLACE(LOWER('Great Learning'), 'a', ''))) AS count_of_a;
-###################################################################################
- 
- 
-######################################################################################################################################################
-CREATE TABLE T1 (
-  C1  SERIAL                           ,  -- PRIMARY KEY
-  C2  VARCHAR(50)  NOT NULL UNIQUE     ,
-  C3  VARCHAR(255) NOT NULL            ,
-  C3  VARCHAR(255) check (C3<> '')     ,
-  C4  DATE         DEFAULT CURRENT_DATE,
-  C5  TIMESTAMP    DEFAULT NOW()       ,
-  C5  BOOLEAN      DEFAULT TRUE        ,
-  C7 DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
-  PRIMARY KEY (C1, C2),
-  FOREIGN KEY (C3) REFERENCES T2(C3) ON DELETE CASCADE
-  CHECK (C1 <> '')
-);
-CREATE INDEX idx_orders_date ON orders(order_date);
-
--- grant
-GRANT SELECT            ON users        TO reporting_role;
-GRANT INSERT, UPDATE    ON orders       TO sales_app;
-GRANT EXECUTE           ON FUNCTION add_order(INT, DECIMAL) TO sales_app;
-GRANT USAGE             ON SEQUENCE invoice_seq TO billing_app;
-CREATE ROLE analyst;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO analyst;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO analyst;
-REVOKE INSERT, UPDATE ON orders FROM analyst;
-DROP ROLE IF EXISTS temp_role;
-
-ALTER TABLE employees 
-      DROP   COLUMN      nickname
-      ADD    COLUMN      middle_name VARCHAR(50) AFTER first_name, 
-      MODIFY COLUMN      last_name   VARCHAR(100)                , 
-      CHANGE COLUMN      hire_date start_date DATETIME NOT NULL, 
-      DROP   FOREIGN KEY fk_emp_dept, 
-      DROP   CHECK       chk_start_date, 
-      ADD    CONSTRAINT  uq_emp_email UNIQUE (email), 
-      ADD    CONSTRAINT  fk_emp_department FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL ON UPDATE CASCADE, 
-      ENGINE=InnoDB, AUTO_INCREMENT=1000;
-
-      RENAME COLUMN C TO D;
-      ALTER  COLUMN C TYPE NUMERIC(12,2),
-      ALTER  COLUMN C DROP NOT NULL              ;
-      ADD    COLUMN C INT  NOT NULL DEFAULT 1001 ;
-ALTER TABLE A  RENAME          TO B;
-
-
- 
--- Update with join
-    UPDATE orders o SET total_amount  = total_amount * 1.10  FROM users u  WHERE o.user_id = u.id;
-    UPDATE orders o SET email = TRIM(BOTH/LEADING/TRAILING '*' FROM email);
-    UPDATE orders o SET email = REPLACE(TRIM(email), '@company.com', '@example.com');
-
- 
-DELETE FROM users WHERE last_login < CURRENT_DATE - INTERVAL '1 year';
-
--- Insert, merge
-        INSERT INTO employees1 (id, col1, col2, col3)
-        VALUES
-          (1, 'A', 100, 'a'),
-          (2, 'B', 200, 'b') AS new_row
-        ON DUPLICATE KEY UPDATE
-          col1 = new_row.col1,
-          col2 = new_row.col2,
-          col3 = new_row.col3;
-          
-        --  deletes and re-inserts 
-        REPLACE INTO employees1 (id, col1, col2, col3)
-            VALUES
-              (1, 'A', 100, 'c'),
-              (2, 'B', 200, 'd');
---upsert
-        INSERT INTO employees1 (id, col1, col2, col3)
-        VALUES (1, 'A', 100, 'e') AS new_row
-        ON DUPLICATE KEY UPDATE
-          col3 = new_row.col3;
-		  
--- event : create a view & every 500min insert data to it
-        DELIMITER $$
-        CREATE EVENT emp_view
-        ON SCHEDULE EVERY 5 MINUTE
-        DO
-        BEGIN
-          DELETE FROM employees1;
-          INSERT INTO employees1 (id, col1, col2, col3)
-          VALUES (1, 'A', 100, 'e') AS new_row
-          ON DUPLICATE KEY UPDATE
-            col3 = new_row.col3;
-        END$$
-        DELIMITER ;
-		
---- procedure
-			DELIMITER $$
-			CREATE PROCEDURE scscsc(IN p_item INT, IN p_delta INT)
-			BEGIN
-			  DECLARE EXIT HANDLER FOR SQLEXCEPTION
-			  BEGIN-- on error rollback
-				ROLLBACK;
-			  END;
-			  START TRANSACTION;
-				UPDATE inventory SET qty = qty + p_delta WHERE item_id = p_item;
-			  COMMIT;
-			END; 
-			DELIMITER 
-		
--- trigger & function
-			-- 1. Audit table
-			CREATE TABLE employees1_audit (
-			id INT, action TEXT,
-			changed_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-			);
-
-			-- 2. Trigger function
-			DELIMITER $$
-			CREATE TRIGGER trg_employees1_insert
-			AFTER INSERT ON employees1
-			FOR EACH ROW
-			BEGIN
-			INSERT INTO employees1_audit (id, action, changed_on)
-			VALUES (NEW.id, 'INSERT', NOW());
-			END$$
-			DELIMITER ;
-
-			-- 3. Trigger on INSERT
-			DELIMITER $$
-			CREATE TRIGGER trg_employees1_insert1	
-			AFTER INSERT ON employees1
-			FOR EACH ROW
-			BEGIN
-			INSERT INTO employees1_audit (id, action, changed_on)
-			VALUES (NEW.id, 'INSERT', NOW());
-			END$$
-			DELIMITER ;
-
-			-- Example
-			INSERT INTO employees1 (id, col1, col2, col3)
-			VALUES (3, 'C', 300, 'cc');
-
-			select * from employees1_audit
-			| id | action | changed\_on  |
-			| -- | ------ | ------------ |
-			| 3  | INSERT | \[timestamp] |
-
--- sequence
-			DROP TABLE IF EXISTS employees1;
-			CREATE TABLE employees1 (
-			  id INT AUTO_INCREMENT PRIMARY KEY,
-			  col1 VARCHAR(10),
-			  col2 INT,
-			  col3 VARCHAR(50)
-			);
-			ALTER TABLE employees1 AUTO_INCREMENT = 1000;
-			INSERT INTO employees1 (col1, col2, col3)
-			VALUES ('X', 123, 'test');
-			Select * from employees1;
-
-
--- CTE for readability & reuse
-      WITH recent_orders AS (..),
-      spenders AS (...)
-      SELECT u.username, s.sum30
-        FROM users u
-        JOIN spenders s ON u.id = s.user_id
-       ORDER BY s.sum30 DESC;
-
--- SUM, AVG, MIN, MAX, COUNT, VAR_POP, VAR_SAMP, STDDEV_POP, STDDEV_SAMP, FIRST_VALUE, LAST_VALUE, NTH_VALUE, CUME_DIST, PERCENT_RANK
-    -- ROWS BETWEEN 2 AND CURRENT ROW 
-    -- RANGE BETWEEN 1000 PRECEDING AND CURRENT ROW  -- value-based
-    -- GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING      -- peer-based
-
-
-
-WITH flagged AS (
-      SELECT employee_id,department_id, hire_date, salary,
-             LAG(salary, 1, 0)  OVER (PARTITION BY department_id ORDER BY salary DESC) AS prev_highest,
-             SUM(salary      )  OVER (PARTITION BY department_id ORDER BY salary
-                                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS total_department_salary,
-        CASE
-          WHEN LAG(hire_date) OVER (PARTITION BY department_id ORDER BY hire_date  ) IS NULL THEN 'first hire'
-          WHEN LEAD(hire_date)OVER (PARTITION BY department_id ORDER BY hire_date  ) IS NULL THEN 'latest hire'
-          ELSE ''
-        END AS hire_flag
-      FROM     employees
-      WHERE    (last_login < CURRENT_DATE - INTERVAL 1 year)
-)
-SELECT  department_id     ,  hire_flag,  COUNT(*) AS employee_count,
-        MAX(prev_highest)    AS max_prev_highest
-        FROM       flagged f
-        INNER JOIN orders o ON f.employee_id = o.user_id
-        LEFT JOIN shipments s ON o.order_id = s.order_id 
-        CROSS JOIN calendar cal  -- beware: Cartesian!
-        WHERE  hire_flag IN ('first hire', 'latest hire')
-        GROUP BY  department_id, hire_flag
-        HAVING EXISTS (  -- only keep departments with at least one high earner
-          SELECT 1 FROM employees e2 WHERE e2.department_id = f.department_id AND e2.salary > 100000)
-        ORDER BY  department_id, hire_flag
-
-
--- union not full OUTER JOIN returns r ON o.order_id = r.order_id
-
-CONCAT(C2,'-',C3)
-REPLACE(C2,'\n','bar')
-TRIM(BOTH ' ' FROM C2) 
-TRIM(LEADING '0' FROM '000123400')   AS no_leading_zeros,
-TRIM(TRAILING '!' FROM 'wow!!!')  
-STR_TO_DATE('13th Apr 2024', '%D %b %Y') AS parsed_date,
-DATE_FORMAT('2024-04-07', '%W') AS dy_name
-
-ROUND(total_amount, 2)   AS rounded_2,
-TRUNC(total_amount, 0)   AS truncated,
-FLOOR(total_amount)      AS floored,
-CEIL(total_amount)       AS ceiled
-CONCAT_WS(',', 'apple', 'banana', 'orange'
-CONCAT('>', customer_name, '<')        AS raw_value,
-CONCAT('>', TRIM(customer_name), '<')  AS trimmed_value
-CONCAT(LPAD('$1000.00', 15, '#'), '###') AS balance;
-RPAD(SPLIT_PART(email,'@',1), 10, '.') 
-SUBSTR('welcome', 4, 3)
-LENGTH('界') AS length_function_multibyte,
-CHAR_LENGTH('界') AS char_length_function_multibyte;
-
-
-NTILE(4) ,PERCENT_RANK() ,CUME_DIST() 
-
-
-
-##########################################################################################
-Other
-###########################################################################################
--- Sorting Hierarchical Data: employee table where each employee has a manager:
-SELECT 
-  e1.first_name AS employee_name,
-  e2.first_name AS manager_name
-FROM employee e1
-LEFT JOIN employee e2 ON e1.manager_id = e2.employee_id
-ORDER BY e2.first_name ASC, e1.first_name ASC;
-
--- Dynamic Sorting
-DECLARE @sort_order VARCHAR(4) = 'ASC';
-SELECT *
-FROM employee
-ORDER BY hire_date @sort_order;
-
-#####################################################################
-Chk
-#####################################################################
-;
-
-
-/* 11. Transactions & Concurrency */
-BEGIN;
-  -- Example transactional update
-  UPDATE accounts SET balance = balance - 100 WHERE id = 1;
-  UPDATE accounts SET balance = balance + 100 WHERE id = 2;
-COMMIT;
-
--- Or rollback on error
-BEGIN;
-  /* ...some statements... */
-ROLLBACK;
- 
--- Example stored procedure (MySQL syntax)
-DELIMITER $$
-CREATE PROCEDURE add_order(IN p_user INT, IN p_amount DECIMAL(10,2))
-BEGIN
-  INSERT INTO orders (order_id, user_id, total_amount) 
-  VALUES (NULL, p_user, p_amount);
-END $$
-DELIMITER ;
-
-/* 13. Permissions & Security */
-GRANT SELECT, INSERT ON users TO reporting_role;
-REVOKE DELETE ON orders FROM public;
-
-/* 14. Performance Tips */
--- • Use EXPLAIN [ANALYZE] to inspect query plans.
--- • Add indexes on columns used in WHERE, JOIN, ORDER BY.
--- • Avoid functions on indexed columns in filters.
--- • Use LIMIT for sampling during development.
-
- 
-
-#####################################################################
-Date time
-#####################################################################
-
--- Current Date and Time Functions
-SELECT NOW() AS current_datetime,      -- output: '2024-04-07 12:34:56'
-       UTC_TIMESTAMP() AS current_utc_datetime,  -- output: '2024-04-07 12:34:56'
-       CURRENT_DATE() AS current_date;   -- output: '2024-04-07'
-
--- Date Arithmetic Functions
-SELECT DATE_ADD('2023-04-20', INTERVAL 1 MONTH) AS date_after_addition,  -- output: '2023-05-20'
-       DATE_SUB('2023-04-20', INTERVAL 1 WEEK) AS date_after_subtraction,  -- output: '2023-04-13'
-       DATEDIFF('2023-04-30', '2023-04-20') AS days_difference;  -- output: 10
-
--- Date and Time Functions
-SELECT YEAR('2024-04-07') AS year,  -- output: 2024
-       MONTH('2024-04-07') AS month,  -- output: 4
-       DAY('2024-04-07') AS day,  -- output: 7
-       DAYOFMONTH('2024-04-07') AS day_of_month,  -- output: 7
-       DAYOFWEEK('2024-04-07') AS day_of_week,  -- output: 2 (Monday)
-       DAYNAME('2024-04-07') AS day_name,  -- output: 'Monday'
-       DATE_FORMAT('2024-04-07', '%Y-%m-%d') AS formatted_date;  -- output: '2024-04-07'
-
--- Date Arithmetic Functions
-SELECT DATE_ADD('2024-04-07', INTERVAL 1 MONTH) AS date_after_addition,  -- output: '2024-05-07'
-       DATE_SUB('2024-04-07', INTERVAL 1 WEEK) AS date_after_subtraction,  -- output: '2024-03-31'
-       DATEDIFF('2024-04-30', '2024-04-07') AS days_difference;  -- output: 23
-
--- Additional Date Functions
-SELECT WEEK('2024-04-07') AS week_number,  -- output: 14
-       WEEK('2024-04-07', 1) AS week_number_mode,  -- output: 15
-       LAST_DAY('2024-04-07') AS last_day_of_month,  -- output: '2024-04-30'
-       DATE_PART('year', '2024-04-07') AS year_part,  -- output: 2024
-       EXTRACT(YEAR FROM '2024-04-07') AS extracted_year,  -- output: 2024
-       DATE_TRUNC('month', '2024-04-07') AS truncated_date,  -- output: '2024-04-01'
-       TO_DATE('20240407', 'YYYYMMDD') AS converted_date,  -- output: '2024-04-07'
-       TO_CHAR('2024-04-07', 'Month DD, YYYY') AS formatted_string,  -- output: 'April 07, 2024'
-       CAST('2024-04-07' AS VARCHAR) AS date_to_string;  -- output: '2024-04-07'
-       
-       
- -- Date and Time Functions
-SELECT 
-DATE_FORMAT(NOW(), '%Y-%m-%d') AS curr_date, -- output: '2024-04-07'
-DATE_FORMAT(UTC_TIMESTAMP(), '%Y-%m-%d') AS curr_utc_date;  
-                                            -- output: '2024-04-07'
-
--- Date and Time Functions
-SELECT 
-DATE_FORMAT('2024-04-07', '%Y') AS yr,          -- output: '2024'
-DATE_FORMAT('2024-04-07', '%m') AS mnth,        -- output: '04'
-DATE_FORMAT('2024-04-07', '%d') AS dy,          -- output: '07'
-DATE_FORMAT('2024-04-07', '%e') AS dy_of_mnth,  -- output: '7'
-DATE_FORMAT('2024-04-07', '%w') AS dy_of_wk,    -- output: '6'
-DATE_FORMAT('2024-04-07', '%W') AS dy_name,     -- output: 'Saturday'
-DATE_FORMAT('2024-04-07', '%Y-%m-%d') AS fmt_date,    -- output: '2024-04-07'
-DATE_FORMAT('2024-04-07', '%Y-%m-%d') AS yr_mnth_day; -- output: '2024-04-07'
-DATE_FORMAT('2024-04-07', '%U') AS wk_num,         -- output: '14'
-DATE_FORMAT('2024-04-07', '%u') AS wk_num_mode,    -- output: '6'
-DATE_FORMAT(LAST_DAY('2024-04-07'), '%Y-%m-%d') AS last_day_mnth, -- output: '2024-04-30'
-DATE_FORMAT('2024-04-07', '%Y') AS yr_part,        -- output: '2024'
-DATE_FORMAT('2024-04-07', '%Y') AS ext_year,       -- output: '2024'
-DATE_FORMAT(DATE_FORMAT('2024-04-07', '%Y-%m-01'), '%Y-%m-%d') AS trunc_date, 
-                                                   -- output: '2024-04-01'
-DATE_FORMAT(TO_DATE('20240407', 'YYYYMMDD'), '%Y-%m-%d') AS conv_date, 
-                                                   -- output: '2024-04-07'
-DATE_FORMAT('2024-04-07', '%M %D, %Y') AS fmt_str, -- output: 'April 7th, 2024'
-CAST('2024-04-07' AS VARCHAR) AS str_date;         -- output: '2024-04-07'      
-       
-
-
-SELECT STR_TO_DATE('13th Apr 2024'   , '%D %b %Y') AS converted_date;  -- output: 2024-04-13
-SELECT STR_TO_DATE('April 13th, 2024', '%M %D, %Y') AS converted_date; -- output: 2024-04-13
-SELECT STR_TO_DATE('2024/04/13'      , '%Y/%m/%d') AS converted_date;  -- output: 2024-04-13
-SELECT STR_TO_DATE('20240413'        , '%Y%m%d') AS converted_date;    -- output: 2024-04-13
-SELECT STR_TO_DATE('13-Apr-2024'     , '%d-%b-%Y') AS converted_date;  -- output: 2024-04-13
-
-
-
-UPDATE customers SET customer_name = TRIM(customer_name);
-UPDATE customers SET customer_name = LTRIM(customer_name);
-UPDATE customers SET customer_name = RTRIM(customer_name);
-UPDATE customers SET customer_name = TRIM(BOTH '*' FROM customer_name);
-                                    [BOTH | LEADING | TRAILING] 
--- 5. You can also do it in a SELECT to see the results without modifying data:
-SELECT
-  customer_id,
-  CONCAT('>', customer_name, '<')        AS raw_value,
-  CONCAT('>', TRIM(customer_name), '<')  AS trimmed_value
-FROM customers;
-
-
-##############################################################################
-DDL & DML
-##############################################################################
-/* 1. DDL: Additional Schema Operations */
--- Drop a table if exists
-DROP TABLE IF EXISTS archived_orders;
-
--- Truncate a table (fast delete)
-TRUNCATE TABLE temp_logs;
-
--- Create a sequence and use it in table
-CREATE SEQUENCE invoice_seq
-  START WITH 1000
-  INCREMENT BY 1
-  MINVALUE 1000
-  NO CYCLE;
-
-CREATE TABLE invoices (
-  invoice_id   INT         PRIMARY KEY DEFAULT NEXTVAL('invoice_seq'),
-  order_id     INT         REFERENCES orders(order_id),
-  issued_date  DATE        DEFAULT CURRENT_DATE,
-  amount       DECIMAL(10,2) NOT NULL
-);
-
-
-
-
--- 1. CREATE
-
-CREATE TABLE table_name (
-  column_name   DATA_TYPE [NULL | NOT NULL] [DEFAULT default_value],
-  …,
-  [PRIMARY KEY (column_list)],
-  [UNIQUE (column_list)],
-  [FOREIGN KEY (column_list) REFERENCES other_table(other_column_list)]
-);
-
-CREATE [UNIQUE] INDEX index_name
-  ON table_name (column1 [ASC|DESC], column2, …);
-
-CREATE VIEW view_name AS
-  SELECT …;
-
-CREATE DATABASE database_name;
-
-
--- 2. ALTER
-
-ALTER TABLE table_name
-  ADD COLUMN    column_name DATA_TYPE [NULL | NOT NULL] [DEFAULT default_value] [AFTER existing_column],
-  DROP COLUMN   column_name,
-  MODIFY COLUMN column_name NEW_DATA_TYPE [NULL | NOT NULL] [DEFAULT default_value],
-  CHANGE COLUMN old_name new_name DATA_TYPE [NULL | NOT NULL] [DEFAULT default_value],
-  ADD CONSTRAINT constraint_name FOREIGN KEY (column_list) REFERENCES other_table(other_column_list),
-  DROP FOREIGN KEY constraint_name;
-
-ALTER INDEX index_name REBUILD;
-ALTER INDEX index_name RENAME TO new_index_name;
-
-
--- 3. DROP
-
-DROP TABLE   IF EXISTS table_name;
-DROP INDEX   IF EXISTS index_name       — MySQL: DROP INDEX index_name ON table_name;
-DROP VIEW    IF EXISTS view_name;
-DROP DATABASE IF EXISTS database_name;
-
-
--- 4. TRUNCATE
-
-TRUNCATE TABLE table_name;
-
-
--- 5. RENAME
-
-RENAME TABLE old_name TO new_name;        — MySQL
-ALTER TABLE old_name RENAME TO new_name;  — Oracle/PostgreSQL
-
-
-
-
--- Rename table and column
-ALTER TABLE users RENAME TO app_users;
-ALTER TABLE app_users RENAME COLUMN signup_date TO registered_on;
-
--- Modify column datatype / nullability
-ALTER TABLE orders
-  ALTER COLUMN total_amount TYPE NUMERIC(12,2),
-  ALTER COLUMN order_date DROP NOT NULL;
-
-/* 2. DML: Advanced Data Manipulation */
--- UPSERT (PostgreSQL / MySQL 8+)
-INSERT INTO products (product_id, name, price)
-VALUES (1, 'Gadget', 19.99)
-ON CONFLICT (product_id) DO UPDATE
-  SET price = EXCLUDED.price;
-
--- MERGE (SQL Server / Oracle)
-MERGE INTO inventory tgt
-USING incoming_shipments src
-  ON (tgt.item_id = src.item_id)
-WHEN MATCHED THEN
-  UPDATE SET tgt.qty = tgt.qty + src.qty
-WHEN NOT MATCHED THEN
-  INSERT (item_id, qty) VALUES (src.item_id, src.qty);
-
--- Bulk load data (PostgreSQL COPY)
-COPY customers (id, name, email)
-FROM '/path/to/file.csv'
-DELIMITER ','
-CSV HEADER;
-
--- Delete with join
-DELETE FROM orders o
-USING users u
-WHERE o.user_id = u.id
-  AND u.is_active = FALSE;
-
--- Insert-select from another table
-INSERT INTO order_summary (order_id, year, total)
-SELECT order_id, EXTRACT(YEAR FROM order_date), SUM(amount)
-  FROM order_items
- GROUP BY order_id;
-
-/* 3. Transaction Control */
-BEGIN TRANSACTION;
-  UPDATE accounts SET balance = balance - 50 WHERE id = 1;
-  UPDATE accounts SET balance = balance + 50 WHERE id = 2;
-  SAVEPOINT before_audit;
-  INSERT INTO audit_log(user_id, action) VALUES (current_user, 'transfer');
-COMMIT;
-
--- Rollback to savepoint
-ROLLBACK TO before_audit;
-COMMIT;
-
-
-
+print(f"Root Mean Squared Error (RMSE) on test set: {rmse}")

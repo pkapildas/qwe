@@ -1,4 +1,219 @@
-Process the dataset as questioned below using spark libraries.
+
+#content = open('1.txt', 'r').read()
+
+# import statements
+from pyspark.context import SparkContext
+from pyspark.sql.session import SparkSession
+from pyspark.ml.feature import StringIndexer
+from pyspark.ml.feature import VectorAssembler
+from pyspark.sql.functions import isnull, when, count, col
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
+from pyspark.ml.classification import LogisticRegression
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
+
+sc = SparkContext.getOrCreate()
+# spark = SparkSession(sc)
+
+spark = SparkSession.builder.appName('MyAppName').getOrCreate()
+
+"""#### Q1.  Print Spark version  (1 mark)"""
+
+print(spark.version)
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+#spark.read.format("csv").option("header", "false").option("inferschema","True").load('dbfs:/databricks-datasets/adult/adult.data')#
+
+"""#### Q2. Read adult_data into a Spark-dataframe , databricks_datasets path is - 'dbfs:/databricks-datasets/adult/adult.data'  (1 mark)"""
+
+#!ls drive/MyDrive/PES3SEM
+
+data_path = "/content/drive/MyDrive/PES3SEM/adult.data"
+df = spark.read.csv(data_path, header=True, inferSchema=True)
+
+# Read  the data from  dbfs:/databricks-datasets/adult/adult.data  into Saprk dataframe
+# df=spark.read.format("csv").option("header", "false").option("inferschema","True").load('dbfs:/databricks-datasets/adult/adult.data')
+
+#df.columns
+
+"""#### Q3. Rename columns of spark dataframe same as given below list  ( 1 mark)
+"""
+
+column_names = ["age","workclass", "final_weight", "education", "education_num", "marital_status",
+     "occupation", "relationship","race","sex","capital_gain","capital_loss",
+     "hours_per_week","native_country","income_class"]
+for new_col, old_col in zip(column_names, df.columns):
+    df = df.withColumnRenamed(old_col, new_col)
+
+df.limit(2).show()        #df.show()
+
+df.printSchema()
+
+from pyspark.sql.functions import trim, col # Import trim and col
+df = df.select(*[(trim(col(c)).alias(c) if t == "string" else col(c))for c, t in df.dtypes]) #to remove empty spaces
+#df = df.drop("No. of Bedrooms")                                #to drop cols if asked
+#columns = df.columns ; columns.sort(); print(','.join(columns)) # list of cols in alphabetic order
+df.printSchema()
+
+#### Q4. Check if spark-dataframe has any columns with missing/null values and drop such columns  (1 mark)
+from pyspark.sql.functions import isnull, when, count, col
+df.select([count(when(isnull(c), c)).alias(c) for c in df.columns]).show()
+# df = df.na.drop()
+
+from os import truncate
+df.groupby("marital_status").count().show(truncate=False)
+
+"""#### Q5. Show the datatypes(schema) of each Spark-dataframe columns without using any for loop (1 mark)"""
+
+df.printSchema()
+
+# 2 distinct values of each column
+#for column in df.columns:
+#  print(f"Distinct values for column '{column}':")
+#  df.select(column).distinct().limit(2).show()
+#---
+# see distinct values of sex column
+#df.select('sex').distinct().show()
+
+from pyspark.sql.functions import col, min, max, avg
+#df.select(min("age"), max("age"), avg("age")).show()
+#white_female_count          = df.filter((col("sex")=="Female") & (col("race")=="White")).count()
+#male_high_income_zero_hours = df.filter((col("sex")=="Male") & (col("income_class")==">50K") & (col("hours_per_week")==0)).count()
+#df                          = df.drop("final_weight").na.drop()
+#distinct_educations         = df.select("education"                                                          ).distinct().count()
+distinct_indian_educations  = df.filter(col("native_country")=="India").select("education"                   ).distinct().count()
+private_profs               = df.filter((col("occupation")=="Prof-specialty") & (col("workclass")=="Private")).count()
+#husbands                    = df.filter(col("relationship")=="Husband"                                       ).count()
+#df.filter(col("native_country")=="India").select(avg("capital_gain")   ).show()
+#df.filter(col("hours_per_week")==40     ).select("age","marital_status").show()
+#df.filter((col("occupation")=="Exec-managerial") & (col("workclass")=="Local-gov")).select(avg("hours_per_week")).show()
+#------------------------------------------------
+
+from pyspark.sql.functions import isnull, when, count, col, min, max, avg
+#df.select(min("income_class"), max("income_class"), avg("income_class")).show()
+df.filter((col("sex") == "Female") & (col("race") == "White")).count()
+#df.filter((col("sex") == "Male") & (col("placed") == "Yes") & (col("work_experience") == 0)).count()
+#df = df.drop("sl_no").na.drop()
+#df.select("institution").distinct().count()
+#df.filter(col("country") == "India").select("institution").distinct().count()
+#df.filter(col("country") == "India").select(avg("citations_per_faculty")).show()
+#df.filter(col("international_students") == 100).select("name", "location_full").show()
+#df.filter(col("location") == "HSR Layout").count()
+#df.filter((col("location") == "Whitefield") & (col("bhk_size") == "2 BHK")).count()
+#df.filter((col("location") == "HSR Layout") & (col("bhk_size") == "2 BHK")).select(avg("price")).show()
+
+'''
+# === Group 2: Data Cleaning ===
+df = df.filter(df["QS Overall Score"] != "-")
+df = df.withColumn("QS Overall Score", col("QS Overall Score").cast("float"))
+null_counts = df.select([count(when(isnull(c), c)).alias(c) for c in df.columns])
+threshold = df.count() / 3
+cols_to_drop = [c for c in df.columns if df.filter(col(c).isNull()).count() > threshold]
+df = df.drop(*cols_to_drop).na.drop()
+
+'''
+
+'''
+String Indexer
+'''
+string_columns = [col for col, dtype in df.dtypes if dtype == 'string'] ; # print(string_columns); #fix col manually if needed
+indexers = [StringIndexer(inputCol=col, outputCol=col + "_indexed") for col in string_columns]  ; #, handleInvalid="skip"
+
+for indexer in indexers:
+    df = indexer.fit(df).transform(df)
+df = df.drop(*string_columns)
+
+# Rename the indexed income_class column to 'label'
+df = df.withColumnRenamed("income_class_indexed", "label")
+
+df.printSchema()
+df.show(2)
+
+"""#### Q7. Using vectorAssembler combines all columns (except  label)  of Sparkdataframe into single column named features (3 marks)"""
+
+'''
+ Group 4: Feature Vectorization
+'''
+features = [c for c in df.columns if c not in ["label"]] ; print(features);
+assembler = VectorAssembler(inputCols=features, outputCol="features")
+df = assembler.transform(df).select("features", "label")
+df.limit(2).show()
+
+'''
+Scaling
+'''
+from pyspark.ml.feature import StandardScaler
+scaler = StandardScaler(inputCol="features", outputCol="scaled_features")
+scaler_model = scaler.fit(df)
+df = scaler_model.transform(df)
+df = df.drop("features")
+df = df.withColumnRenamed("scaled_features", "features")
+df.show(5, truncate=False)
+
+"""#### Q8.  Split the vectorised spark dataframe into training and test sets  (with one third being held for  testing) ( 3 marks)"""
+
+'''
+Split
+'''
+df_train, df_test =  df.randomSplit([0.67,0.33], seed = 2020)
+print(f"Training Data Count: {df_train.count()}")
+print(f"Test Data Count: {df_test.count()}")
+
+#### Q9. Train default logistic regression  model with   'featuresCol' as  features and  features as ' label'  (3 marks)
+
+'''
+### LogisticRegression  # === Group 6B: Classification Model ===
+'''
+from pyspark.ml.classification import LogisticRegression
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
+
+# Build the LogisticRegression object 'lr' by setting the required parameters
+lr  = LogisticRegression(featuresCol="features", labelCol="label")
+#lr = LinearRegression(featuresCol="features", labelCol="label")
+
+# fit the LogisticRegression object on the training data
+lrmodel = lr.fit(df_train)
+
+print(f"Coefficients: {lrmodel.coefficients}\n")
+print(f"Intercept: {lrmodel.intercept}\n")
+#print(f"RMSE: {lrmodel.summary.rootMeanSquaredError}\n")
+#print(f"R-squared: {lrmodel.summary.r2}")
+
+#### Q10. Find accuracy of   logistic regression model  on test set ( 3 marks)
+#This LogisticRegressionModel can be used as a transformer to perform prediction on the testing data
+predictonDF = lrmodel.transform(df_test)
+evaluator = BinaryClassificationEvaluator()
+
+# Calculate the accracy and print its value
+accuracy = predictonDF.filter(predictonDF.label == predictonDF.prediction).count()/float(predictonDF.count())
+print("Accuracy = ", accuracy)
+evaluator.evaluate(predictonDF)
+
+'''
+#Linear Regression
+'''
+from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.regression import LinearRegression
+# Build the LogisticRegression object 'lr' by setting the required parameters
+lr = LinearRegression(featuresCol="features", labelCol="label")
+
+# fit the LogisticRegression object on the training data
+lrmodel = lr.fit(df_train)
+
+print(f"Coefficients: {lrmodel.coefficients}\n")
+print(f"Intercept: {lrmodel.intercept}\n")
+print(f"RMSE: {lrmodel.summary.rootMeanSquaredError}\n")
+print(f"R-squared: {lrmodel.summary.r2}")
+
+predictions = lrmodel.transform(df_test)
+
+evaluator = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="rmse")
+rmse = evaluator.evaluate(predictions)
+
+print(f"Root Mean Squared Error (RMSE) on test set: {rmse}")
+
+#GAProcess the dataset as questioned below using spark libraries.
 
 # import statements
 
@@ -118,3 +333,433 @@ evaluator = RegressionEvaluator(labelCol="Price", predictionCol="prediction", me
 rmse = evaluator.evaluate(predictions)
 
 print(f"Root Mean Squared Error (RMSE) on test set: {rmse}")
+
+
+
+#Create an RDD from the following List: List(1,2,3,4,5,6,7,8,9,10)
+
+data_list = [1,2,3,4,5,6,7,8,9,10]
+rdd_list = sc.parallelize(data_list)
+
+Print data in RDD
+rdd_list.collect()
+Display/Print first four elements of RDD
+rdd_list.take(4)
+Display/Print the first element of the RDD
+
+rdd_list.first()
+
+#Print number of partitions of RDD
+rdd_list.getNumPartitions()
+#Read/load a text file located at "/path/to/file.txt" into an RDD
+rdd_text_file = sc.textFile('/FileStore/tables/text.txt',minPartitions=5)
+type(rdd_text_file)
+
+#Explain with example map, filter Apache Spark transformations (4 marks)
+#map each element of RDD to its square
+rdd_list_map = rdd_list.map(lambda x: x**2)
+rdd_list_map.collect()
+
+#Filter out the even numbers from RDD
+rdd_list_even = rdd_list.filter(lambda x: x%2==0)
+rdd_list_even.collect()
+#Count the number of elements in RDD
+rdd_list.count()
+#Write a Spark Program pseudo-code to load a text file named as text.txt and compute its word count.
+rdd_text_file = sc.textFile('/FileStore/tables/text.txt')
+
+# Split each line into words
+words = rdd_text_file.flatMap(lambda line: line.split())
+
+# Create key-value pairs (word, 1)
+word_pairs = words.map(lambda word: (word, 1))
+
+# Reduce by key (sum up word occurrences)
+word_counts = word_pairs.reduceByKey(lambda a, b: a + b)
+
+# Collect the result and print it
+for word, count in word_counts.collect():
+    print(f"{word}: {count}")
+
+
+#Bangalore Housing Dataset is provided and loaded as Spark-DataFrame
+from pyspark.context import SparkContext
+from pyspark.sql.session import SparkSession
+from pyspark.ml.feature import StringIndexer
+from pyspark.ml.feature import VectorAssembler
+from pyspark.sql.functions import isnull, when, count, col, sum
+from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.feature import VectorAssembler, StandardScaler
+from pyspark.ml.regression import LinearRegression
+
+load file
+file_location = '/FileStore/tables/Bengaluru_House_Data_1.csv'
+file_type = 'csv'
+df = spark.read.format('csv').option('header',True).option('inferSchema',True).load(file_location)
+
+
+df.show()
+df.printSchema()
+df.summary().show()
+i. Count the total number of housing-properties listed from 'HSR Layout location. (4 marks)
+print('Total number of housing-properties from HSR Layout : ',df.filter((df.location=='HSR Layout')).count())
+ii. How many '2 BHK' size housing-properties are listed from 'Whitefield' location? (5 marks)
+print('2BHK housing-properties in Whitefield : ',df.filter((df.location=='Whitefield') & (df.size=='2 BHK')).count())
+iii. What is the average price of '2 BHK' size housing-properties in 'HSR Layout' location? (6 Marks)
+print('Average price of 2BHK in HSR Layout : ',df.filter((df.location=='HSR Layout') & (df.size=='2 BHK')).agg({'price': 'avg'}).first()[0])
+
+b. Using Spark ML execute the steps, as questioned below:
+i. Remove the features, having more than one third of their entries as missing/null. For the remaining missing values - remove the corresponding row entry from the DataFrame. (5 marks)
+df.select([sum(col(c).isNull().cast("int")).alias(c) for c in df.columns]).show()
+print('Null Value Count : ')
+for c in df.columns:
+    null_count = df.filter(col(c).isNull()).count()
+    print(f"{c}: {null_count}")
+
+
+df.count() / 3
+Only 'society' column has more than one third values missing. So, let us drop it.
+df = df.drop('society')
+Let us drop all other rows which has missing values.
+
+df = df.dropna()
+df.count()
+df.printSchema()
+ii. Convert all the string columns into numeric values using StringIndexer transformer and make sure now DataFrame does not have any string columns anymore. (5 marks)
+string_coumns = ['area_type', 'availability', 'location', 'size', 'total_sqft']
+indexed_columns = ['area_type_indexed', 'availability_indexed', 'location_indexed', 'size_indexed', 'total_sqft_indexed']
+
+indexer_model = StringIndexer(inputCols=string_coumns,outputCols=indexed_columns).fit(df)
+df = indexer_model.transform(df)
+df_indexed = df.drop(*string_coumns)
+
+df_indexed.printSchema()
+iii. Using vectorAssembler combines all columns (exxcept target column i.e., 'price') of spark DataFrame into single column (name as features). Make sure DataFrame now contains only two columns features and price. (5 marks)
+feature_cols = df_indexed.columns
+feature_cols.remove('price')
+
+assembler = VectorAssembler(inputCols=feature_cols,outputCol='features')
+df_assembled = assembler.transform(df_indexed)
+df_assembled = df_assembled.select('features','price')
+
+df_assembled.printSchema()
+iv. Split the vectorized dataframe into training and test sets with one fourth records being held for testing (2 marks)
+train_df, test_df = df_assembled.randomSplit([0.75,0.25],seed=42)
+print('Train count : ',train_df.count(),'\nTest Count : ', test_df.count())
+v. Train default LinearRegression model with features as 'featureCol' and 'price' as label. (8 marks)
+lr = LinearRegression(featuresCol='features',labelCol='price')
+lr_model = lr.fit(train_df)
+
+prediction = lr_model.transform(test_df)
+evaluator = RegressionEvaluator(labelCol="price", predictionCol="prediction", metricName="rmse")
+rmse = evaluator.evaluate(prediction)
+print(rmse)
+
+
+Create a directory in HDFS whose path should be /sales/2020
+
+hdfs dfs -mkdir -p /sales/2020
+
+You save this Linux file into HDFS in the folder “/sales/2020” which you create in the step no 1
+
+hdfs dfs -put sales.csv /sales/2020
+
+4. Execute a command to verify number of files, block for each file, rack information of this folder “/sales”
+hdfs fsck /sales -files -blocks -locations -racks
+hdfs dfs -rm -r /sales
+hdfs dfs -ls /sales
+
+1 Create a directory in HDFS to copy this data in HDFs
+hdfs dfs -mkdir /NYSE_daily
+hdfs dfs -put NYSE_daily_File /NYSE_daily
+2To Load data into partitioned table, we need to load data into non-partition table and then by using SQL Query we can load the data into partitioned table.
+Lets create "NYSE" as non partition table
+
+hive>
+
+create table NYSE(exchange_symbol string,company string,date_txn string,open_price float,day_high float,day_low float,close_price float,txn bigint,adjust_close float) row format delimited fields terminated by '\t' stored as textfile location 'hdfs:///NYSE_daily
+
+3 Let’s create a partitioned table as ORC File which is partitioned on date field
+
+hive>
+
+
+SET hive.exec.dynamic.partition=true;
+
+SET hive.exec.dynamic.partition.mode=nonstrict;
+create table NYSE_Partition(exchange_symbol string,company string,open_price float,day_high
+float,day_low float,close_price float,txn bigint,adjust_close float) partitioned by (date_txn String) stored as orcfile;
+
+4Now, we can load data into partition table using Hive SQL Query
+hive>
+
+from NYSE insert into NYSE_Partition partition(date_txn) select exchange_symbol,company,open_price,day_high,day_low,close_price,txn,adjust_close,date_txn where open_price > 68 AND close_price <70;
+
+1. Find all the records for city “CHICOPEE".
+ use assignment
+show tables
+
+Answer:
+
+
+Ø use assignment
+
+Ø db.zipcodes.find({"city" : "CHICOPEE"}
+Display all the distinct State names which are there in this dataset.
+db.zipcodes.distinct("state")
+
+The records of "TOLLAND" or "MONTGOMERY" city.
+db.zipcodes.find({$or:[{"city" : "TOLLAND","city": "MONTGOMERY"}]})
+The list of cities name for the state “VA”
+The list of cities name for the state “VA
+db.zipcodes.distinct("city",{"state": "VA"})
+
+. The name of cities where "population” is greater than 33801.
+
+db.zipcodes.find({"pop": {$gte:33801}},{"city":1,_id:0})
+The names of the state and its total population whose poulaiton is greater than 5000000
+
+db.zipcodes.aggregate([ {$group: {_id: "$state",totalPop: {$sum: "$pop"}}}, {$match: {totalPop: {$gte: 5000000}}} ])
+
+Spark SQL 
+# number of rows and columns in the dataset
+print("Number of Rows: ", rawDF.count())
+print("Number of Columns", len(rawDF.columns))
+
+Q. Find the top 10 host properties (hotel names) in New York City
+# apply groupby function on the 'name' column to get the count of each category present in the column
+# arrange the count in descending order
+rawDF.groupBy('name').count().sort("Count",ascending=False).show(10,False)
+Q. What can you tell about the hosts and their properties (hotels)
+# apply groupby function on the 'host_id' column to get the count of each category present in the column
+# arrange the count in descending order
+rawDF.groupBy('host_id').count().sort("Count",ascending=False).show(5,False)
+Inference 
+From the above results, we can observe that the count of hosts is greater than count of host names, Therefore, we can conclude that a host can have multiple properties in a neighbourhood group with same host id's but with different property name
+
+# import countDistinct from the pyspark.sql library
+from pyspark.sql.functions import countDistinct
+ QGet the total number of hosts and number of properties (hotels) listed
+# apply countDistinct on host_name and name respectively
+# collect() returns Array of Row type
+# collect[0][0] returns the value of the first row & first column.
+print("Number of hosts in New York  city: ", rawDF.select(countDistinct("host_name")).collect()[0][0])
+print("Number of properties listed: ", rawDF.select(countDistinct("name")).collect()[0][0])
+
+Q. Which neighbourhood group has the highest number of properties (hotels) listed. Plot a bar chart to display the results
+# import matplotlib
+import matplotlib.pyplot as plt
+fig = plt.figure(figsize =(25, 10))
+
+# apply groupby function on the 'neighbourhood_group' column to get the count of each category present in the column
+# arrange the count in descending order
+neighDF = rawDF.groupBy('neighbourhood_group').count().sort("Count",ascending=False).toPandas().head(5)
+plt.bar(neighDF["neighbourhood_group"], neighDF["count"])
+
+Q. Get the top 10 neighbourhoods in New York city
+
+fig = plt.figure(figsize =(20, 8))
+
+
+# apply groupby function on the 'neighbourhood' column to get the count of each category present in the column
+# arrange the count in descending order
+neighDF = rawDF.groupBy('neighbourhood').count().sort("Count",ascending=False).toPandas().head(10)
+plt.bar(neighDF["neighbourhood"], neighDF["count"])
+
+Q. Number of nights stayed in shared rooms
+import seaborn as sns
+roomDF = rawDF.filter(rawDF.room_type == "Shared room").select("minimum_nights").toPandas()
+#df.filter(df.state == "OH")
+
+ax = sns.swarmplot(y= roomDF.index,x= roomDF.minimum_nights)
+plt.xlabel("minimum_nights")
+plt.show()
+From the above results you can observe that people on low budget ( mostly travellers and backpackers) like to stay in the shared rooms. They live on an average of 1-2 days as they keep on moving from one place to another
+Q. How many neighbourhood groups are present in the New York city?
+rawDF.select(countDistinct("neighbourhood_group")).show()
+
+ check if the dataset is read as rawDF
+rawDF.show(5, False)
+
+Q. Treat missing values and remove unnecessary columns
+from pyspark.sql.functions import isnull, when, count, col
+# count the number of missing values for each column
+rawDF.select([count(when(isnull(c), c)).alias(c) for c in rawDF.columns]).show()
+from the above results we can see that the dataframe does not contain any missing value
+
+# number of rows and columns in the dataset
+print("Number of Rows: ", rawDF.count())
+print("Number of Columns: ",len(rawDF.columns))
+After dropping all the missing values we now have almost 8 million records with 10 columns
+
+We now drop the column '_c0' as it is not required for our analysis
+
+# use the drop() transformer to drop the selected column "_c0"
+rawDF = rawDF.drop('_c0')
+# check if the column has been dropped
+rawDF.show(5, False)
+# we will cache the dataset at this stage since the dataset is huge
+kartDF = rawDF.cache()
+Q. Check column data types and change the column data type if required
+# check the data types of the columns
+kartDF.printSchema()
+
+# most popular products sold
+kartDF.select('product').groupBy('product').count().orderBy('count', ascending = False).show(10)
+# most popular product categories
+kartDF.select('product_category').groupBy('product_category').count().orderBy('count', ascending = False).show(10)
+
+Q.List down five least sold products that the company sold in the month of May
+# least popular products sold
+kartDF.select('product').groupBy('product').count().orderBy('count', ascending = True).show(5)
+# most popular brands
+kartDF.select('brand').groupBy('brand').count().orderBy('count', ascending = False).show(10)
+# average amount spent on smartphones by the customers
+kartDF.select('price').filter("product == 'smartphone'").describe().show()
+
+Q. Find the user's website activities on each day of the week and plot bar chart showing the number of user activities on each day of the week
+neDF = kartDF
+from pyspark.sql.functions import date_format
+kartDF=neDF.withColumn('dayofweek', date_format('clickeventtime', 'E'))
+kartDF.show(5)
+actDF = kartDF.select("dayofweek").groupBy("dayofweek").count().orderBy("dayofweek").toPandas()
+actDF.head(7)
+
+# create the plot
+import matplotlib.pyplot as plt
+plt.rcParams["figure.figsize"] = (15,10)
+actDF.plot(x = 'dayofweek', kind='bar')
+plt.title('Day-wise Activities')
+plt.ylabel('Number of Activities')
+plt.xlabel('Day')
+plt.show()
+
+Preparing data for model building
+import pyspark.sql.functions as f
+
+df = kartDF.withColumn('label', f.when(kartDF['productstatus']=='purchase',1).otherwise(0))
+# Printing the count of each label
+df.groupBy('label').count().show()
+
+Q. Divide the data in train and test set
+# We spilt the data into 70-30 set
+# Training Set - 70% obesevations
+# Testing Set - 30% observations
+trainDF, testDF =  df.randomSplit([0.7,0.3], seed = 2020)
+
+# print the count of observations in each set
+print("Observations in training set = ", trainDF.count())
+print("Observations in testing set = ", testDF.count())
+
+Q. Apply necessary transformation required to preapre data for machine learning
+# Categorising the attributes into its type
+cat_features=['brand','product_category', 'product', 'dayofweek']
+cont_features=['price']
+
+# importing all the required libraries for feature transformation
+from pyspark.ml.feature import OneHotEncoder,StringIndexer,VectorAssembler
+
+# defining an empty list to hold transforming stages
+# to prepare pipelines
+stages=[]
+
+
+# Encoding categorical features
+for catcol in cat_features:
+    indexer=StringIndexer(inputCol=catcol,outputCol=catcol+'_index').setHandleInvalid("keep")
+    encoder=OneHotEncoder(inputCols=[indexer.getOutputCol()],outputCols=[catcol+"_enc"])
+    stages+=[indexer,encoder]
+assemblerInputs=[col+"_enc" for col in cat_features]+cont_features
+assembler=VectorAssembler(inputCols=assemblerInputs,outputCol="features")
+stages+=[assembler]
+# Scaling the features vector
+from pyspark.ml.feature import MinMaxScaler
+scaler = MinMaxScaler().setInputCol("features").setOutputCol("scaled_features")
+stages+=[scaler]
+
+Q. Build a logistic regression pipeline model
+# Importing the library for Logistic regression
+from pyspark.ml.classification import LogisticRegression
+
+# create the logistic model and store this estimator in pipeline stages 
+lr = LogisticRegression(featuresCol='scaled_features', labelCol='label')
+
+stages += [lr] 
+# Building a spark ml pipeline to transform the data
+from pyspark.ml import Pipeline
+pipeline = Pipeline(stages=stages)
+
+# Fit the pipeline to training documents.
+model = pipeline.fit(trainDF)
+[Stage 51:>                                                        (0 + 8) / 10]
+# Make predictions on test documents and print columns of interest.
+predictionDF = model.transform(testDF)
+predictionDF.select("rawPrediction", "probability", "prediction", "label").show(10,False)
+Q. Evaluate the logistic regression pipeline model
+# import BinaryClassificationEvaluator from the pyspark.ml.evaluation package
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
+
+# Build the BinaryClassificationEvaluator object 'evaluator'
+evaluator = BinaryClassificationEvaluator()
+
+# Calculate the accracy and print its value
+accuracy = predictionDF.filter(predictionDF.label == predictionDF.prediction).count()/float(predictionDF.count())
+print("Accuracy = ", accuracy)
+
+# evaluate(predictiondataframe) gets area under the ROC curve
+print('Area under the ROC curve = ', evaluator.evaluate(predictionDF)
+
+# import MulticlassClassificationEvaluator from the pyspark.ml.evaluation package
+from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+
+# Build the MulticlassClassificationEvaluator object 'evaluator'
+multievaluator = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction")
+
+# 1. Accuracy
+print("Accuracy: ", multievaluator.evaluate(predictionDF, {evaluator.metricName: "accuracy"})) 
+# 2. Area under the ROC curve
+print('Area under the ROC curve = ', evaluator.evaluate(predictionDF))
+# 3. Precision (Positive Predictive Value)
+print("Precision = ", multievaluator.evaluate(predictionDF, {evaluator.metricName: "weightedPrecision"}))
+# 4. Recall (True Positive Rate)
+print("Recall = ", multievaluator.evaluate(predictionDF, {evaluator.metricName: "weightedRecall"}))
+# 5. F1 Score (F-measure)
+print("F1 Score = ", multievaluator.evaluate(predictionDF, {evaluator.metricName: "f1"}))
+
+
+pip install pymongo
+from pymongo import MongoClient
+# pprint library is used to make the output look more pretty
+from pprint import pprint
+from random import randint
+client = MongoClient("localhost:27017")
+#let's connect to greatlearning database, and insert 1000 documents containing product name, company name and rating
+
+db = client['greatlearning']
+productcollection = db['product_feedback']
+
+#
+productlist = []
+product_name = ['Mobile','TV','Washing machine', 'Refrigerator', 'Microwave Oven','Induction cooker','AC']
+company_name = ['LG', 'Samsung', 'Bosch','Siemens','Whirlpool','Electrolux','Haier','Videocon']
+for x in range(1, 1001):
+    sale = {
+        'name' : product_name[randint(0, (len(product_name)-1))],
+        'rating' : randint(1, 5),
+        'brand' : company_name[randint(0, (len(company_name)-1))] 
+    }
+    productlist.append(sale)
+    
+productcollection.insert_many(productlist)
+<pymongo.results.InsertManyResult at 0x10c982220>
+Now, we have inserted 1000 documents then we can peform different CRUD operations using PyMongo.
+
+Query to find those products which have recived 5/5 rating.
+rating5reviews= productcollection.find({"rating":5})
+for  review in rating5reviews:
+    print(review)
+Query to update those records where product name is AC to "Air conditioner"
+productcollection.update_many({"name": "AC"},{"$set": {"name": "Air conditioner"} })
+for doc in productcollection.find({"name": "Air conditioner"}):
+    pprint(doc)
+

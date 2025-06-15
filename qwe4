@@ -1,5 +1,10 @@
+bda notes
 
-#content = open('1.txt', 'r').read()
+content = open('1.txt', 'r').read()
+
+
+from google.colab import drive
+drive.mount('/content/drive')
 
 # import statements
 from pyspark.context import SparkContext
@@ -11,88 +16,78 @@ from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 
-sc = SparkContext.getOrCreate()
+# sc = SparkContext.getOrCreate()
 # spark = SparkSession(sc)
-
 spark = SparkSession.builder.appName('MyAppName').getOrCreate()
 
-"""#### Q1.  Print Spark version  (1 mark)"""
-
+#### Q1.  Print Spark version  (1 mark)
 print(spark.version)
 
-from google.colab import drive
-drive.mount('/content/drive')
-
-#spark.read.format("csv").option("header", "false").option("inferschema","True").load('dbfs:/databricks-datasets/adult/adult.data')#
-
-"""#### Q2. Read adult_data into a Spark-dataframe , databricks_datasets path is - 'dbfs:/databricks-datasets/adult/adult.data'  (1 mark)"""
-
-#!ls drive/MyDrive/PES3SEM
-
+#### Q2. Read adult_data into a Spark-dataframe , databricks_datasets path is - 'dbfs:/databricks-datasets/adult/adult.data'  (1 mark)
 data_path = "/content/drive/MyDrive/PES3SEM/adult.data"
 df = spark.read.csv(data_path, header=True, inferSchema=True)
-
-# Read  the data from  dbfs:/databricks-datasets/adult/adult.data  into Saprk dataframe
-# df=spark.read.format("csv").option("header", "false").option("inferschema","True").load('dbfs:/databricks-datasets/adult/adult.data')
-
+#df = spark.read.format("csv").option("header", "false").option("inferschema","True").load('dbfs:/databricks-datasets/adult/adult.data')
 #df.columns
 
-"""#### Q3. Rename columns of spark dataframe same as given below list  ( 1 mark)
-"""
-
+#### Q3. Rename columns of spark dataframe same as given below list  ( 1 mark)
 column_names = ["age","workclass", "final_weight", "education", "education_num", "marital_status",
-     "occupation", "relationship","race","sex","capital_gain","capital_loss",
-     "hours_per_week","native_country","income_class"]
+     "occupation", "relationship","race","sex","capital_gain","capital_loss", "hours_per_week","native_country","income_class"]
 for new_col, old_col in zip(column_names, df.columns):
     df = df.withColumnRenamed(old_col, new_col)
-
-df.limit(2).show()        #df.show()
-
-df.printSchema()
-
-from pyspark.sql.functions import trim, col # Import trim and col
-df = df.select(*[(trim(col(c)).alias(c) if t == "string" else col(c))for c, t in df.dtypes]) #to remove empty spaces
-#df = df.drop("No. of Bedrooms")                                #to drop cols if asked
+#df = df.drop("No. of Bedrooms")                                 #to drop cols if asked
 #columns = df.columns ; columns.sort(); print(','.join(columns)) # list of cols in alphabetic order
-df.printSchema()
+df.limit(2).show()        #df.show()
+#df.printSchema()
+
+#### If data has empty spaces then use trim
+from pyspark.sql.functions import trim, col
+df = df.select(*[(trim(col(c)).alias(c) if t == "string" else col(c))for c, t in df.dtypes]) #to remove empty spaces
 
 #### Q4. Check if spark-dataframe has any columns with missing/null values and drop such columns  (1 mark)
 from pyspark.sql.functions import isnull, when, count, col
+print('Number of missing values per column:')
 df.select([count(when(isnull(c), c)).alias(c) for c in df.columns]).show()
 # df = df.na.drop()
 
+#### group by example
+print("Grouped DataFrame by marital_status and displayed full counts without truncation.")
 from os import truncate
 df.groupby("marital_status").count().show(truncate=False)
 
-"""#### Q5. Show the datatypes(schema) of each Spark-dataframe columns without using any for loop (1 mark)"""
-
-df.printSchema()
-
-# 2 distinct values of each column
+#### distinct values of each column
 #for column in df.columns:
 #  print(f"Distinct values for column '{column}':")
 #  df.select(column).distinct().limit(2).show()
 #---
-# see distinct values of sex column
-#df.select('sex').distinct().show()
+# see distinct values of sex column   #df.select('sex').distinct().show()
 
-from pyspark.sql.functions import col, min, max, avg
+
+#### Q5. Show the datatypes(schema) of each Spark-dataframe columns without using any for loop (1 mark)
+df.printSchema()
+
+#### Filters
+from pyspark.sql.functions import col, min, max, avg, when, count
 #df.select(min("age"), max("age"), avg("age")).show()
 #white_female_count          = df.filter((col("sex")=="Female") & (col("race")=="White")).count()
 #male_high_income_zero_hours = df.filter((col("sex")=="Male") & (col("income_class")==">50K") & (col("hours_per_week")==0)).count()
 #df                          = df.drop("final_weight").na.drop()
 #distinct_educations         = df.select("education"                                                          ).distinct().count()
 distinct_indian_educations  = df.filter(col("native_country")=="India").select("education"                   ).distinct().count()
-private_profs               = df.filter((col("occupation")=="Prof-specialty") & (col("workclass")=="Private")).count()
+print(f"Number of distinct education levels for individuals from India: {distinct_indian_educations}")
+#private_profs               = df.filter((col("occupation")=="Prof-specialty") & (col("workclass")=="Private")).count()
 #husbands                    = df.filter(col("relationship")=="Husband"                                       ).count()
 #df.filter(col("native_country")=="India").select(avg("capital_gain")   ).show()
 #df.filter(col("hours_per_week")==40     ).select("age","marital_status").show()
 #df.filter((col("occupation")=="Exec-managerial") & (col("workclass")=="Local-gov")).select(avg("hours_per_week")).show()
-#------------------------------------------------
-
-from pyspark.sql.functions import isnull, when, count, col, min, max, avg
+#------------------------------------------------when & count-----------------------------------------------------------------
+# Add a column based on a condition using when
+#df_with_flag = df.withColumn("is_white_female", when((col("sex") == "Female") & (col("race") == "White"), 1).otherwise(0))
+# Count how many rows matched the condition
+#white_female_count = df_with_flag.agg(count(when(col("is_white_female") == 1, True))).collect()[0][0]
+#print(f"White Female Count: {white_female_count}")
+#------------------------------------------------other paper------------------------------------------------------------------
 #df.select(min("income_class"), max("income_class"), avg("income_class")).show()
-df.filter((col("sex") == "Female") & (col("race") == "White")).count()
+#df.filter((col("sex") == "Female") & (col("race") == "White")).count()
 #df.filter((col("sex") == "Male") & (col("placed") == "Yes") & (col("work_experience") == 0)).count()
 #df = df.drop("sl_no").na.drop()
 #df.select("institution").distinct().count()
@@ -113,7 +108,6 @@ cols_to_drop = [c for c in df.columns if df.filter(col(c).isNull()).count() > th
 df = df.drop(*cols_to_drop).na.drop()
 
 '''
-
 '''
 String Indexer
 '''
@@ -130,10 +124,9 @@ df = df.withColumnRenamed("income_class_indexed", "label")
 df.printSchema()
 df.show(2)
 
-"""#### Q7. Using vectorAssembler combines all columns (except  label)  of Sparkdataframe into single column named features (3 marks)"""
-
 '''
- Group 4: Feature Vectorization
+ Q7: Feature Vectorization
+ #### Q7. Using vectorAssembler combines all columns (except  label)  of Sparkdataframe into single column named features (3 marks)
 '''
 features = [c for c in df.columns if c not in ["label"]] ; print(features);
 assembler = VectorAssembler(inputCols=features, outputCol="features")
@@ -151,26 +144,23 @@ df = df.drop("features")
 df = df.withColumnRenamed("scaled_features", "features")
 df.show(5, truncate=False)
 
-"""#### Q8.  Split the vectorised spark dataframe into training and test sets  (with one third being held for  testing) ( 3 marks)"""
-
 '''
 Split
+#### Q8.  Split the vectorised spark dataframe into training and test sets  (with one third being held for  testing) ( 3 marks)
 '''
 df_train, df_test =  df.randomSplit([0.67,0.33], seed = 2020)
 print(f"Training Data Count: {df_train.count()}")
 print(f"Test Data Count: {df_test.count()}")
 
-#### Q9. Train default logistic regression  model with   'featuresCol' as  features and  features as ' label'  (3 marks)
-
 '''
 ### LogisticRegression  # === Group 6B: Classification Model ===
+#### Q9. Train default logistic regression  model with   'featuresCol' as  features and  features as ' label'  (3 marks)
 '''
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 
 # Build the LogisticRegression object 'lr' by setting the required parameters
 lr  = LogisticRegression(featuresCol="features", labelCol="label")
-#lr = LinearRegression(featuresCol="features", labelCol="label")
 
 # fit the LogisticRegression object on the training data
 lrmodel = lr.fit(df_train)
@@ -212,6 +202,623 @@ evaluator = RegressionEvaluator(labelCol="label", predictionCol="prediction", me
 rmse = evaluator.evaluate(predictions)
 
 print(f"Root Mean Squared Error (RMSE) on test set: {rmse}")
+
+
+
+################################################################################################################################
+HDFS Commands Summary
+
+1. List directory contents with details:
+   hdfs dfs -ls /path/to/directory
+
+2. Upload multiple files to HDFS:
+   hdfs dfs -put file1 file2            /hdfs/destination/ 
+   hdfs dfs -put /local/path/*.txt  /hdfs/destination/
+
+3. Display HDFS file content: 
+   hdfs dfs -cat /path/to/file 
+   hdfs dfs -tail /path/to/file (To display only the last few lines)
+   hdfs dfs -tail -n <N> /path/to/file (To display the last N lines)
+
+4. Delete file/directory recursively: 
+   hdfs dfs -rm -r /path/to/file_or_directory
+
+5. Copy file from HDFS to local:
+   hdfs dfs -get /hdfs/file /local/path/
+   hdfs dfs -copyToLocal /hdfs/file /local/path/
+
+6. Copy and rename files in HDFS: 
+   hdfs dfs -cp /hdfs/file1 /hdfs/file2
+
+7. Delete empty directory:
+   hdfs dfs -rmdir /path/to/empty_directory
+
+8. List directory contents: (Print directory contents with permissions, owner, size)
+   hdfs dfs -ls .   
+   hdfs dfs -ls /path
+   hdfs dfs -ls -R /path 
+
+9. Change permissions to 444 (read-only):
+   hdfs dfs -chmod 444 /path/to/file_or_dir
+   hdfs dfs -chmod -R 444 /path/to/dir
+
+10. Check Hadoop version:
+    hadoop version
+
+11. Get help:
+    hadoop --help
+    hdfs dfs -help
+    hdfs dfs -help <command_name>
+
+—
+12. Show size of each file and directory:
+    hdfs dfs -du /path
+
+13. Show total size summary of a path:
+    hdfs dfs -du -s /path
+
+14. Move or rename files/directories:
+    hdfs dfs -mv <src> <dest>
+
+15. Copy files/directories:
+    hdfs dfs -cp <src> <dest>
+
+==============================================================
+
+What is Big Data?  
+- Massive, fast, diverse datasets beyond traditional tools' capabilities.  
+3 V’s of Big Data:  
+- Volume – Large data sizes (TB–ZB).  
+- Velocity – Rapid data flow and processing.  
+- Variety – Diverse formats (structured, semi-structured, unstructured).  
+Extra V’s (optional):  
+- Veracity – Trustworthiness of data.  
+- Value – Usefulness of insights derived.  
+Types of NoSQL Databases:  
+- Key-Value – Pairs (e.g., Redis).  
+- Document – JSON/XML (e.g., MongoDB).  
+- Column – Columns (e.g., Cassandra).  
+- Graph – Nodes/edges (e.g., Neo4j).
+
+==============================================================
+NoSQL Database Types:
+
+1. Key-Value Stores:
+- Concept: Simplest model; data stored as unique key-value pairs.
+- Use Cases: Caching, session management, user profiles, shopping carts.
+- Examples: Redis, Memcached, Amazon DynamoDB.
+
+2. Document Databases (Document Stores):
+- Concept: Flexible, semi-structured documents (JSON, BSON, XML).
+- Use Cases: Content management, catalogs, user profiles, e-commerce.
+- Examples: MongoDB, Couchbase, CouchDB, Amazon DynamoDB.
+
+3. Column-Family Stores (Wide-Column Stores):
+- Concept: Data stored by columns within column families; scalable for big data.
+- Use Cases: Event logging, time-series data, analytics, high-volume writes.
+- Examples: Apache Cassandra, HBase, Google Bigtable.
+
+4. Graph Databases:
+- Concept: Data as nodes (entities) and edges (relationships).
+- Use Cases: Social networks, recommendations, fraud detection, knowledge graphs.
+- Examples: Neo4j, Amazon Neptune, ArangoDB (multi-model).
+
+==========================================================
+
+MapReduce – Phases
+
+1. Input Phase:   Reads raw data line by line.
+2. Map Phase:   Emits each word with a count of 1.
+3. Shuffle & Sort Phase:   Groups values by word.
+4. Reduce Phase:   Sums counts for each word.
+5. Output Phase:   Writes final word counts to HDFS.
+
+==============================================================
+Word count using MapReduce (with example)
+Input:
+hello world
+hello hadoop
+Map Phase: Each word is mapped to (word, 1)
+Output:
+hello 1
+world 1
+hello 1
+hadoop 1
+Shuffle & Sort Phase: Groups same words together
+hello → [1, 1]
+world → [1]
+hadoop → [1]
+Reduce Phase: Sums the counts ←—--------- optimise + aggregate
+hello → 2
+world → 1
+hadoop → 1
+Final Output:
+hello 2
+world 1
+hadoop 1
+
+==============================================================
+
+YARN Architecture
+ResourceManager – Allocates cluster resources and manages jobs.
+NodeManager – Runs on each node; manages containers and reports to RM.
+ApplicationMaster – Controls a single app’s execution and resource requests.
+Container – Unit of execution with allocated resources (CPU, memory).
+Flow – RM → NM → AM → Containers run tasks.
+
++------------------------------------------------------+
+|                   ResourceManager (RM)               |
+|  +-----------------+      +-----------------------+  |
+|  |   Scheduler     |      |   ApplicationManager  |  |
+|  +-----------------+      +-----------------------+  |
++-------------------+---------------------------+------+
+                    |                           |
+                    | Resource Allocation       | Application Lifecycle
+                    |                           |
+                    v                           v
++------------------------------------------------------+
+|                  NodeManager (NM) on Node1           |
+|  +-----------------------------------------------+   |
+|  |               Containers (Tasks)               |  |
+|  +-----------------------------------------------+   |
++------------------------------------------------------+
+
++------------------------------------------------------+
+|                  NodeManager (NM) on Node2           |
+|  +-----------------------------------------------+   |
+|  |               Containers (Tasks)               |  |
+|  +-----------------------------------------------+   |
++------------------------------------------------------+
+
+              ^                         ^
+              |                         |
+              |   Launch & Monitor      |
+              |                         |
+        +---------------------------------------+
+        |         ApplicationMaster (AM)        |
+        |  (One per Application, negotiates     |
+        |  resources and manages tasks)         |
+        +---------------------------------------+
+
+
+
+Hadoop Architecture
+HDFS (Hadoop Distributed File System) – Stores large files across multiple nodes.
+NameNode – Master node; manages metadata and file system namespace.
+DataNode – Worker nodes; store actual data blocks and serve read/write requests.
+YARN (Yet Another Resource Negotiator) – Manages resource allocation and job scheduling.
+MapReduce – Processing framework for distributed data computation using map and reduce tasks.
+
+
++------------------------------------------------------------+
+|                         Client                             |
++------------------------------------------------------------+
+          |                           |                  
+          | Submit jobs / Read data   |                    
+          v                           v
++----------------------+    +-------------------------------+
+|      NameNode        |    |          ResourceManager      |
+|  (Metadata Manager)  |    |    (Job & Resource Manager)   |
++----------------------+    +-------------------------------+
+          |                           |                 
+          |                           |
+          v                           v
++------------------------------------------------------------+
+|                       DataNodes / NodeManagers             |
+| +----------+   +----------+   +----------+   +----------+  |
+| | DataNode |   | DataNode |   | DataNode |   | DataNode |  |
+| | & NM     |   | & NM     |   | & NM     |   | & NM     |  |
+| +----------+   +----------+   +----------+   +----------+  |
++------------------------------------------------------------+
+
+
+
+
+
+Hadoop 2.0 vs 3.0
+
+Feature
+Hadoop 2.x
+Hadoop 3.x
+NameNode Support
+Active + Standby (2 NameNodes)
+More than two NameNodes supported for high availability
+Storage Efficiency
+3x Replication
+Erasure Coding reduces storage overhead by up to 50%
+Container Scheduling
+Only guaranteed containers
+Opportunistic containers and distributed scheduling supported
+Disk Balancing
+No intra-datanode balancing
+Intra-datanode balancer distributes data within a datanode
+Filesystem Connector Support
+Limited cloud/storage support
+Improved support for cloud file systems (S3, Azure, GCS, etc.)
+Java Requirement
+Java 7+
+JDK 8.0 is the minimum supported version
+
+
+
+
+
+
+==========================================================
+
+Hive
+
+
+What is Hive Metastore? Can HBase be used for it?
+- Central repository for Hive metadata (tables, columns, partitions, data types, file locations).
+- Stores schema and data location information.
+- Used by Hive to parse and execute queries.
+- Backed by a relational database (RDBMS).
+- Common RDBMS options:
+  - Derby (embedded, dev/testing only)
+  - MySQL (popular for production)
+  - PostgreSQL (common open-source choice)
+  - Oracle, SQL Server (less common, enterprise use)
+
+
+Can HBase be used for Hive Metastore?
+No, HBase is not suitable.
+Hive Metastore needs:
+Relational data model (tables, schemas, relationships)
+ACID compliance (transactional consistency)
+JDBC/SQL interface
+HBase is:
+NoSQL column-family store
+Lacks relational features & SQL support
+Designed for real-time reads/writes, not metadata storage
+
+Hive Architecture
+- Client: CLI, JDBC/ODBC, Web UI for query submission.
+- Driver: Controls query execution, coordinates all components.
+- Metastore: Stores metadata (schemas, tables, partitions); uses RDBMS.
+- Compiler: Parses HiveQL into logical execution plan.
+- Optimizer: Improves plan (e.g. join reordering, predicate pushdown).
+- Executor: Converts plan into tasks.
+- Execution Engine: Runs tasks (MapReduce, Tez, Spark via YARN).
+- Storage: HDFS/S3 holds actual data.
+
++---------------------------------------------------------+
+|                      User Interface                     |
+|   (CLI / Web UI / JDBC / ODBC)                          |
++---------------------------+-----------------------------+
+                            |
+                            v
++---------------------------------------------------------+
+|                          Driver                         |
+|           (Query lifecycle manager & compiler)          |
++---------------------------+-----------------------------+
+                            |
+                            v
++---------------------------------------------------------+
+|                         Compiler                        |
+|    (Parses query, semantic analysis, execution plan)    |
++---------------------------+-----------------------------+
+                            |
+                            v
++------------------+           +---------------------------+
+|   Metastore      |           |    Execution Engine       |
+| (Metadata store) | <-------> | (Runs MapReduce/Tez/Spark)|
++------------------+           +---------------------------+
+                                        |
+                                        v
+                             +-------------------+
+                             |       HDFS        |
+                             | (Data Storage)    |
+                             +-------------------+
+
+
+
+Partitioning in Hive
+- Divides tables into subdirectories based on column values.
+- Reduces data scanned → improves query performance.
+- Creates HDFS folders for each partition (e.g., year=2024/month=01/).
+- Easier data management (add/drop partitions easily).
+- Scales well for large datasets.
+- Example: Query for "January 2024" scans only year=2024/month=01.
+Benefits:
+Faster query execution.
+Lower I/O and compute costs.
+Efficient use of cluster resources.
+Simplifies data archival and lifecycle management.
+Easier maintenance of time-based or logical data slices.
+├── year=2023/
+│   ├── month=01/
+│   │   └── sales_data_jan_2023.csv
+│   ├── month=02/
+│   │   └── sales_data_feb_2023.csv
+
+Without partitioning, if you want to query sales data for "January 2024", Hive would scan the entire sales dataset. 
+With partitioning, your data in HDFS might look like this, Now, if you query for "January 2024", 
+Hive will only go to the /user/hive/warehouse/sales_data/year=2024/month=01/ directory, drastically reducing the amount of data scanned.
+
+
+Hive Query to Create Databases
+CREATE DATABASE emp;
+CREATE DATABASE anotherDB;
+
+Hive Query to Create External Tables
+CREATE EXTERNAL TABLE it_employee (
+    id INT,
+    name STRING,
+    department STRING,
+    salary DOUBLE
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/user/hive/external_tables/it_employee'; -- Specify the HDFS path where your data files will reside
+
+
+
+Load Data Commands in Hive
+LOAD DATA LOCAL INPATH '/home/user/data/employee_data.csv' INTO TABLE it_employee;
+LOAD DATA LOCAL INPATH '/home/user/data/orders_data.csv' INTO TABLE orders1;
+
+
+
+-- Inner Join Query in Hive
+SELECT    e.id,     e.name,    e.department,    o.order_id,    o.product_name, o.amount
+FROM            it_employee e
+INNER JOIN  orders1 o        ON    e.id = o.id;
+
+
+====================================================================
+
+ MongoDB Tasks
+
+1. Create Collection
+---------------------
+use mydatabase;
+db.createCollection("orders");
+
+
+2. Insert Documents
+---------------------
+db.orders.insertMany([
+  { order_id: 101, customer: "Alice", product: "Laptop", rating: 4.5, order_status: "delivered" },
+  { order_id: 102, customer: "Bob", product: "Mouse", rating: 4.0, order_status: "shipped" }
+]);
+
+
+3. Query by rating/order_status
+---------------------
+-- Find orders with rating >= 4.5
+db.orders.find({ rating: { $gte: 4.5 } });
+
+-- Find orders where status is 'delivered'
+db.orders.find({ order_status: "delivered" });
+
+
+4. Update Documents
+---------------------
+-- Update order_status to 'delivered' where order_id = 104
+db.orders.updateOne(
+  { order_id: 104 },
+  { $set: { order_status: "delivered" } }
+);
+
+
+5. Count Based on Status
+---------------------
+-- Count how many orders are 'delivered'
+db.orders.countDocuments({ order_status: "delivered" });
+
+-- Count how many orders are 'cancelled'
+db.orders.countDocuments({ order_status: "cancelled" });
+
+
+
+======================================================================
+### MongoDB Syntax Cheat Sheet
+
+3. Query Documents
+db.orders.find();
+db.orders.find({ customer: "Alice" });
+db.orders.find({ rating: { $eq: 4.5 } });
+db.orders.find({ rating: { $ne: 3.0 } });
+db.orders.find({ rating: { $gt: 4.0 } });
+db.orders.find({ rating: { $gte: 4.0 } });
+db.orders.find({ rating: { $lt: 4.0 } });
+db.orders.find({ rating: { $lte: 4.0 } });
+db.orders.find({ order_status: { $in: ["delivered", "shipped"] } });
+db.orders.find({ order_status: { $nin: ["cancelled", "returned"] } });
+db.orders.find({ $and: [ {customer: "Alice"}, {order_status: "delivered"} ] });
+db.orders.find({ $or: [ {customer: "Bob"}, {rating: { $gte: 4.0 }} ] });
+
+
+4. Update Documents
+db.collectionName.updateOne ({ filterField: filterValue }, { $set: { fieldToUpdate: newValue } });
+db.collectionName.updateMany({ filterField: filterValue}, { $set: { fieldToUpdate: newValue } });
+db.collectionName.updateOne ({ filterField: filterValue }, { $inc: { numericField: incrementValue } });
+db.collectionName.updateOne ({ filterField: filterValue }, { $unset: { fieldToRemove: "" } });
+
+db.orders.updateOne({ order_id: 101 }, { $set: { order_status: "shipped" } });
+db.orders.updateMany({ order_status: "processing" }, { $set: { order_status: "shipped" } });
+db.orders.updateOne({ order_id: 102 }, { $inc: { rating: 1 } });
+db.orders.updateOne({ order_id: 103 }, { $unset: { rating: "" } });
+
+// Update a single document by setting a field
+// Update multiple documents by setting a field
+// Increment a numeric field in a single document
+// Remove a field from a single document
+
+======================================================================
+### CAP Theorem (Consistency, Availability, Partition Tolerance)
+A distributed system cannot guarantee all three of the following simultaneously:
+Consistency (C): Every read reflects the most recent write; all nodes show the same data.
+Availability (A): Every request gets a (non-error) response, even if it’s not the latest data.
+Partition Tolerance (P): The system continues functioning despite network failures.
+Network partitions are inevitable, so systems must choose Consistency or Availability when a partition occurs.
+—
+
+
+### MongoDB and CAP Theorem
+Type: MongoDB is generally a CP (Consistency + Partition Tolerance) system.
+Consistency:
+Prioritizes consistency with default read/write concerns.
+Ensures writes to the primary are visible in subsequent reads across replica set members.
+Partition Tolerance:
+Designed to handle network partitions.
+Maintains consistency among connected nodes during a partition, possibly sacrificing availability.
+Availability:
+Can be reduced during partitions if the primary is unreachable.
+Tunable consistency (e.g., secondaryPreferred) can increase availability at the cost of strict consistency.
+Conclusion:
+MongoDB emphasizes consistency and partition tolerance, sacrificing availability during partitions.
+
+
+
+============================================================================
+
+
+SPARK Question
+=========================================================
+
+Create RDD from list
+--------------------
+data = [1, 2, 3, 4, 5]
+rdd = sc.parallelize(data)
+
+Display first elements
+----------------------
+rdd.take(5)  # returns first 5 elements as a list
+
+Map/filter transformations
+--------------------------
+# Map example: multiply each element by 2
+mapped_rdd = rdd.map(lambda x: x * 2)
+
+# Filter example: keep only even numbers
+filtered_rdd = rdd.filter(lambda x: x % 2 == 0)
+Differences between Coalesce and Repartition
+Feature
+coalesce()
+repartition()
+Purpose
+Reduce number of partitions
+Increase or change number of partitions
+Shuffle
+Avoids full shuffle (more efficient)
+Performs full shuffle (expensive)
+Use Case
+Optimize for performance during narrow transformation (e.g., before writing to disk)
+Balance data evenly across partitions
+Speed
+Faster (less data movement)
+Slower (due to full data movement)
+Partition Range
+Only reduces number of partitions
+Can increase or decrease partitions
+Resulting Data Distribution
+May result in uneven partition sizes, especially with skewed data
+Ensures uniform data distribution
+Example
+rdd.coalesce(2)
+rdd.repartition(4)
+
+
+In summary:
+Use coalesce when you want to reduce the number of partitions and prioritize performance by minimizing shuffles, even if it leads to uneven partition sizes.
+Use repartition when you want to increase or decrease the number of partitions and requ
+Pseudo-code for word count in Spark RDD
+------------------------------------------------------------------------------------------------
+# Input: RDD of lines of text
+lines = sc.textFile("path/to/textfile")
+
+word_counts = (lines
+               .flatMap(lambda line: line.split())         # Split lines into words
+               .map(lambda word: (word, 1))             # Create (word, 1) pairs
+               .reduceByKey(lambda a, b: a + b))     # Sum counts per word
+
+word_counts.collect()  # Returns list of (word, count) pairs
+
+
+==================================================================—-------------------------------
+
+# Cheatsheet
+
+# 1. Load text file as RDD (each element is a line)
+lines = sc.textFile("hdfs:///path/to/your/text_file.txt")
+
+# 2. Split each line into words, convert to lowercase
+words = lines.flatMap(lambda line: line.lower().split(" "))
+
+# 3. Map each word to (word, 1)
+word_pairs = words.map(lambda word: (word, 1))
+
+# 4. Aggregate counts for each word
+word_counts = word_pairs.reduceByKey(lambda a, b: a + b)
+
+# 5. Collect results and print
+for word, count in word_counts.collect():
+    print(f"{word}: {count}")
+
+# Optional: Save results to HDFS
+# word_counts.saveAsTextFile("hdfs:///path/to/output_directory")
+
+# Optional: Stop SparkContext
+# sc.stop()
+
+=========================================================
+
+
+SPARK ARchitecture
++----------------------------------------------------+
+|                   Driver Program                   |
+|   +-----------------+                              |
+|   |   SparkContext  |                              |
+|   +-----------------+                              |
+|            |                                       |
+|            | Request resources & submit tasks      |
+|            v                                       |
+|   +------------------------------------------+     |
+|   |             Cluster Manager              |     |
+|   |     (YARN / Standalone / Mesos / K8s)   |      |
+|   +------------------------------------------+     |
+|            |                                       |
+|    +-------+-------+        +-------+-------+      |
+|    |               |        |               |      |
+|    v               v        v               v      |
+| +--------+    +--------+  +--------+    +--------+ |
+| |Executor|    |Executor|  |Executor|    |Executor| |
+| | Worker |    | Worker |  | Worker |    | Worker | |
+| +--------+    +--------+  +--------+    +--------+ |
+|    |              |          |             |       |
+|  Tasks          Tasks      Tasks          Tasks    |
++----------------------------------------------------+
+
+Spark Architecture - Concise Summary
+
+Driver Program:  - Entry point of Spark application.  - Contains SparkContext.  - Converts code to DAG and handles job scheduling.
+Cluster Manager:  - Manages resources across nodes.  - Examples: Standalone, YARN, Mesos, Kubernetes.
+Executors:  - Worker processes launched for each application.  - Execute tasks and store data (in memory/disk).
+Tasks:  - Smallest unit of work sent to executors.  - Each stage split into multiple parallel tasks.
+SparkContext:  - Core object connecting driver to cluster.  - Manages job execution and communication.
+
+• Execution Flow:   
+1. Driver submits job → builds DAG.
+2. DAG Scheduler splits into stages.
+3. Tasks sent to executors.
+4. Executors run tasks and return results.
+—-------------------------------—-------------------------------
+DAG stands for Directed Acyclic Graph. A DAG represents the logical execution plan of a job. It is made up of vertices (RDD operations) 
+and edges (data dependencies). Directed: Execution flows in one direction. Acyclic: No loops or cycles—each step moves forward.
+This structure helps Spark optimize execution by rearranging stages and minimizing data movement.
+
+—-------------------------------—-------------------------------
+
+
+
+
+
+
+
+
 
 #GAProcess the dataset as questioned below using spark libraries.
 

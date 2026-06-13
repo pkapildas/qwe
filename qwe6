@@ -1,0 +1,2678 @@
+#####################################################################################
+'''                         1. Importanttttttttt                           '''
+#####################################################################################
+a = [1,2,3]; df = pd.DataFrame({'Column_A': a, 'Column_B': b})
+
+df[df["c1"] == 10].
+groupby(["Cat1", "Cat2"], as_index=False)["Value"].mean().
+sort_values(by=["Cat1", "Value"], ascending=[True, False])
+
+c1 = df["col"].dropna() #df[df['Stream_HSC'] == 'Commerce']['Salary'].dropna()
+CC1='Course_Degree'; dfn = df.select_dtypes(include=np.number) #"object" 
+ 
+sm.qqplot(c1, line='s')
+sns.histplot   (c1, kde=True)
+sns.histplot   (x="Salary" , hue=CC1  , data=df, kde=True)
+sns.boxplot    (x=CC1  , y='Salary' , data=df)
+sns.pairplot   (dfn)
+sns.scatterplot(x="Percent_SSC" , y="Salary" , data=df , hue=CC1); plt.show()
+
+cv = dfn.std() / dfn.mean(); correlation = st.pearsonr(d["x"], d["y"])
+'''----------------------------------------------'''
+before = df1['before_score'].dropna().tolist(); diff = after-before;
+st.shapiro(diff)<alpha
+st.ttest_rel(after, before, alternative = greater)[1]<alpha; #wilcoxon
+'''----------------------------------------------'''
+#Normal Distribuitin & <10 ? >10 ?  between 10 & 12
+a = st.norm.cdf(x, loc=mu, scale=sigma) #1-a, a-b
+#Poisson - >>> EXACT NUMER NOT CONTINUUS VALUE LIKE KG
+st.poisson.pmf(x, mu=lam) #exactly  ; 
+st.poisson.cdf(x, mu=lam) #less than or equal to 
+'''------------------------------------------------''' 
+print("Reject H0" if p < alpha else "Fail to reject H0")   
+
+# --- HOW TO CHOOSE A TEST ---
+# Z-TEST     : 1 Group vs Target --> POPULATION SD IS GIVEN.
+                    z = (xbar - mu)/(sigma/np.sqrt(n))
+                    p_right =    1- st.norm.cdf(z)        # right
+                    p_left  =       st.norm.cdf(z)        # left 
+                    p_two   = 2*(1- st.norm.cdf(abs(z)))  # two-tailed
+
+# 1-SAMPLE T : 1 Group vs Target --> Population SD is UNKNOWN.
+                    st.ttest_1samp(c1, popmean=2280, alternative="greater")
+                >   p_left = p2/2 if t < 0 else 1-p2/2
+                    p_right = p2/2 if t > 0 else 1-p2/2
+                >   df['Difference'] = df['Before'] - df['After']   #diabetes dcrease bef after
+                    t, p2 = st.ttest_1samp(df['Difference'], 0, alternative='greater') 
+# 2-Sample t   : 2 Independent groups (A vs B)
+                    st.ttest_ind(g1, g2, equal_var=True)[1] 
+# PAIRED T      : 1 Group tested 2 times -> "Before vs After" ; st.ttest_rel(after, before)        
+                    before = np.array([121, 2, 3]); after = np.array([130, 4,8]); 
+                    differences = after - before;
+                    p_shapiro = stats.shapiro(differences)[1]
+                    v1 = stats.ttest_rel(ht_after, ht_before, alternative='greater')[1]
+                    v2 = stats.wilcoxon(ht_after, ht_before, alternative='greater')[1] 
+# ANOVA        : 3+ Independent groups -> "Machine A vs B vs C", "3 locations".
+# Chi-Square   : Categorical data (Counts/Frequencies) 
+# Shapiro-Wilk : Checks for Normality (required before t-tests/ANOVA)
+#                p > 0.05 -> Normal (Use t-test)
+#                p < 0.05 -> Not Normal (Use Wilcoxon / Non-parametric)
+
+ # chi-square
+observed = np.array([1124,1125,1110,1120,1126,1115])
+expected = np.full(len(observed), observed.sum()/len(observed))
+st.chisquare(observed, expected)
+st.chi2_contingency(pd.crosstab(df["cat1"], df["cat2"]))
+
+# ANOVA 
+df = pd.DataFrame({  'Nozzle_1': [0.78, ],    'Nozzle_2': [0.85, ],})
+p  = st.f_oneway(df['Nozzle_1'], ... , df['Nozzle_5'])[1]
+st.f_oneway(g1, g2, g3)
+groups = [g["Value"] for _, g in df[["Group","Value"]].dropna().groupby("Group")]
+st.f_oneway(*groups)
+sm.stats.anova_lm(ols("Value ~ C(Group)", data=df).fit(), typ=2)
+# ANOVA 
+groups = [g['Salary'].dropna() for _, g in df[['Specialization_MBA', 'Salary']].dropna().groupby('Specialization_MBA')]
+p = st.f_oneway(*groups)[1]
+print(f'ANOVA F-statistic: {f_stat:.4f}, p-value: {p_anova:.4f}')
+
+#####################################################################################
+'''                       Stat Testing                                            '''
+#####################################################################################
+
+
+# chi-square
+observed = np.array([1124,1125,1110,1120,1126,1115])
+expected = np.full(len(observed), observed.sum()/len(observed))
+st.chisquare(observed, expected)
+st.chi2_contingency(pd.crosstab(df["cat1"], df["cat2"]))
+
+# ANOVA
+data = {
+    'Nozzle_1': [0.78, 0.8, 0.81, 0.75, 0.77, 0.78],
+    'Nozzle_2': [0.85, 0.85, 0.92, 0.86, 0.81, 0.83],
+}
+df_nozzle = pd.DataFrame(data)
+f, p = st.f_oneway(df_nozzle['Nozzle_1'], ... , df_nozzle['Nozzle_5'])
+st.f_oneway(g1, g2, g3)
+
+groups = [g["Value"] for _, g in df[["Group","Value"]].dropna().groupby("Group")]
+st.f_oneway(*groups)
+sm.stats.anova_lm(ols("Value ~ C(Group)", data=df).fit(), typ=2)
+
+
+
+
+#####################################################################################
+'''                        Paired t-test full example                            '''
+#####################################################################################
+# (reading from excel, plotting, calculating right-tail) 
+#  1. Load the Excel file
+file_path = r"c:\Users\Sweta\Music\PES_STATS_EXAM\DATA\1 paired_data.xlsx"
+df_paired = pd.read_excel(file_path)
+before = df_paired["before_score"].dropna().tolist()
+after  = df_paired["after_score"].dropna().tolist()
+#before = [23, 38, 35, 45, 32, 29]
+alpha = 0.05
+
+# 1. Normality check (visual)
+sns.histplot(before, kde=True, color="blue", label="Before")
+sns.histplot(after, kde=True, color="orange", label="After")
+plt.legend()
+plt.title("Normality Check")
+plt.show()
+
+# 2. H0: mean_after <= mean_before. H1: mean_after > mean_before
+# 3. Paired t-test
+t, p2 = st.ttest_rel(after, before)
+
+# We want to test if after > before (right-tailed)
+p_right = p2/2 if t > 0 else 1-p2/2
+
+print("t-statistic:", t)
+print("p-value (right-tailed):", p_right)
+
+if p_right < alpha:
+    print("Reject H0. Course was effective.")
+else:
+    print("Fail to reject H0.")
+
+
+#####################################################################################
+'''                         Plots                                                 '''
+#####################################################################################
+# plots 
+c1 = df_adm['Salary'].dropna(); c2 = df_adm['Percent_MBA'];  
+sns.histplot(c1, kde=True); 
+sns.histplot(c1, bins=15, kde=True, ax=axes[0])
+sns.histplot(data=df, x="charges", hue="catagory_smoker", kde=True); plt.show()
+sns.boxplot(x="cat", y="val", data=df); plt.show()
+sns.scatterplot(x="x", y="y", data=df); plt.show()
+sns.scatterplot(data=df, x="x", y="y", hue="cat"); plt.show()
+sns.pairplot(df.select_dtypes(include=np.number)); plt.show()
+sns.heatmap(df.select_dtypes(include=np.number).corr(), annot=True); plt.show()
+sns.boxplot(x='Specialization_MBA', y='Salary', data=df); plt.show()
+
+#  Scatter plot for all variables against Salary
+sns.pairplot(df.select_dtypes(include=np.number), y_vars=['Salary'], 
+             x_vars=df.select_dtypes(include=np.number).columns.drop('Salary')); plt.show()
+
+# plot labels
+plt.title("Title"); plt.xlabel("X label"); plt.ylabel("Y label")
+plt.xticks(rotation=45); plt.grid(True); plt.show()
+ 
+# Plot regions
+se = sigma/np.sqrt(n); a = mu - 4*se; b = mu + 4*se; c = 1000
+x_vals = np.linspace(a, b, c)
+y_vals = st.norm.pdf(x_vals, mu, se)
+plt.plot(x_vals, y_vals)
+
+critical_val = st.norm.ppf(alpha, mu, sigma/np.sqrt(n))
+plt.axvline(critical_val, color='r', linestyle='--', label='Critical Value')
+plt.axvline(xbar, color='g', linestyle='-', label='Sample Mean')
+plt.fill_between(x_vals, y_vals, where=(x_vals < critical_val), color='red', alpha=0.3, label='Rejection Region')
+plt.legend()
+plt.title('Acceptance and Rejection Regions')
+plt.show()
+
+# normal curve / rejection line
+xx = np.linspace(-4, 4, 1000)
+plt.plot(xx, st.norm.pdf(xx)); plt.axvline(z, linestyle="--"); plt.show()
+
+#Plot2: Normality check (visual)
+sns.histplot(before, kde=True, color="blue", label="Before")
+sns.histplot(after, kde=True, color="orange", label="After")
+plt.legend()
+plt.title("Normality Check")
+plt.show()
+
+# histplot
+# 4a.ii) Histogram for Salary and Percentage of marks in MBA
+plt.figure(figsize=(10, 4))
+plt.subplot(1, 2, 1)
+sns.histplot(df['Salary'].dropna(), kde=True)
+plt.title('Salary Histogram')
+plt.subplot(1, 2, 2)
+sns.histplot(df['Percent_MBA'].dropna(), kde=True)
+plt.title('MBA Percentage Histogram')
+plt.show()
+print('Salary Skewness:', df['Salary'].skew()          )
+print('Salary Kurtosis:', df['Salary'].kurtosis()      )
+print('MBA % Skewness:' , df['Percent_MBA'].skew()     )
+print('MBA % Kurtosis:' , df['Percent_MBA'].kurtosis() )
+
+#####################################################################################
+'''                         1. Imports                                            '''
+#####################################################################################
+import pandas as pd             ;           import numpy as np
+import matplotlib.pyplot as plt ;           import seaborn as sns
+import statsmodels.api as sm    ;           import statistics
+from statsmodels.formula.api import ols 
+from statsmodels.stats.anova import anova_lm
+from statsmodels.stats import weightstats as stests
+import scipy.stats as stats     ;           
+from scipy.stats import shapiro, norm, chi2_contingency, chi2, chisquare
+from warnings import filterwarnings
+filterwarnings("ignore")
+
+#####################################################################################
+'''                      2. Data Cleaning & Exploration                           '''
+#####################################################################################
+
+# Loading & Inspection
+# df = pd.read_csv("file.csv")     #read_excel               # Load CSV
+# df.head(); df.info(); df.describe(); df.isnull().sum()     # Basic overview
+# df["col"].value_counts(); df["col"].unique()               # Categorical counts
+print(f"Std Dev Salary for them   : {salary_commerce.std():.2f}")
+
+# Column Selection & Renaming
+df.rename(columns={"Old Name": "new_name"}, inplace=True)    # Rename columns
+dfn = df.select_dtypes(include=np.number)                    # Get numerical df
+dfc = df.select_dtypes(include="object")                     # Get categorical df
+numerical_cols = dfn.columns.tolist()                        # Numerical list
+categorical_cols = dfc.columns.tolist()                      # Categorical list
+
+    # Drop column
+    if 'Salary' in df: df.drop(columns=['Salary'], inplace=True) 
+    if 'Salary' in df:  # We are plotting against Salary, so remove it from the independent variable list
+        df.remove('Salary') 
+
+# Missing Data & Duplicates
+df.dropna(inplace=True)                                      # Drop rows with NA
+df.drop_duplicates(inplace=True)                             # Drop exact duplicates
+df["col"] = df["col"].fillna(df["col"].median())             # Impute num with median
+df["cat"] = df["cat"].fillna(df["cat"].mode()[0])            # Impute cat with mode
+df['col'] = pd.to_numeric(df['col'].astype(str).str.replace(',', ''), errors='coerce') # String to Float
+
+# Outlier Detection & Removal (IQR Method)
+Q1, Q3 = df["col"].quantile([0.25, 0.75])                    # Find quartiles
+IQR = Q3 - Q1                                                # Calculate IQR
+lower, upper = Q1 - 1.5 * IQR, Q3 + 1.5 * IQR                # Define bounds
+df_clean = df[(df["col"] >= lower) & (df["col"] <= upper)]   # Filter outliers
+
+# Replace
+df["Fat_Content"] = df["Fat_Content"].replace({"LF":"Low Fat"}) # Replace values
+
+df["Item_Fat_Content"] = df["Item_Fat_Content"].replace({
+    "LF":"Low Fat", "low fat":"Low Fat", "reg":"Regular"
+})
+
+def clean_name(x):
+    if "High" in x: return "High"
+    elif "Low" in x: return "Low"
+    return x
+df["Category"] = df["Category"].apply(clean_name)            # Apply custom func
+
+# SQL: SELECT Cat1, Cat2, AVG(Value) FROM df 
+# WHERE c1 = 10 GROUP BY Cat1, Cat2 ORDER BY Cat1 ASC, AVG(Value) DESC
+df[df["c1"] == 10].
+groupby(["Cat1", "Cat2"], as_index=False)["Value"].mean().
+sort_values(by=["Cat1", "Value"], ascending=[True, False])
+
+   
+# Filtering & Grouping
+c1, c2 = df['Stream_HSC'], df['Status'] 
+salary_commerce = df[(c1 == 'Commerce') & (c2 == 'Placed')]['Salary'].dropna() # Multi-condition
+g1              = df[c1 == 'Management']['Salary'].dropna()  # Single-condition
+
+df.groupby("Category")["Value"].mean().sort_values(ascending=False) # Group mean & sort
+df.groupby("Category")["Value"].agg(["mean", "median", "std", "count"]) # Group multi-stats
+df.groupby(["Category", "Status"])["Value"].mean()           # Multi-group mean
+df[df["Category"].isin(["Management", "Commerce"])]          # Filter by list
+
+# Crosstabs & Binning
+pd.crosstab(df["Category1"], df["Category2"], margins=True)  # Frequencies w/ totals
+pd.crosstab(df["Category1"], df["Category2"], normalize="index") * 100   # Row-wise percentages
+pd.crosstab(df["Category1"], df["Category2"], normalize="columns") * 100 # Column-wise percentages
+df["Binned"] = pd.cut(df["Value"], bins=3, labels=["L","M","H"])         # Equal-width binning
+df["Binned_q"] = pd.qcut(df["Value"], q=3, labels=["L","M","H"])         # Equal-frequency binning
+
+#####################################################################################
+'''                    3. Descriptive Stats & Distributions                       '''
+#####################################################################################
+
+
+# print CV to find high variability or Order
+dfn = df.select_dtypes(include=np.number);  
+cv = dfn.std() / dfn.mean(); cv = cv.sort_values(ascending=False) ; print(cv)
+print("Most variable:", df.select_dtypes(include=np.number).std().idxmax())
+
+df[df['Stream_HSC'] == 'Commerce']['Salary'].dropna()
+
+# correlation
+d = df[["x","y"]].dropna();  st.pearsonr(d["x"], d["y"])
+
+# confidence interval
+x = np.array([55.291,59.718,62.688,63.886,66.458,68.548,
+              69.857,70.833,70.237,69.787,68.793,66.388])
+st.t.interval(0.95, len(x)-1, loc=np.mean(x),
+              scale=np.std(x, ddof=1)/np.sqrt(len(x)))
+
+# Central Tendency, Dispersion & Shape
+c1 = df["col"].dropna()
+print("Mean:", c1.mean(), "Median:", c1.median(), "Mode:", c1.mode()[0])
+print("Std Dev:", c1.std(), "Variance:", c1.var())
+print("Skewness:", c1.skew(), "Kurtosis:", c1.kurtosis())
+
+    # Subsetting specific groups to check their stats
+    salary_commerce = df[df['Stream_HSC'] == 'Commerce']['Salary'].dropna()
+    print("Size:", len(salary_commerce), "Mean:", salary_commerce.mean(), 
+        "Std:", salary_commerce.std())
+
+
+ 
+#####################################################################################
+'''                       Normal vs Poission                                   '''
+#####################################################################################
+# normal distribution  >>>> continuous value, mean & sd will be given
+a = st.norm.cdf(x, loc=mu, scale=sigma) # Less than x
+1 - a                                   # Greater than x
+a - b                                   # Between a and b
+st.norm.ppf(probability, loc=mu, scale=sigma)  
+# Find value (e.g., probability=0.05 for exceeded by 95%)
+
+# poisson >>>  discrete # number of occurrences/rate/avg
+st.poisson.pmf(x, mu=lam)    # Exactly x events (e.g., exactly 1 sale)
+st.poisson.cdf(x, mu=lam)    # x or fewer events (e.g., 0 or 1 sale if x=1)
+1-st.poisson.cdf(x, mu=lam)  # More than x events (e.g., 2 or more sales if x=1)
+
+#pmf = exactly
+#cdf = up to / less than    ;1 - cdf = more than / greater than
+#ppf = find value
+
+#####################################################################################
+'''                       How to Test                                            '''
+#####################################################################################
+''' 
+#------------------------------------------------------------------           
+# --- HYPOTHESIS TESTING RULES ---
+# * The claim usually goes into H1 (unless the claim explicitly includes equality)
+# * H0 MUST ALWAYS contain the equality (=, <=, >=)
+# Claim: "less than X"    -> H1: mu < X   -> H0: mu >= X
+# Claim: "greater than X" -> H1: mu > X   -> H0: mu <= X
+# Claim: "differs from X" -> H1: mu != X  -> H0: mu == X
+
+# --- TAIL RULES (Based on H1 / Exam Keywords) --- 
+# H1: mu < X   -> Left-tailed test  (Keywords: Less than, Decrease, Drop, Worse)
+# H1: mu > X   -> Right-tailed test (Keywords: Greater than, Increase, Improve, Effective)
+# H1: mu != X  -> Two-tailed test   (Keywords: Difference, Changed, Not equal)
+
+# --- HOW TO CHOOSE A TEST ---
+?is normall distributin mentioned? poplulation sd is given?
+# Z-test         : Like 1-sample t-test, but POPULATION standard deviation is given.
+# 1-Sample t-test: ONE group, comparing mean to a target number.
+# 2-Sample t-test: Comparing means of TWO INDEPENDENT groups  (e.g., A vs B).
+# Paired   t-test: Comparing means of SAME group at TWO times (e.g., Before vs After).
+# ANOVA          : Comparing means of THREE OR MORE independent groups.
+# Chi-Square     : Categorical data (counts/frequencies) for independence/fit.
+#------------------------------------------------------------------            '''
+
+print("Reject H0" if p < alpha else "Fail to reject H0")   
+print('Reject H0. Commerce > Science.' if p_right_s < 0.05 else 'Fail to reject H0. Commerce not > Science.')   
+
+#####################################################################################
+'''                       Stat Testing                                            '''
+#####################################################################################
+# z-test 
+mu = 18          # population_mean_hypothesized (μ0)
+sigma = 1.7      # population_std_dev (σ) 
+n = 40           # sample_size (n)
+xbar = 17.5      # sample_mean (x̄)
+alpha = 0.01     # significance_level (α)
+
+z = (xbar - mu)/(sigma/np.sqrt(n))
+p_right =    1- st.norm.cdf(z)                # right
+p_left  =       st.norm.cdf(z)                # left 
+p_two   = 2*(1- st.norm.cdf(abs(z)))          # two-tailed
+#------------------------------------------------------------------ 
+
+
+ 
+# t-tests
+c1= df["col"]       ; st.ttest_1samp(c1.dropna(), popmean=2280, alternative="greater")  
+g1=[],g2=[]         ; st.ttest_ind(g1, g2, equal_var=True)                                     
+after=[],before=[]  ; st.ttest_rel(after, before)                                              
+
+df['Difference'] = df['Before'] - df['After']   #diabetes dcrease bef after
+t, p2 = st.ttest_1samp(df['Difference'], 0, alternative='greater') 
+
+# one-tailed p from two-tailed t-test
+t, p2 = st.ttest_1samp(x, popmean)
+p_left = p2/2 if t < 0 else 1-p2/2
+p_right = p2/2 if t > 0 else 1-p2/2
+
+
+# normality # shapiro test (detailed)
+c1= df["col"].dropna() 
+p_value = st.shapiro(c1)[1]
+sm.qqplot(c1, line="s"); plt.show()
+print(f'Shapiro test p-value: {p_et:.4f}')
+
+# 1. Normality Check (Shapiro-Wilk)      # b = b = df['your_column_name'].dropna().to_numpy()
+before = np.array([121, 2, 3]); 
+after = np.array([130, 4,8]); 
+differences = after - before;
+_, p_shapiro = stats.shapiro(differences)
+v1 = stats.ttest_rel(ht_after, ht_before, alternative='greater')[1]
+v2 = stats.wilcoxon(ht_after, ht_before, alternative='greater')[1] 
+if p_shapiro > 0.05:
+    print(f"Normal. Paired t-test p-value: {v1 = :.4f}")
+else:
+    print(f"Not Normal. Wilcoxon p-value: { v2:.4f}") 
+
+
+# chi-square
+observed = np.array([1124,1125,1110,1120,1126,1115])
+expected = np.full(len(observed), observed.sum()/len(observed))
+st.chisquare(observed, expected)
+st.chi2_contingency(pd.crosstab(df["cat1"], df["cat2"]))
+
+# ANOVA
+data = {
+    'Nozzle_1': [0.78, 0.8, 0.81, 0.75, 0.77, 0.78],
+    'Nozzle_2': [0.85, 0.85, 0.92, 0.86, 0.81, 0.83],
+}
+df_nozzle = pd.DataFrame(data)
+f, p = st.f_oneway(df_nozzle['Nozzle_1'], ... , df_nozzle['Nozzle_5'])
+st.f_oneway(g1, g2, g3)
+
+groups = [g["Value"] for _, g in df[["Group","Value"]].dropna().groupby("Group")]
+st.f_oneway(*groups)
+sm.stats.anova_lm(ols("Value ~ C(Group)", data=df).fit(), typ=2)
+
+
+
+
+#####################################################################################
+'''                         Theory                                                '''
+#####################################################################################
+'''
+
+#### Skewness and Kurtosis
+**Skewness:**
+  - A skewness value close to 0 indicates a symmetrical distribution.
+  - Positive skewness indicates a tail on the right side (right-skewed). Mean > Median.
+  - Negative skewness indicates a tail on the left side (left-skewed). Mean < Median.
+
+**Kurtosis:**
+  - Kurtosis measures the 'tailedness' of the distribution.
+  - A kurtosis value close to 0 (for Fisher's kurtosis, which is standard in pandas) indicates a mesokurtic distribution, similar to a normal distribution.
+  - Positive kurtosis (leptokurtic) indicates heavy tails or more outliers than a normal distribution.
+  - Negative kurtosis (platykurtic) indicates light tails or fewer outliers than a normal distribution.
+
+
+#---scatter 
+
+Correlation
+Positive : If points generally go up from left to right, it suggests a positive relationship. 
+           As the independent variable increases, Salary tends to increase.
+Negative : If points generally go down from left to right, it suggests a negative relationship. 
+           As the independent variable increases, Salary tends to decrease.
+No Apparent : If points are scattered randomly with no clear pattern, it suggests 
+              little to no linear relationship between the variable and Salary.
+trength of Relationship:
+           Strong: Points cluster closely around an imaginary line.
+           Weak: Points are widely spread.
+Outliers:  Individual points that deviate significantly from the overall pattern might be outliers 
+           and could influence the perceived relationship.
+Specific Variable Observations (example for some common variables):**
+  - Percent_SSC, Percent_HSC, Percent_Degree, Percent_MBA:
+           Often, higher percentages in academics might correlate positively with higher salaries, 
+           but this is not always linear or strong. The plots will show if there's any visible trend.
+  - Experience_Yrs: 
+           Generally, more experience tends to correlate with higher salaries, 
+           which might be visible as a positive trend.
+  - Percentile_ET: Performance in entrance tests could show some positive relationship with salary.
+'''
+==============================
+
+
+
+
+
+
+Q1.Find the Z score for the value of X =40, where mean = 45, standard deviation is 5 
+
+Z-Score
+Formula: Z = (X - μ) / σ
+Given: X = 40, μ = 45, σ = 5
+Z = (40 - 45) / 5 = -1
+Z-score = -1
+
+
+Q2. ANOVA
+Full form: Analysis of Variance
+Purpose: Tests if there are significant differences between group means.
+Why preferred: Avoids inflated Type I error from multiple t-tests.
+
+ANOVA is a statistical technique used to determine whether there are significant differences among the means of three or more groups.
+
+ANOVA (Analysis of Variance) is a statistical method used to test whether the means of three or more groups differ significantly. Its purpose is to compare multiple group means at the same time. It is preferred over multiple paired t-tests because repeated t-tests increase the risk of Type I error, whereas ANOVA controls this error and gives a more accurate overall comparison.
+
+Q3. List the different types of sampling techniques (any 4 four). 
+
+: Sampling techniques are broadly classified into Probability Sampling (simple random, systematic, stratified, cluster, multistage) and Non-Probability Sampling (convenience, purposive, quota, snowball, volunteer).
+
+Simple Random Sampling – equal chance for all units.
+
+Stratified Sampling – divide into strata, sample each.
+
+Systematic Sampling – select every k-th element.
+
+Cluster Sampling – divide into clusters, sample clusters.
+
+Q4 Measures of Dispersion
+
+Measures of Dispersion are statistical measures that show the degree of spread or variability of data around a central value.
+
+Main Measures of Dispersion
+Range – Difference between the highest and lowest values.
+Quartile Deviation (Semi-Interquartile Range) – Half of the difference between the third and first quartiles.
+Mean Deviation – Average of the absolute deviations from a central value (mean, median, or mode).
+Variance – Average of the squared deviations from the mean.
+Standard Deviation – Square root of the variance.
+Coefficient of Variation (CV) – Relative measure of dispersion; compares variability between datasets.
+
+Q5 Central Limit Theorem (CLT)
+
+The Central Limit Theorem states that for a large sample size, the distribution of sample means becomes approximately normal, regardless of the population distribution. The mean of the sampling distribution equals the population mean, and its standard deviation is σ/
+n
+	​
+
+. It is important because it enables statistical inference using the normal distribution.
+
+Importance:
+
+Allows the use of normal distribution methods for statistical inference.
+Forms the basis for confidence intervals and hypothesis testing.
+Makes it possible to analyze large samples even when the population is not normally distributed.
+
+
+
+Q6 Consider two dice are rolled simultaneously. Find the probability that the sum of the two numbers is at least 9
+
+Favorable sums ≥ 9: {9, 10, 11, 12}
+
+Ways: 4 + 3 + 2 + 1 = 10
+
+Total outcomes = 36. 
+ P(sum>=9) = 10/36 = 5/18 = .278
+
+
+ Q8, Define p-value. What does a very low p-value indicate ?
+ A p-value is the probability of obtaining the observed result (or a more extreme result) assuming that the null hypothesis (H
+0) is true.
+What does a very low p-value indicate?
+
+A very low p-value (typically less than 0.05) indicates that the observed result is unlikely to have occurred by chance if the null hypothesis were true.
+Therefore, there is strong evidence against the null hypothesis, and it is usually rejected.
+
+Q9 Bayes' Theorem is a mathematical formula used to find the probability of an event based on prior knowledge of conditions related to that event.
+
+Bayes' Theorem is a mathematical formula used to find the probability of an event based on prior knowledge of conditions related to that event.
+
+P(A∣B)=P(B∣A)P(A) / P(B)
+
+Where:
+
+P(A∣B) = Probability of A given B
+P(B∣A) = Probability of B given A
+P(A) = Prior probability of A
+P(B) = Probability of B
+
+Suppose a disease affects 1% of people. A test detects it correctly 95% of the time but has a 5% false positive rate.
+Bayes theorem helps calculate the probability that a person actually has the disease given a positive test result.
+
+Bayes' Theorem is used to find the conditional probability of an event based on prior information. It is expressed as shown above. An important application is in medical testing, where it helps estimate the probability that a person has a disease given a positive test result.
+
+
+Q10 A trading company has eight computers that it uses to trade on the New York Stock
+Exchange (NYSE). The probability of a computer failing in a day is 0.005, and the
+computers fail independently. Computers are repaired in the evening and each day is an
+independent trial. What is the probability that 1 computer will fail in a day?
+
+Probability of 1 computer failing in a day
+
+Number of computers = 8
+
+Probability of failure for one computer = 0.005
+
+Probability of success (no failure) = 0.995
+
+This follows a Binomial distribution: P(X = 1) = C(8,1) * (0.005)^1 * (0.995)^7
+
+= 8 * 0.005 * (0.9654) ≈ 0.0386
+So, probability ≈ 3.86%
+
+
+Q11  Find the Z score for the value of X =30, where mean = 35, standard deviation is 5
+
+Z-Score
+Formula: Z = (X - μ) / σ
+Given: X = 30, μ = 35, σ = 5
+Z = (30 - 35) / 5 = -1
+Z-score = -1
+
+
+Q12 List the different types of sampling techniques 
+Simple Random Sampling
+
+Stratified Sampling
+
+Systematic Sampling
+
+Cluster Sampling
+
+
+Q13 The sample space of a random experiment is {a, b, c, d, e} with probabilities 0.1, 0.1, 0.2,
+0.4, and 0.2, respectively. Let A denote the event {a, b, c}, and let B denote the event {c, d,
+e}. Determine the following : P(A), P(B)
+Event A = {a, b, c} → P(A) = 0.1 + 0.1 + 0.2 = 0.4
+Event B = {c, d, e} → P(B) = 0.2 + 0.4 + 0.2 = 0.8
+
+
+Q14 Under what conditions would you prefer using one sample t test.
+
+Conditions for One Sample t-test
+
+When comparing the mean of a single sample to a known population mean.
+
+Population standard deviation is unknown.
+
+Sample size is small (n < 30).
+
+Data is approximately normally distributed.
+
+
+
+Q15 Explain briefly about Chi square goodness of fit test.
+
+Chi-Square Goodness of Fit Test
+
+Purpose: To test whether observed frequencies match expected frequencies.
+
+Compares categorical data distribution with a theoretical distribution.
+
+Useful for testing hypotheses about population proportions.
+
+
+
+
+
+
+Q16 Explain the difference between a sample and population.
+
+A population is the complete set of all individuals or observations of interest, while a sample is a subset selected from the population for study. Population data provide parameters, whereas sample data provide statistics used to estimate those parameters. Sampling saves time and cost compared to studying the entire population.
+
+Difference between Sample and Population
+
+Population: The entire set of individuals or items of interest. Example: All traders on NYSE.
+
+Sample: A subset of the population selected for analysis. Example: 100 traders chosen randomly.
+
+Sampling is used because studying the entire population is often impractical.
+
+
+Q17 How would you explain stratified sampling
+
+
+Definition: A sampling method where the population is divided into distinct subgroups (strata) based on specific characteristics, and samples are drawn proportionally from each stratum.
+
+Purpose: Ensures representation of all subgroups, improves accuracy of estimates, and reduces sampling error.
+
+
+
+
+Q18 Under what conditions would prefer using t test.
+
+Conditions to Prefer a t-test
+
+When population standard deviation is unknown.
+
+When sample size is small (n < 30).
+
+When comparing sample mean to population mean or comparing means of two groups.
+
+Data should be approximately normally distributed.
+
+
+
+Q19 What is the purpose of chi square goodness of fit test and independence test
+The Chi-Square Goodness-of-Fit Test is used to check whether observed data fit an expected distribution. The Chi-Square Test of Independence is used to determine whether two categorical variables are associated or independent. Both tests are based on comparing observed and expected frequencies.
+
+ 
+Q20 Explain about bootstrapping.
+
+Definition:
+Bootstrapping is a resampling technique used in statistics where repeated samples are drawn (with replacement) from an original dataset to estimate the sampling distribution of a statistic.
+
+How it works:
+Start with an original sample of size n.
+Randomly draw samples of size n with replacement.
+Compute the statistic (mean, median, etc.) for each resample.
+Repeat many times to build an empirical distribution.
+Purpose / Uses:
+Estimating standard errors.
+Constructing confidence intervals.
+Performing inference when theoretical distributions are unknown or complex.
+Useful for small samples.
+
+
+Q21 Under what conditions or scenario would you prefer using a z test or a t test?
+
+
+Q22 While conducting t test would you do prefer checking for normality, if so what is the test for
+normality you would prefer ?
+
+Z-test (Normal test)
+
+A Z-test is preferred when:
+
+The sample size is large (usually n≥30).
+The population standard deviation (σ) is known.
+The population is normally distributed or sample size is large (CLT applies).
+
+Used for: Comparing means or proportions when σ is known.
+
+T-test
+
+A T-test is preferred when:
+
+The sample size is small (n<30).
+The population standard deviation (σ) is unknown.
+The sample comes from a normally distributed population.
+
+
+ 
+
+ 
+ 
+Q23 Identify the possible distribution for the following scenario
+i) Number of covid cases per day.
+ii) Counting the number of defects from inspected sample of size n.
+
+Possible Distributions
+i) Number of covid cases per day → Poisson distribution (count of events in time).
+ii) Number of defects in inspected sample of size n → Binomial distribution (success/failure outcomes).
+
+
+A bin contains 3 different types of lamps. The probability that a type 1 lamp will give over
+100 hours of use is 0.7, with the corresponding probabilities for type 2 and 3 lamps being 0.4
+and 0.3 respectively. Suppose that 20 per cent of the lamps in the bin are of type 1, 30 per cent
+are of type 2 and 50 per cent are of type 3. What is the probability that a randomly selected
+lamp will last more than 100 hours?
+
+Lamp Problem
+
+Type 1: P(lasting >100 hrs) = 0.7, proportion = 0.2 → contribution = 0.14
+
+Type 2: P(lasting >100 hrs) = 0.4, proportion = 0.3 → contribution = 0.12
+
+Type 3: P(lasting >100 hrs) = 0.3, proportion = 0.5 → contribution = 0.15
+Total probability = 0.14 + 0.12 + 0.15 = 0.41
+So, probability = 41%
+
+
+
+===============================================================================================================================================================================
+
+import pandas as pd
+import numpy as np
+import scipy.stats as stats
+import statsmodels.api as sm
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy.stats import f_oneway
+from statsmodels.stats.weightstats import ztest as ztest
+from statsmodels.stats.weightstats import ttest_ind as ttest_ind
+
+
+
+
+# Load the dataset
+df11 = pd.read_csv (path11)
+df12 = pd.read_excel(path12)
+df14 = pd.read_excel(path14)
+
+1 ESA Q : Descriptive
+# Observations:
+# 1. Analyze the summary statistics to comment on variability.
+# 2. Use skewness and kurtosis results to describe the shape of distributions.
+# 3. Identify outliers and differences in salary by specialization in the boxplot.
+# 4. Note relationships between variables in the scatter plot matrix.
+# Import necessary libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import skew, kurtosi
+
+
+print('\n-----------data--------\n',df12.head(2))
+# Part (i) Summary statistics and variability
+print("Summary Statistics:")
+summary = df12.describe()
+#print('\n-----------describe--------\n',summary)
+# Identify variables with high variability (using standard deviation as a measure)
+high_variability = summary.loc['std'].sort_values(ascending=False)
+print('\n-----------Variables with high variability (by standard deviation)--------------
+# Identify numerical and categorical features
+print('\n--------numerical and categorical features---------')
+numerical_features = df12.select_dtypes(include=['number']).columns
+categorical_features = df12.select_dtypes(include=['object', 'category']).columns
+print("Numerical Features:", numerical_features.tolist())
+print("Categorical Features:", categorical_features.tolist())
+# Calculate skewness and kurtosis
+print('\n--------Skew & Kurtosis---------')
+salary_skew = skew(df12['Salary'].dropna())
+salary_kurtosis = kurtosis(df12['Salary'].dropna())
+marks_skew = skew(df12['Percent_MBA'].dropna())
+marks_kurtosis = kurtosis(df12['Percent_MBA'].dropna())
+print(f"Salary - Skewness: {salary_skew:.2f}, Kurtosis: {salary_kurtosis:.2f}")
+print(f"Percentage of Marks - Skewness: {marks_skew:.2f}, Kurtosis: {marks_kurtosis:.2f}"
+
+
+# Part (ii) Histogram for 'salary' and 'Percentage of marks scored in MBA'
+plt.figure(figsize=(12, 3))
+plt.subplot(1, 2, 1)
+sns.histplot(df12['Salary'], bins=20, kde=True)
+plt.title('Histogram of Salary')
+plt.xlabel('Salary')
+plt.ylabel('Frequency')
+plt.subplot(1, 2, 2)
+sns.histplot(df12['Percent_MBA'], bins=20, kde=True)
+plt.title('Histogram of Percentage of Marks')
+plt.xlabel('Percentage of Marks')
+plt.ylabel('Frequency')
+plt.tight_layout()
+plt.show()
+# Part (iii) Boxplot for salary based on MBA specialization
+plt.figure(figsize=(10, 3))
+sns.boxplot(x='Specialization_MBA', y='Salary', data=df12)
+plt.title('Boxplot of Salary by MBA Specialization')
+plt.xticks(rotation=45)
+plt.show()
+# Part (iv) Scatter plot matrix for all numerical variables
+#sns.pairplot(df[numerical_features], diag_kind='kde', height = 0.5)
+#plt.show()
+
+
+1 (20mark) - Shapiro,
+Consider the purchases.csv file and answer the following questions
+i. Check whether the percentile in entrance test from the data follows normal distribution by
+using a proper plot and with suitable statistical test. (5 marks)
+ii. Conduct a hypothesis to see whether there is a difference in terms of salary for students
+degree specialization of management and engineering. What do you conclude (consider level
+of significance 0.05) (5 marks)
+iii. Conduct an hypothesis to prove whether the salary of a student from commenrce stream is
+higher than Science stream, do you agree or not. (consider level of significance 0.05) (5
+marks)
+iv. Conduct an ANOVA to check whether there is salary difference for students with diffetent
+MBA_specialization of Marketing & Finance , Marketing & HR, Operations &
+Management, Marketing & IB. State your inferences. (consider level of significance 0.05) (5
+marks)
+print(df12.columns)
+print('\n ----------------------- Normality Check -------------------------')
+plt.figure(figsize=(12, 3))
+sns.histplot(df12['Percentile_ET'], kde=True, bins=20)
+plt.title('Histogram of Percentile in Entrance Test')
+plt.xlabel('Percentile_ET')
+plt.ylabel('Frequency')
+plt.show()
+
+print('--------------------------------------------2-------------------------------------
+# Statistical test for normality (Shapiro-Wilk Test)
+stat, p_value = stats.shapiro(df12['Percentile_ET'].dropna())
+print("\nShapiro-Wilk Test for Percentile_ET: Test Statistic = {:.3f}, p-value = {:.3f}".
+if p_value > 0.05:
+
+
+print("Data follows a normal distribution.")
+else:
+print("Data does not follow a normal distribution.")
+print('--------------------------------------------2-------------------------------------
+print('-------- Part (ii) Hypothesis test for salary difference between Management and En
+management_salary = df12[df12['Course_Degree'] == 'Management']['Salary'].dropna()
+engineering_salary = df12[df12['Course_Degree'] == 'Engineering']['Salary'].dropna()
+t_stat, p_value = stats.ttest_ind(management_salary, engineering_salary)
+print("\nT-Test for Salary Difference between Management and Engineering:")
+print("T-statistic = {:.3f}, p-value = {:.3f}".format(t_stat, p_value))
+if p_value < 0.05:
+print("Reject the null hypothesis: There is a significant difference in salaries.")
+else:
+print("Fail to reject the null hypothesis: No significant difference in salaries.")
+print('--------------------------------------------3-------------------------------------
+# Part (iii) Hypothesis test for salary comparison between Commerce and Science streams
+commerce_salary = df12[df12['Stream_HSC'] == 'Commerce']['Salary'].dropna()
+science_salary = df12[df12['Stream_HSC'] == 'Science']['Salary'].dropna()
+# Perform an independent t-test
+t_stat, p_value = stats.ttest_ind(commerce_salary, science_salary)
+print("\nT-Test for Salary Difference between Commerce and Science Streams:")
+print("T-statistic = {:.3f}, p-value = {:.3f}".format(t_stat, p_value))
+if p_value < 0.05:
+print("Reject the null hypothesis: Commerce stream students have significantly differ
+else:
+print("Fail to reject the null hypothesis: No significant difference in salaries.")
+print('--------------------------------------------4-------------------------------------
+# Part (iv) ANOVA test for salary differences among MBA specializations
+# Filter relevant specializations
+specializations = ['Marketing & Finance', 'Marketing & HR', 'Operations & Management', 'M
+df_anova = df12[df12['Specialization_MBA'].isin(specializations)]
+# Perform ANOVA
+#model = ols('Salary ~ Specialization_MBA)', data=df_anova).fit()
+model = smf.ols('Salary ~ Specialization_MBA', data=df_anova).fit() # Use smf.ols instea
+anova_table = sm.stats.anova_lm(model, typ=2)
+print("ANOVA Results for Salary Differences among MBA Specializations:\n")
+print(anova_table)
+print('\n')
+if anova_table['PR(>F)'].iloc[0] < 0.05:
+#if anova_table['PR(>F)'][0] < 0.05: <----------------this will work but will g
+print("Reject the null hypothesis: There is a significant difference in salaries amon
+else:
+print("Fail to reject the null hypothesis: No significant difference in salaries amon
+
+
+
+-------- Part (ii) Hypothesis test for salary difference between Management and Engin
+T-Test for Salary Difference between Management and Engineering:
+T-statistic = -4.173, p-value = 0.000
+Reject the null hypothesis: There is a significant difference in salaries.
+--------------------------------------------3----------------------------------------
+T-Test for Salary Difference between Commerce and Science Streams:
+T-statistic = 0.705, p-value = 0.481
+Fail to reject the null hypothesis: No significant difference in salaries.
+--------------------------------------------4----------------------------------------
+
+
+
+Confidence Interval for Percentile in Entrance Test
+"Calculate a 95% confidence interval for the mean Percentile_ET (Percentile in Entrance Test).
+Interpret the interval and explain what it tells you about the population mean."
+Confidence Interval for Salary by Degree Specialization (Management and Engineering)
+"Calculate separate 95% confidence intervals for the mean salary of students with Management and
+Compare the intervals and state whether they overlap. What can you conclude from the overlap (or
+Difference in Means Confidence Interval (Salary)
+"Calculate a 95% confidence interval for the difference in mean salary between Commerce and Scienc
+What does this interval tell you about the potential difference between the two groups?"
+
+
+
+import scipy.stats as stats
+import numpy as np
+# Function to calculate confidence interval
+def confidence_interval(data, confidence=0.95):
+mean = np.mean(data)
+sem = stats.sem(data) # Standard error of the mean
+
+margin_of_error = sem * stats.t.ppf((1 + confidence) / 2., len(data)-1)
+return mean - margin_of_error, mean + margin_of_error
+# Example: 95% CI for Percentile_ET
+percentile_data = df12['Percentile_ET'].dropna()
+ci_lower, ci_upper = confidence_interval(percentile_data)
+print(f"95% Confidence Interval for Percentile_ET: ({ci_lower:.2f}, {ci_upper:.2f})")
+# Example: 95% CI for Salary in Management and Engineering
+management_salary = df12[df12['Course_Degree'] == 'Management']['Salary'].dropna()
+engineering_salary = df12[df12['Course_Degree'] == 'Engineering']['Salary'].dropna()
+mgmt_ci_lower, mgmt_ci_upper = confidence_interval(management_salary)
+engg_ci_lower, engg_ci_upper = confidence_interval(engineering_salary)
+print(f"95% CI for Management Salary: ({mgmt_ci_lower:.2f}, {mgmt_ci_upper:.2f})")
+print(f"95% CI for Engineering Salary: ({engg_ci_lower:.2f}, {engg_ci_upper:.2f})")
+
+Do the intervals overlap?
+The 95% CI for Management Salary is (196,988.06, 229,302.41). The 95% CI for Engineering
+Salary is (248,730.40, 303,926.74). These intervals do not overlap, which strongly suggests that
+the true mean salary for Engineering students is signi
+
+
+'''
+Z-Test Questions
+Z-Test for Single Mean (Percentile_ET)
+"Conduct a one-sample Z-test to determine if the average Percentile_ET of students is sig
+Use a significance level of 0.05 and assume the population standard deviation is 8."
+Z-Test for Difference in Means (Management vs. Engineering Salary)
+"Perform a two-sample Z-test to check if the mean salary for students with Management spe
+from those with Engineering specialization at a 0.05 significance level. Assume the popul
+Z-Test for Proportions (Placement Rate)
+"Conduct a Z-test for proportions to determine if the proportion of students placed (Plac
+Z-Test for Gender Pay Gap
+"Perform a two-sample Z-test to check if the mean salary of male students is significantl
+Use a significance level of 0.05."
+'''
+
+from statsmodels.stats.weightstats import ztest
+# Question 1: One-sample Z-test for Percentile_ET
+population_mean = 60
+population_std = 8
+z_stat, p_value = ztest(df12['Percentile_ET'].dropna(), value=population_mean)
+print(f"One-sample Z-test for Percentile_ET: Z-statistic = {z_stat:.2f}, p-value = {p_val
+if p_value < 0.05:
+print("Reject the null hypothesis: The mean Percentile_ET is significantly different
+else:
+print("Fail to reject the null hypothesis: No significant difference from 60.")
+# Question 2: Two-sample Z-test for Salary (Management vs Engineering)
+management_salary = df12[df12['Course_Degree'] == 'Management']['Salary'].dropna()
+engineering_salary = df12[df12['Course_Degree'] == 'Engineering']['Salary'].dropna()
+z_stat, p_value = ztest(management_salary, engineering_salary)
+print(f"\nTwo-sample Z-test for Salary (Management vs Engineering): Z-statistic = {z_stat
+if p_value < 0.05:
+print("Reject the null hypothesis: There is a significant difference in salaries.")
+else:
+print("Fail to reject the null hypothesis: No significant difference in salaries.")
+# Question 3: Z-test for Proportion (Placement Rate)
+total_students = len(df12)
+placed_students = len(df12[df12['Placement'] == 'Yes'])
+observed_proportion = placed_students / total_students
+expected_proportion = 0.70
+z_stat = (observed_proportion - expected_proportion) / np.sqrt((expected_proportion * (1
+p_value = 2 * (1 - stats.norm.cdf(abs(z_stat)))
+print(f"\nZ-test for Proportion (Placement): Z-statistic = {z_stat:.2f}, p-value = {p_val
+if p_value < 0.05:
+print("Reject the null hypothesis: The placement rate is significantly different from
+else:
+print("Fail to reject the null hypothesis: No significant difference from 70%.")
+
+
+'''
+1. Z-Test for Two-Tailed Test (Population Mean Comparison)
+Question:
+"Conduct a Z-test to determine if the average Percentile_ET (Percentile in Entrance Test)
+with a known population standard deviation of 8. Use a 5% significance level and interpre
+2 - . Z-Test for Left-Tailed Test (Performance Decrease Check)
+Question:
+
+
+"A university claims that the Percentile_ET for students is no less than 60. Conduct a le
+if there is significant evidence that the true mean is less than 60. Use a 5% significanc
+3. Z-Test for Right-Tailed Test (Improved Performance Check)
+Question:
+"A new teaching method is believed to improve Percentile_ET. Conduct a right-tailed Z-tes
+if the true mean is significantly higher than 60. Use a 5% significance level and interp
+from scipy.stats import norm
+import numpy as np
+# Parameters for Z-test
+sample_mean = np.mean(df12['Percentile_ET'].dropna()); print('Sample Mean :', sample_m
+population_mean = 58 ; print('Population Mean:', populati
+population_std = 8 ; n = len(df12['Percentile_ET'].dropna())
+# Calculate Z-score
+z_score = (sample_mean - population_mean) / (population_std / np.sqrt(n)) ; print(f"Z-sc
+# Two-tailed test
+p_value_two_tailed = 2 * (1 - norm.cdf(abs(z_score))) ; print(f"Two-
+# Left-tailed test
+p_value_left_tailed = norm.cdf(z_score) ; print(f"Left
+# Right-tailed test
+p_value_right_tailed = 1 - norm.cdf(z_score) ; print(f"Righ
+# Interpretation
+alpha = 0.05
+if p_value_two_tailed < alpha:
+print("Reject the null hypothesis (two-tailed test). Significant difference exists.")
+else:
+print("Fail to reject the null hypothesis (two-tailed test). No significant differenc
+
+
+Interpretation:
+Two-Tailed Test (p-value = 0.013 < 0.05): Reject the null hypothesis.
+There is significant evidence that the sample
+This indicates that the sample’s Percentile_E
+Left-Tailed Test (p-value = 0.993 > 0.05): Fail to reject the null hypothesis.
+There is no significant evidence that the sam
+The sample mean is likely not lower than the
+Right-Tailed Test (p-value = 0.007 < 0.05): Reject the null hypothesis.
+There is strong evidence that the sample mean
+This suggests that Percentile_ET is significa
+
+
+### ESA Model Question Paper
+Frame the hypothesis ,calculate the test statistic and p_value ,
+interpret the results for the following tasks with 95% Confidence level :¶
+i. The shop keeper claims that the average of the item outlet sales is not less than $2280.Validat
+ii. IS the mean for sales from regular and low fat the same? (4 marks)
+iii.Is there any relation between Outlet_Location_Type and Outlet_Type? (4 marks)
+iv.Is there any relation between Item_Weight and Item_Outlet_Sales? (4 marks)
+v. Is there any relation between Outlet_Size and Item_Outlet_Sales? (4 marks)
+Note: Assume all continuous columns are normally distributed and have equal variance.
+
+#The shop keeper claims that the average of the item outlet sales is not less than $2280.
+#Validate if his claim is true
+#Ho : Mu =2280
+# h1 Mu > 2280
+t_stat, p_val = stats.ttest_1samp(a = df11["Item_Outlet_Sales"], popmean = 2280,alternati
+print('t_stat',t_stat)
+print('p_val',p_val) #0.6414922422772751
+# Since p value is greater than alpha fail to reject null
+print(df11["Item_Outlet_Sales"].count() ) # 4650
+Area = stats.t.cdf(t_stat,4649)
+print(Area)
+print(1 - Area) # 0.6414922422772751
+
+# Is there any relation between Item_Fat_Content and Item_Outlet_Sales?
+# Ho Mu_Itemregular = mulowfat
+
+#H1 Mu_Itemregular not equal mulowfat
+low_fat_sale = df11[df11['Item_Fat_Content']=='Low Fat']['Item_Outlet_Sales']
+reg_sale = df11[df11['Item_Fat_Content']=='Regular']['Item_Outlet_Sales']
+stats.ttest_ind(low_fat_sale,reg_sale)
+#Since p is greater than .05 there is no difference
+
+
+
+print('\n------------------ Q3 \n # iii.Is there any relation between Outlet_Location_Typ
+print('# Ho : There is no relation # Ha : There is a relation \n')
+obs = pd.crosstab(df11['Outlet_Location_Type'],df11['Outlet_Type']) ; print('------------
+a = stats.chi2_contingency(obs) ; print('------------
+chi2, p, dof, expected = stats.chi2_contingency(obs)
+# print(f"Chi-square statistic: {chi2}, P-value: {p}, Degrees of freedom: {dof} , Expecte
+print('------------------ Finding \n Sicne p value is less than .05 Reject the null hence
+print('\n------------------ Q4 \n # iv.Is there any relation between Item_Weight and Item
+sns.scatterplot(x=df11['Item_Weight'], y=df11['Item_Outlet_Sales']); plt.show() # Specify
+a = stats.pearsonr(df11['Item_Weight'],df11['Item_Outlet_Sales']); print(a);
+stat, p = a
+print(f'p value is {p:.2f}. It is > 0.05 (95% CI)')
+print('------------------ Finding \n Sicne p value is greater than .05 hence fail to reje
+print('\n------------------ Q5 \n Is there any relation between Outlet_Size and Item_Outl
+# Ho :Mu small sales= medium sales= high sales
+# Ha : any one different
+small_sale = df11[df11['Outlet_Size']=='Small']['Item_Outlet_Sales']
+med_sale = df11[df11['Outlet_Size']=='Medium']['Item_Outlet_Sales']
+high_sale = df11[df11['Outlet_Size']=='High']['Item_Outlet_Sales']
+a = stats.f_oneway(small_sale,med_sale,high_sale) ; print(a) ########### ANO
+print('------------------ Finding \n since p value is less than .05 reject null hence the
+
+------------------ Q3 
+ # iii.Is there any relation between Outlet_Location_Type and Outlet_Type? (4 marks) 
+# Ho : There is no relation # Ha : There is a relation 
+-------------------observation --- Outlet_Type Supermarket Type1 Supermark
+Outlet_Location_Type 
+Tier 1 1860 0
+Tier 2 930 0
+Tier 3 932 928
+-------------------chi2 --- Chi2ContingencyResult(statistic=1739.0650188070927, pvalu
+ [ 744.4, 185.6],
+ [1488.8, 371.2]]))
+------------------ Finding 
+ Sicne p value is less than .05 Reject the null hence there is a relation ---
+------------------ Q4 
+ # iv.Is there any relation between Item_Weight and Item_Outlet_Sales? (4 marks)
+
+ PearsonRResult(statistic=0.010971826651563633, pvalue=0.4544600421328699)
+p value is 0.45. It is > 0.05 (95% CI)
+------------------ Finding 
+ Sicne p value is greater than .05 hence fail to reject null whcih implies there is n
+------------------ Q5 
+ Is there any relation between Outlet_Size and Item_Outlet_Sales? (4 marks)
+F_onewayResult(statistic=7.391908481135086, pvalue=0.0006234916597581883)
+------------------ Finding 
+ since p value is less than .05 reject null hence there is a significant difference t
+
+
+The output of `stats.chi2_contingency(obs)` provides the results of a chi-square test of independe
+* **1739.0650188070927 (Chi-square statistic):**
+This is the chi-square test statistic.
+It measures the difference between the observed frequencies in your contingency table (`obs`) and
+if there were no relationship between the two categorical variables(Outlet_Location_Type and Outle
+A larger chi-square value indicates a greater difference between observed and expected frequencie
+* **0.0 (P-value):**
+This is the probability of observing a chi-square statistic as extreme as, or more extreme than, t
+*assuming* that there is no association between the variables.
+A very small p-value (typically less than your significance level, like 0.05) leads you to reject
+In this case, a p-value of 0.0 strongly suggests a relationship exists.
+* **2 (Degrees of freedom):**
+The degrees of freedom are determined by the dimensions of the contingency table.
+It's calculated as (number of rows - 1) * (number of columns - 1).
+This value helps in determining the appropriate chi-square distribution to use for calculating the
+* **array([[1488.8, 371.2], [ 744.4, 185.6], [1488.8, 371.2]]) (Expected frequencies):**
+This array represents the expected frequencies for each cell in the contingency table *if* the two
+These are calculated based on the row and column totals.
+Comparing these expected frequencies to the observed frequencies in your `obs` table helps illus
+where the discrepancies lie and contribute to the chi-square statistic.
+**In Summary:**
+The results strongly suggest that there is a statistically significant relationship between `Outle
+The very low p-value provides strong evidence against the null hypothesis (that the variables are
+
+
+
+2 ESA Question Chi Square
+The solar energy consumed (in trillion BTU) in the U.S. by year from 1989 to 2004 (source: U.S.
+Department of Energy Web site, http://www.eia.doe.gov/emeu) is shown in the below. Check the
+assumption of normality in the population. Construct a 95% con
+
+import numpy as np
+from scipy import stats
+# Solar energy data
+solar_energy = [55.291, 59.718, 62.688, 63.886, 66.458, 68.548, 69.857, 70.833, 70.237, 6
+solar_energy = [1,2,3,4,5]
+# Check for normality (Shapiro-Wilk test)
+stat, p_value = stats.shapiro(solar_energy)
+print("Shapiro-Wilk Test Statistic:", stat)
+print("p-Value:", p_value)
+# Interpretation of normality
+if p_value > 0.05:
+print("The data is normally distributed (Fail to reject H0).")
+else:
+print("The data is not normally distributed (Reject H0).")
+# Calculate 95% confidence interval
+sample_mean = np.mean(solar_energy)
+sample_std = np.std(solar_energy, ddof=1) # Sample standard deviation
+n = len(solar_energy)
+t_critical = stats.t.ppf(0.975, df=n-1) # t-value for 95% confidence and n-1 degrees of
+margin_of_error = t_critical * (sample_std / np.sqrt(n))
+confidence_interval = (sample_mean - margin_of_error, sample_mean + margin_of_error)
+print(f"95% Confidence Interval: {confidence_interval}")
+
+
+ESA 10marks s
+'''
+A multinational company use case is provided in the notebook. Test the company's claim th
+course was effective in developing soft skills with 90% confidence using the p-value tech
+Read the data set Paired_data.xlsx
+Consider the scores given in the file `paired_data.xlsx`
+please consider the first two attributes
+1. Check if the attributes are normally distributed (2 marks)
+2. State the null hypothesis and alternate hypothesis (1 mark)
+3. Test the hypothesis and conclude. (3 marks)
+
+# Import necessary libraries
+import pandas as pd
+import scipy.stats as stats
+import matplotlib.pyplot as plt
+import seaborn as sns
+# Load the dataset
+df_paired = df14
+# Extract the first two attributes (assuming columns are 'Attribute1' and 'Attribute2')
+attribute1 = df_paired.iloc[:, 0] ; attribute2 = df_paired.iloc[:, 1]
+# Part 1: Check for Normality
+plt.figure(figsize=(12, 3));
+plt.subplot(1, 2, 1) ; sns.histplot(attribute1, kde=True) ; plt.title('Histogram of Attri
+plt.subplot(1, 2, 2) ; sns.histplot(attribute2, kde=True) ; plt.title('Histogram of Attri
+plt.tight_layout(); plt.show()
+# Shapiro-Wilk test for normality
+stat1, p_value1 = stats.shapiro(attribute1)
+stat2, p_value2 = stats.shapiro(attribute2)
+print(f"Shapiro-Wilk Test for Attribute 1: Test Statistic = {stat1:.3f}, p-value = {p_val
+print(f"Shapiro-Wilk Test for Attribute 2: Test Statistic = {stat2:.3f}, p-value = {p_val
+if p_value1 > 0.05 and p_value2 > 0.05:
+print("Both attributes are normally distributed.")
+use_t_test = True
+else:
+print("One or both attributes are not normally distributed.")
+use_t_test = False
+# Part 2 & 3: Hypothesis Test (Paired T-test or Wilcoxon Test)
+alpha = 0.10 # 90% confidence level
+if use_t_test:
+# Paired T-test
+t_stat, p_value = stats.ttest_rel(attribute1, attribute2)
+test_name = "Paired T-test"
+else:
+# Wilcoxon signed-rank test
+t_stat, p_value = stats.wilcoxon(attribute1, attribute2)
+test_name = "Wilcoxon Signed-Rank Test"
+print(f"\n{test_name}: Test Statistic = {t_stat:.3f}, p-value = {p_value:.3f}")
+
+# Conclusion
+if p_value < alpha:
+print("Reject the null hypothesis: The course has a significant effect on soft skills
+else:
+print("Fail to reject the null hypothesis: There is no significant effect of the cour
+
+
+Q3 8 Marks
+'''
+Two catalysts are being analyzed to determine how they affect the mean yield of a chemica
+Specifically, catalyst 1 is currently in use, but catalyst 2 is acceptable. Since catalys
+should be adopted, providing it does not change the process yield. A test is run in the p
+results in the data shown table. Is there any difference in mean yields for an α =.05 and
+variances
+Number 1 2 3 4 5 6 7 8
+Catlayst1 91.50 94.18 92.18 95.39 91.79 89.07 94.72 89.21
+Catalyst2 89.19 90.95 90.46 93.21 97.19 97.04 91.07 92.75
+i. State the hypothesis and type of test to be used (2 marks)
+ii. Test the hypothesis and conclude (4 marks)
+'''
+alpha = 0.05
+Number = [1,2,3,4,5,6,7,8]
+Catlayst1 = [91.50, 94.18, 92.18, 95.39, 91.79, 89.07, 94.72, 89.21]
+Catalyst2 = [89.19, 90.95, 90.46, 93.21, 97.19, 97.04, 91.07, 92.75]
+
+
+Z Test
+Double-click (or enter) to edit
+# Step 1: Problem Recap
+# Claim: The car company claims the mean mileage is 25 kmph with a population sta
+# Sample Size (n) = 45, with a sample mean = 24 kmph.
+# Significance Level (α) = 0.01 (99% confidence level).
+# Step 2: Hypotheses
+# Null Hypothesis (��0 ): The mean mileage is 25 kmph (μ=25).
+# Alternative Hypothesis (Ha): The mean mileage is not 25 kmph (��≠25).
+# (Since it’s a two-tailed test, we check for any significant difference.)
+# Step 3: Z-Test Calculation on Given data
+from scipy.stats import norm
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+population_mean = 25 ; sample_mean = 24 ; population_std = 2.5 ; n = 45 ;alpha = 0.01
+z_stat = (sample_mean - population_mean) / (population_std / np.sqrt(n))
+print("Z-Statistic :", z_stat)
+print("Absolute Z-Statistic: ", abs(z_stat))
+CDF = norm.cdf(abs(z_stat))
+p_value = (1 - CDF)
+p_value = 2 * p_value # Since it’s a two-tailed test, we multiply by 2
+print("P-Value : ", p_value)
+# Step 4 Step 4: Confidence Interval
+# The 99% confidence interval for the population mean is:
+confidence_interval = norm.interval(0.99, loc=sample_mean, scale=population_std / np.sqrt
+print("99% Confidence Interval:", confidence_interval)
+
+
+plot
+# Plot the acceptance and rejection regions for a two-tailed test
+X = norm.rvs(size=1000000, random_state=20)
+ax = sns.kdeplot(X, cumulative=False, color="steelblue")
+z_crit = norm.isf(q=alpha/2) # for 99% confidence level
+print("Critical z-value:", round(z_crit, 2))
+
+# Plot critical values and z-score
+plt.axvline(z_crit, color='black', linestyle='--', label=f'z_crit = {round(z_crit, 2)}')
+plt.axvline(-z_crit, color='black', linestyle='--')
+plt.axvline(z_stat, color='darkorange', linestyle='--', label=f'z_score = {round(z_stat,
+# Fill the rejection regions
+x = np.linspace(-4, 4, 1000)
+y = norm.pdf(x)
+plt.fill_between(x, 0, y, where=(x <= -z_crit) | (x >= z_crit), color='lightblue', alpha=
+# Customize plot
+plt.title('Two-Tailed Z-Test: Acceptance and Rejection Regions')
+plt.xlabel('Z-Score')
+plt.ylabel('Density')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+ 
+
+ The Edison Electric Institute has published 
+
+ import scipy.stats as stats
+import numpy as np
+# Given data
+sample_mean = 42 ; population_mean = 46 ; sample_std = 11.9 ; n = 12 ; alpha = 0.05
+# Calculate t-statistic
+t_stat = (sample_mean - population_mean) / (sample_std / np.sqrt(n))
+print("t-Statistic:", t_stat)
+# Calculate p-value for a one-tailed test
+p_value = stats.t.cdf(t_stat, df=n-1)
+print("p-Value:", p_value)
+# Decision
+if p_value < alpha:
+print("Reject the null hypothesis: The vacuum cleaners use less than 46 kWh on averag
+else:
+print("Fail to reject the null hypothesis: No significant evidence that usage is less
+
+
+6 Chi Square
+#Example 1 (2 marks)
+# The grades in a statistics course for a particular semester were as follows
+# Grades A B C D F
+# 14 18 32 20 16
+#Test the hypothesis, at the 0.05 level of significance, that the distribution of grades
+observed_Grades = [14,18,32,20,16]
+Expected_grades=np.array([1/5,1/5,1/5,1/5,1/5])*100
+stats.chisquare(f_exp=Expected_grades,f_obs=observed_Grades)
+
+plt.figure(figsize=(2, 2)); sns.histplot(df14['before_score'],kde = True ); plt.show()
+plt.figure(figsize=(2, 2)); sns.histplot(df14['after_score'],kde = True ); plt.show()
+a = stats.shapiro(df14['before_score']); print('before value has p value of ', a.pvalue)
+b = stats.shapiro(df14['after_score']); print('before value has p value of ', b.pvalue)
+print('both > 0.05 so both are normally distributed' )
+print( '\nPaired T test if normally dist-----\n', stats.ttest_rel(attribute1, attribu
+print( 'p value is 0.03 < 0.05 so H0 rehected . SO it means "The course has a significant
+print( '\nwilcoxon test if NOT normally dist-----\n', stats.wilcoxon(attribute1, attribut
+
+before value has p value of 0.9998386886685552
+before value has p value of 0.3920469282700294
+both > 0.05 so both are normally distributed
+Paired T test if normally dist-----
+ TtestResult(statistic=-2.75783135866153, pvalue=0.03993727174744146, df=5)
+p value is 0.03 < 0.05 so H0 rehected . SO it means "The course has a significant eff
+wilcoxon test if NOT normally dist-----
+ WilcoxonResult(statistic=1.5, pvalue=0.0625)
+
+
+ '''
+Why Z-Test?
+One-sample Z-test: Used to compare the sample mean with a population mean when the p
+Two-sample Z-test: Compares the means of two independent groups when the population
+Z-test for Proportions: Used to test whether the sample proportion differs significa
+What is a Confidence Interval (CI)?
+1 - A confidence interval provides a range of values that are likely to contain the true
+It helps us estimate the uncertainty or precision of the sample mean.
+2- 95% Confidence Level: This means if we were to take 100 different samples and calcula
+approximately 95 of them would contain the true population mean.
+3- Wider intervals indicate more variability or fewer observations, leading to less prec
+Narrow intervals suggest more precision and confidence in the estimate.
+'''
+
+
+independent t-test
+t_stat, p_value = stats.ttest_ind(management_salary, engineering_salary)
+z_stat = (sample_mean - population_mean) / (population_std / np.sqrt(n))
+# 2 Tailed Test : p_value = 2 * (1 - norm.cdf(abs(z_score)))
+# For a Left-Tailed Test : p_value = norm.cdf(z_score)
+# For a Right-Tailed Test: p_value = 1 - norm.cdf(z_score)
+# Shapiro :
+stat, p_value = stats.shapiro(solar_energy) > 0.05 # data is normally distributed (Fail to reject
+stat, p_value = stats.shapiro(df12['Percentile_ET'].dropna())
+# Calculate 95% confidence interval
+sample_mean = np.mean(solar_energy)
+sample_std = np.std(solar_energy, ddof=1) # Sample standard deviation
+n = len(solar_energy)
+t_critical = stats.t.ppf(0.975, df=n-1) # t-value for 95% confidence and n-1 degrees of freedom
+margin_of_error = t_critical * (sample_std / np.sqrt(n))
+confidence_interval = (sample_mean - margin_of_error, sample_mean + margin_of_error)
+
+
+'''
+i. Check whether the percentile in entrance test from the data follows normal distributi
+using a proper plot and with suitable statistical test. (5 marks)
+ii. Conduct a hypothesis to see whether there is a difference in terms of salary for stu
+degree specialization of management and engineering. What do you conclude (consider leve
+of significance 0.05) (5 marks)
+iii. Conduct an hypothesis to prove whether the salary of a student from commenrce strea
+higher than Science stream, do you agree or not. (consider level of significance 0.05) (
+marks)
+iv. Conduct an ANOVA to check whether there is salary difference for students with diffe
+MBA_specialization of Marketing & Finance , Marketing & HR, Operations &
+Management, Marketing & IB. State your inferences. (consider level of significance 0.05)
+marks)
+
+'''
+Z-Test Questions
+Z-Test for Single Mean (Percentile_ET)
+"Conduct a one-sample Z-test to determine if the average Percentile_ET of students is si
+Use a significance level of 0.05 and assume the population standard deviation is 8."
+Z-Test for Difference in Means (Management vs. Engineering Salary)
+"Perform a two-sample Z-test to check if the mean salary for students with Management sp
+from those with Engineering specialization at a 0.05 significance level. Assume the popu
+Z-Test for Proportions (Placement Rate)
+"Conduct a Z-test for proportions to determine if the proportion of students placed (Pla
+Z-Test for Gender Pay Gap
+"Perform a two-sample Z-test to check if the mean salary of male students is significant
+Use a significance level of 0.05."
+
+
+from statsmodels.stats.weightstats import ztest
+import scipy.stats as stats
+import numpy as np
+print('-------------1 Shapiro : Normality in Entrace Percentile--------------------------
+print(stats.shapiro(df12['Percentile_ET'].dropna()))
+print('\n-----------2 Independebt t test : salary betwwn eng & MBA student---------------
+management_salary = df12[df12['Course_Degree'] == 'Management']['Salary'].dropna()
+engineering_salary = df12[df12['Course_Degree'] == 'Engineering']['Salary'].dropna()
+print(stats.ttest_ind(management_salary, engineering_salary))
+print('\n---------- 3 Independent t test commerce & science stream-----------------------
+commerce_salary = df12[df12['Stream_HSC'] == 'Commerce']['Salary'].dropna()
+science_salary = df12[df12['Stream_HSC'] == 'Science']['Salary'].dropna()
+print(stats.ttest_ind(commerce_salary, science_salary) )
+print('\n-----------4 ANoha -------------------------------------------------------------
+col_list = ['Marketing & Finance', 'Marketing & HR', 'Operations & Management', 'Marketin
+df_anova = df12[df12['Specialization_MBA'].isin(col_list)]
+model = smf.ols('Salary ~ Specialization_MBA', data=df_anova).fit()
+anova_table = sm.stats.anova_lm(model, typ=2)
+print(anova_table)
+print('------------5 Question 1: One-sample Z-test for Percentile_ET---------------------
+population_mean = 60 ; population_std = 8
+print( ztest(df12['Percentile_ET'].dropna(), value=population_mean) )
+print('\n----------6 Question 2: Two-sample Z-test for Salary (Management vs Engineering
+df_management_salary = df12[df12['Course_Degree'] == 'Management']['Salary'].dropna()
+df_engineering_salary = df12[df12['Course_Degree'] == 'Engineering']['Salary'].dropna()
+
+====================================================================================================================================
+
+
+Let us import the required libraries.
+# import 'pandas'
+import pandas as pd
+# import 'numpy'
+import numpy as np
+# import subpackage of matplotlib
+import matplotlib.pyplot as plt
+# import 'seaborn'
+import seaborn as sns
+# to suppress warnings
+from warnings import filterwarnings
+filterwarnings('ignore')
+# import 'random' to generate random sample
+import random
+# import statistics to perform statistical computation
+import statistics
+# import 'stats' package from scipy library
+from scipy import stats
+# import a library to perform Z-test
+from statsmodels.stats import weightstats as stests
+# to test the normality
+from scipy.stats import shapiro
+# import the function to calculate the power of test
+from statsmodels.stats import power
+# set the plot size using 'rcParams'
+# once the plot size is set using 'rcParams', it sets the size of all the forthcoming plots in the file
+# pass width and height in inches to 'figure.figsize'
+plt.rcParams['figure.figsize'] = [15,8
+
+
+
+It is the process of evaluating the validity of the claim made using the sample data obtained from the population. A statistical test is a rule
+used to decide the acceptance or rejection of the claim.
+Examples of hypothesis:
+1. One can get 'A' grade if the attendance in the class is more than 75%.
+2. A probiotic drink can improve the immunity of a person.
+keyboard_arrow_down 2.1 Types of Hypothesis
+Null Hypothesis : The null hypothesis is the claim suggesting 'no difference'. It is denoted as H0
+.
+Alternative Hypothesis : It is the hypothesis that is tested against the null hypothesis. The acceptance or rejection of the hypothesis is
+based on the likelihood of H0
+ being true. It is denoted by Ha
+ or H1
+.
+A company that produces tennis balls claimed that the diameter of a tennis ball is at least 2.625 inches on average. On the other hand, a
+professional tennis coach claimed that the diameter of a ball is less than what the company has claimed. To test the claim of the coach, a
+statistical test can be performed considering the hypothesis:
+Null Hypothesis: Average diameter ≥ 2.625
+Alternative Hypothesis: Average diameter < 2.625
+Example:
+keyboard_arrow_down 3. Types of Test
+The hypothesis test is used to validate the claim given by the null hypothesis. The types of tests are based on the nature of the alternative
+hypothesis.
+3.1 Two Tailed Test
+
+
+
+1. The company's annual quality report of machines states that a lathe machine works efficiently at most for 8 months on average after the
+servicing. The production manager claims that after the special tuxan servicing, the machine works efficiently for more than 8 months. To
+test the claim of production manager consider the hypothesis:
+
+Null Hypothesis: Machine efficiency ≤ 8 months
+Alternative Hypothesis: Machine efficiency > 8 month
+
+
+This is the example of a right-tailed test.
+2. A railway authority claims that all the trains on the Chicago-Seattle route run with a speed of at least 54 mph on average. A customer
+forum declares that there are various records from passengers claiming that the speed of the train is less than what railway has claimed. In
+this scenario, a statistical test can be performed to test the claim of customer forum considering the hypothesis:
+Null Hypothesis: Speed ≥ 56 mph
+Alternative Hypothesis: Speed < 56 mph
+
+This is the example of a left-tailed test.
+
+
+. Hypothesis Tests with Z Statistic
+Let us perform one sample Z test for the population mean. We compare the population mean with a specific value.The sample is assumed to
+be taken from a population following a normal distribution.
+To check the normality of the data, a test for normality is used. The Shapiro-Wilk Test is one of the methods used to check the normality.
+The hypothesis of the test is given as:
+H0
+: The data is normally distributed
+H1
+: The data is not normally distributed
+The shapiro() from scipy library performs a Shapiro-Wilk normality test.
+The null and alternative hypothesis of Z-test is given as:
+ or or 
+ or or 
+H0 : μ = μ0 μ ≥ μ0 μ ≤ μ0
+H1 : μ ≠ μ0 μ < μ0 μ > μ0
+Consider a normal population with standard deviation . Let us take a sample of size n, such that (n > 30). The test statistic for one sample
+Z-test is given as:
+Where,
+: Sample mean
+: Specified Mean 
+ Population standard deviation
+: Sample size
+Under the test statistic follows a standard normal distribution.
+If is unknown, use the sample standard deviation (s) instead of to calculate the test statistic.
+
+
+Example: 1. A car manufacturing company claims that the mileage of their new car
+is 25 kmph with a standard deviation of 2.5 kmph. A random sample of 45 cars was
+drawn and recorded their mileage as per the standard procedure. From the sample,
+the mean mileage was seen to be 24 kmph. Is this evidence to claim that the mean
+mileage is different from 25kmph? (assume the normality of the data) Use α = 0.01.
+
+The null and alternative hypothesis is:
+
+
+H0
+: 
+H1
+: 
+Here ⍺ = 0.01, for a two-tailed test calculate the critical z-value.
+μ = 25
+μ ≠ 25
+# calculate the z-value for 99% of confidence level
+# use 'stats.norm.isf()' to find the z-value corresponding to the upper tail probability 'q'
+# pass the value of 'alpha/2' to the parameter 'q', here alpha = 0.01
+# use 'round()' to round-off the value to 2 digits
+z_val = np.abs(round(stats.norm.isf(q = 0.01/2), 2))
+print('Critical value for two-tailed Z-test:', z_val)
+
+
+i.e. if z is less than -2.58 or greater than 2.58 then we reject the null hypothesis.
+# define a function to calculate the Z-test statistic
+# pass the population mean, population standard deviation, sample size and sample mean as the function input
+def z_test(pop_mean, pop_std, n, samp_mean):
+# calculate the test statistic
+z_score = (samp_mean - pop_mean) / (pop_std / np.sqrt(n))
+# return the z-test value
+return z_score
+# given data
+n = 45
+pop_mean = 25
+pop_std = 2.5
+samp_mean = 24
+# calculate the test statistic using the function 'z_test'
+z_score = z_test(pop_mean, pop_std, n, samp_mean)
+print("Z-score:", z_score)
+
+
+# calculate the corresponding p-value for the test statistic
+# use 'cdf()' to calculate P(Z <= z_score)
+p_value = stats.norm.cdf(z_score)
+# for a two-tailed test multiply the p-value by 2
+req_p = p_value*2
+print('p-value:', req_p)
+
+
+# calculate the 99% confidence interval for the population mean
+# pass the sample mean to the parameter, 'loc'
+# pass the scaling factor (pop_std / n^(1/2)) to the parameter, 'scale'
+print('Confidence interval:', stats.norm.interval(0.99, loc = samp_mean, scale = pop_std / np.sqrt(n)))
+
+
+
+Here the z score is less than -2.58, p-value is less than 0.01, also the confdence  interval do not contain the value in the null hypothesis (i.e.
+25), thus we reject the null hypothesis and conclude that there is enough evidence to claim that the mean mileage is different from 25kmph.
+Let us plot the acceptance and rejection region for a two-tailed test with 99% confdence
+
+
+# consider a random variable 'X' that follows a standard normal distribution
+# pass the required number of observations to the parameter, 'size'
+# set 'random_state' to obtain the same observations every time you run the code
+X = stats.norm.rvs(size = 1000000, random_state = 20)
+# plot the distribution of X
+# pass the data to the parameter, 'a'
+# 'hist=False' does not return the histogram
+# 'cumulative=False' in 'kde_kws' does not return the cumulative kernel density estimator
+ax = sns.distplot(a = X, hist = False, kde_kws = dict(cumulative=False))
+# set the limit for y-axis
+plt.ylim(0, 0.42)
+# use 'stats.norm.isf()' to calculate the critical z-value for alpha = 0.01
+
+
+# pass the value of 'alpha/2' to the parameter 'q' for a two-tailed test
+z = stats.norm.isf(q = 0.01/2)
+# plot a vertical line at z-value
+x, y = [z, z], [0, 0.3]
+plt.plot(x, y, color = 'black')
+# plot a vertical line at -(z-value)
+x, y = [-z, -z], [0, 0.3]
+plt.plot(x, y, color = 'black')
+# plot a vertical line at z-score value
+x, y = [z_score, z_score], [0, 0.013]
+plt.plot(x, y, color = 'black')
+# add the color to the right of the z-value and left of -(z-value)
+# get the data for x and y axes
+l1 = ax.lines[0]
+x1 = l1.get_xydata()[:,0]
+y1 = l1.get_xydata()[:,1]
+# fill the color for the region where x-values are greater than the critical z-value
+# pass the condition to shade the required region
+# pass the required color to the parameter, 'color'
+ax.fill_between(x1[x1 >= z], y1[x1 >= z], color = 'lightblue')
+# fill the color for the region where x-values are less than -(z-value)
+# pass the condition to shade the required region
+# pass the required color to the parameter, 'color'
+ax.fill_between(x1[x1 <= -z], y1[x1 <= -z], color = 'lightblue')
+# use 'annonate' function to draw an arrow between points xy and xytext
+# 's' is a argument to write text
+# we can change the facecolor and arrowstyle; this is only for representation purpose
+plt.annotate(text = 'Mean (μ)', xy = (0, 0), xytext = (-0.3, 0.04), arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+plt.annotate(text = 'α/2 = 0.005\n(Rejection Region for H0)', xy = (2.8, 0.004), xytext = (2.8, 0.055),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+plt.annotate(text = 'α/2 = 0.005\n(Rejection Region for H0)', xy = (-2.8, 0.004), xytext = (-4.5, 0.055),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+plt.annotate(text = 'z_crit = '+ str(round(z,2)), xy = (z, 0), xytext = (z-1.2, 0.02),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+plt.annotate(text = 'z_crit = '+ str(round(-z,2)), xy = (-z, 0), xytext = (-z+0.3, 0.02),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+# use below code to print the values in the graph
+# 'x' and 'y' gives position of the text
+# 's' is the text
+plt.text(x = -1.15, y = 0.2, s = 'Acceptance Region for H0 (1 - α)')
+# assign the x-axis labels
+# pass the position of labels to the parameter, 'ticks'
+# pass the required labels to the parameter, 'labels'
+plt.xticks(ticks = [-6, -4, -2, 0, 2, 4, 6, round(z_score,2)],
+labels = [-6, -4, -2, 0, 2, 4, 6, 'z_test = '+str(round(z_score,2))])
+# set plot and axes labels
+# set text size using 'fontsize'
+plt.xlabel('Z', fontsize = 15)
+plt.ylabel('Probability', fontsize = 15)
+plt.title('Two-Tailed Test', fontsize = 15)
+# display the plot
+plt.show()
+
+
+## Conclusion 
+The above plot shows that the test statistic value is in the rejection region, that implies we reject and conclude that there is enough
+evidence to claim that the mean mileage is different from 25kmph.
+
+
+
+2. The average calories in a slice bread of the brand 'Alphas' are 82 with a standard
+deviation of 15. An experiment is conducted to test the claim of the dietitians that
+the calories in a slice of bread are not as per the manufacturer's specification A
+sample of 40 slices of bread is taken and the mean calories recorded are 95. Test
+the claim of dietitians with ⍺ value (signicance level) as 0.05. (assume the
+normality of the data).
+
+The null and alternative hypothesis is:
+H0 μ. = 82
+: 
+H1. μ Not equal 82 
+: 
+Here ⍺ = 0.05, for a two-tailed test calculate the critical z-value.
+μ = 82
+μ ≠ 82
+# calculate the z-value for 95% of confidence level
+# use 'stats.norm.isf()' to find the z-value corresponding to the upper tail probability 'q'
+# pass the value of 'alpha/2' to the parameter 'q', here alpha = 0.05
+# use 'round()' to round-off the value to 2 digits
+z_val = np.abs(round(stats.norm.isf(q = 0.05/2), 2))
+print('Critical value for two-tailed Z-test:', z_val)
+
+i.e. if z is less than -1.96 or greater than 1.96 then we reject the null hypothesis.
+# define a function to calculate the Z-test statistic
+# pass the population mean, population standard deviation, sample size and sample mean as the function input
+
+
+def z_test(pop_mean, pop_std, n, samp_mean):
+# calculate the test statistic
+z_score = (samp_mean - pop_mean) / (pop_std / np.sqrt(n))
+# return the z-test value
+return z_score
+# given data
+n = 40
+pop_mean = 82
+pop_std = 15
+samp_mean = 95
+# calculate the test statistic using the function 'z_test'
+z_score = z_test(pop_mean, pop_std, n, samp_mean)
+print("Z-score:", z_score)
+
+
+
+# calculate the corresponding p-value for the test statistic
+# use 'cdf()' to calculate P(Z <= -z_score)
+p_value = stats.norm.cdf(-z_score)
+# for a two-tailed test multiply the p-value by 2
+req_p = p_value*2
+print('p-value:', req_p)
+
+
+
+# calculate the 95% confidence interval for the population mean
+# pass the sample mean to the parameter, 'loc'
+# pass the scaling factor (pop_std / n^(1/2)) to the parameter, 'scale'
+print('Confidence interval:', stats.norm.interval(0.95, loc = samp_mean, scale = pop_std / np.sqrt(n)))
+
+
+
+Here the z score is greater than 1.96, the p-value is less than 0.05, also the confidence  interval do not contain the value in the null hypothesis
+(i.e. 82), thus we reject the null hypothesis and thus, there is enough evidence to conclude that the average calories in a slice bread are not
+82.
+
+
+
+
+A typhoid vaccine in the market inscribes 3 mg of ascorbic acid in the vaccine. A
+research team claims that the vaccines contain less than 3 mg of acid. We collected
+the data of 40 vaccines by using random sampling from a population and recorded
+the amount of ascorbic acid. Test the claim of the research team using the sample
+data ⍺ value (significance level ) to 0.05 
+
+
+acid_amt = [2.57, 3.06, 3.28 , 3.24, 2.79, 3.40, 3.36, 3.07, 2.46, 3.03, 3.05, 2.94, 3.46, 3.19, 3.09, 2.81, 3.13, 2.88,
+2.76, 2.75, 3.17, 2.89, 2.54, 3.18, 3.08, 2.60, 3.06, 3.13, 3.11, 3.08, 2.93, 2.90, 3.06, 2.97, 3.24, 2.86,
+2.87, 3.18, 3, 2.95]
+
+
+Let us check the normality of the data.
+# given data
+acid_amt = [2.57, 3.06, 3.28 , 3.24, 2.79, 3.40, 3.36, 3.07, 2.46, 3.03, 3.05, 2.94, 3.46 , 3.19, 3.09,2.81, 3.13, 2.88, 2.76,
+2.75, 3.17, 2.89, 2.54, 3.18, 3.08, 2.60, 3.06, 3.13, 3.11, 3.08, 2.93, 2.90, 3.06, 2.97, 3.24, 2.86, 2.87, 3.18,
+3, 2.95]
+# perform Shapiro-Wilk test to test the normality
+# shapiro() returns a tuple having the values of test statistics and the corresponding p-value
+# pass the sample data to perform the test
+stat, p_value = shapiro(acid_amt)
+# print the test statistic and corresponding p-value
+print('Test statistic:', stat)
+print('P-Value:', p_value)
+
+
+From the above result, we can see that the p-value is greater than 0.05, thus we can say that the data is normally distributed.
+The null and alternative hypothesis is:
+H0 μ >= 3
+: 
+H1 μ < 3 
+: 
+Here ⍺ = 0.05, for a one-tailed test calculate the critical z-value.
+μ ≥ 3
+μ < 3
+# calculate the z-value for 95% of confidence level
+# use 'stats.norm.isf()' to find the z-value corresponding to the upper tail probability 'q'
+# pass the value of 'alpha' to the parameter 'q', here alpha = 0.05
+# use 'round()' to round-off the value to 2 digits
+z_val = np.abs(round(stats.norm.isf(q = 0.05), 2))
+print('Critical value for one-tailed Z-test:', z_val)
+
+
+i.e. if z is less than -1.64 then we reject the null hypothesis.
+# given amount of ascorbic acid in the vaccines
+acid_amt = [2.57, 3.06, 3.28 , 3.24, 2.79, 3.40, 3.36, 3.07, 2.46, 3.03, 3.05, 2.94, 3.46 , 3.19, 3.09, 2.81, 3.13, 2.88, 2.76,
+2.75, 3.17, 2.89, 2.54, 3.18, 3.08, 2.60, 3.06, 3.13, 3.11, 3.08, 2.93, 2.90, 3.06, 2.97, 3.24, 2.86, 2.87, 3.18,
+3, 2.95]
+# 'ztest()' returns the test statistic and corresponding p-value
+# pass the sample data to the parameter, 'x1'
+# pass the value in null hypothesis to the parameter, 'value'
+# pass the one-tailed condition to the parameter, 'alternative'
+z_score, pval = stests.ztest(x1 = acid_amt, value = 3, alternative = 'smaller')
+# print the test statistic and corresponding p-value
+print("Z-score: ", z_score)
+print("p-value: ", pval)
+
+
+# calculate the 95% confidence interval for the population mean
+# pass the sample mean to the parameter, 'loc'
+# pass the scaling factor (standard deviation of sample / n^(1/2)) to the parameter, 'scale'
+# use 'stdev()' to calculate sample standard deviation
+print('Confidence interval:', stats.norm.interval(0.95, loc = np.mean(acid_amt),
+scale = statistics.stdev(acid_amt) / np.sqrt(len(acid_amt))))
+
+
+
+Here the z-score is greater than -1.64, the p-value is greater than 0.05, also the confidence interval contains the value in the null hypothesis
+(i.e. 3), thus we fail to reject (i.e. accept) the null hypothesis. Thus, there is no enough evidence to conclude that on average a typhoid vaccine
+contains less than 3 mg of ascorbic acid.
+Let us plot the acceptance and rejection region for a left-tailed test with 95% confidence
+
+# consider a random variable 'X' that follows a standard normal distribution
+# pass the required number of observations to the parameter, 'size'
+# set 'random_state' to obtain the same observations every time you run the code
+X = stats.norm.rvs(size = 2000000, random_state = 20)
+# plot the distribution of X
+# pass the data to the parameter, 'a'
+# 'hist=False' does not return the histogram
+# 'cumulative=False' in 'kde_kws' does not return the cumulative kernel density estimator
+ax = sns.distplot(a = X, hist = False, kde_kws = dict(cumulative=False))
+# set the limit for y-axis
+plt.ylim(0, 0.42)
+# use 'stats.norm.isf()' to calculate the critical z-value for alpha = 0.05
+# pass the value of 'alpha' to the parameter 'q'
+z = stats.norm.isf(q = 0.05)
+# as normal distribution is symmetric, for a left-tailed test draw a line at -(z-value)
+# plot a vertical line at -(z-value)
+x, y = [-z, -z], [0, 0.3]
+
+
+plt.plot(x, y, color = 'black')
+# plot a vertical line at z-score value
+x, y = [z_score, z_score], [0, 0.05]
+plt.plot(x, y, color = 'black')
+# add the color to the left of the -(z-value)
+# get the data for x and y axes for the distribution plot
+l1 = ax.lines[0]
+x1 = l1.get_xydata()[:,0]
+y1 = l1.get_xydata()[:,1]
+# fill the color for the region where x-values are less than -(z-value)
+# pass the condition to shade the required region
+# pass the required color to the parameter, 'color'
+ax.fill_between(x1[x1 <= -1.64], y1[x1 <= -1.64], color = 'lightblue')
+# use 'annonate' function to draw an arrow between points xy and xytext
+# 's' is a argument to write text
+# we can change the facecolor and arrowstyle; this is only for representation purpose
+plt.annotate(text = 'α = 0.05\n(Rejection Region for H0)', xy = (-2, 0.025), xytext = (-3.8, 0.075),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+plt.annotate(text = 'z_crit = '+ str(round(-z,2)), xy = (-z, 0), xytext = (-z+0.2, 0.04),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+# use below code to print the values in the graph
+# 'x' and 'y' gives position of the text
+# 's' is the text
+plt.text(x = -1.15, y = 0.2, s = 'Acceptance Region for H0 (1 - α)')
+# assign the x-axis labels
+# pass the position of labels to the parameter, 'ticks'
+# pass the required labels to the parameter, 'labels'
+plt.xticks(ticks = [-6, -4, -2, 2, 4, 6, round(z_score,2)],
+labels = [-6, -4, -2, 2, 4, 6, 'z_test = '+str(round(z_score,2))])
+# set plot and axes labels
+# set text size using 'fontsize'
+plt.xlabel('Z', fontsize = 15)
+plt.ylabel('Probability', fontsize = 15)
+plt.title('Left-Tailed Test', fontsize = 15)
+# display the plot
+plt.show()
+
+The above plot shows that the test statistic value is in the acceptance region, that implies we fail to reject (i.e. accept) . Thus, there is no
+enough evidence to conclude that on average a typhoid vaccine contains less than 3 mg of ascorbic acid.
+
+
+
+A sample of 900 PVC pipes is found to have an average thickness of 12.5 mm.
+Can we assume that the sample is coming from a normal population with mean 13
+mm against that it is less than 13 mm. The population standard deviation is 1 mm.
+Test the hypothesis at 5% level of significance 
+
+
+The null and alternative hypothesis is:
+H0 μ ≥ 13
+
+H1
+μ < 13
+ 
+Here ⍺ = 0.05, for a one-tailed test calculate the critical z-value.
+μ ≥ 13
+μ < 13
+# calculate the z-value for 95% of confidence level
+# use 'stats.norm.isf()' to find the z-value corresponding to the upper tail probability 'q'
+# pass the value of 'alpha' to the parameter 'q', here alpha = 0.05
+# use 'round()' to round-off the value to 2 digits
+z_val = np.abs(round(stats.norm.isf(q = 0.05), 2))
+print('Critical value for one-tailed Z-test:', z_val)
+
+
+i.e. if z is less than -1.64 then we reject the null hypothesis.
+# define a function to calculate the Z-test statistic
+# pass the population mean, population standard deviation, sample size and sample mean as the function input
+def z_test(pop_mean, pop_std, n, samp_mean):
+# calculate the test statistic
+z_score = (samp_mean - pop_mean) / (pop_std / np.sqrt(n))
+
+# return the z-test value
+return z_score
+# given data
+n = 900
+pop_mean = 13
+pop_std = 1
+samp_mean = 12.5
+# calculate the test statistic using the function 'z_test'
+z_score = z_test(pop_mean, pop_std, n, samp_mean)
+print("Z-score:", z_score)
+
+
+# calculate the corresponding p-value for the test statistic
+# use 'cdf()' to calculate P(Z <= z_score)
+p_value = stats.norm.cdf(z_score)
+print('p-value:', p_value)
+
+
+
+# calculate the 95% confidence interval for the population mean
+# pass the sample mean to the parameter, 'loc'
+# pass the scaling factor (pop_std / n^(1/2)) to the parameter, 'scale'
+print('Confidence interval:', stats.norm.interval(0.95, loc = samp_mean, scale = pop_std / np.sqrt(n)))
+
+
+Here the z score is less than -1.64, p-value is less than 0.05, also the confidence interval do not contain the value in the null hypothesis (i.e.
+13), thus we reject the null hypothesis and conclude that the sample is not coming from the population with mean 13
+
+
+
+An e-commerce company claims that the mean delivery time of food items on its website in NYC is 60 minutes with a
+standard deviation of 30 minutes. A random sample of 45 customers ordered from the website, and the average time for
+delivery was found to be 75 minutes. Is this enough evidence to claim that the average time to get items delivered is more
+than 60 minutes. (assume the normality of the data). Test the with α = 0.05.
+
+
+The null and alternative hypothesis is:
+H0. μ ≤ 60
+
+: 
+H1. μ > 60
+
+: 
+Here ⍺ = 0.05, for a one-tailed test calculate the critical z-value.
+
+# calculate the z-value for 95% of confidence level
+# use 'stats.norm.isf()' to find the z-value corresponding to the upper tail probability 'q'
+# pass the value of 'alpha' to the parameter 'q', here alpha = 0.05
+# use 'round()' to round-off the value to 2 digits
+z_val = np.abs(round(stats.norm.isf(q = 0.05), 2))
+print('Critical value for one-tailed Z-test:', z_val)
+
+
+i.e. if z is greater than 1.64 then we reject the null hypothesis.
+# define a function to calculate the Z-test statistic
+# pass the population mean, population standard deviation, sample size and sample mean as the function input
+def z_test(pop_mean, pop_std, n, samp_mean):
+# calculate the test statistic
+z_score = (samp_mean - pop_mean) / (pop_std / np.sqrt(n))
+# return the z-test value
+return z_score
+# given data
+n = 45
+pop_mean = 60
+pop_std = 30
+samp_mean = 75
+# calculate the test statistic using the function 'z_test'
+
+
+z_score = z_test(pop_mean, pop_std, n, samp_mean)
+print("Z-score:", z_score)
+
+
+# calculate the corresponding p-value for the test statistic
+# use 'sf()' to calculate P(Z > z_score)
+p_value = stats.norm.sf(z_score)
+print('p-value:', p_value)
+
+
+# calculate the 95% confidence interval for the population mean
+# pass the sample mean to the parameter, 'loc'
+# pass the scaling factor (pop_std / n^(1/2)) to the parameter, 'scale'
+print('Confidence interval:', stats.norm.interval(0.95, loc = samp_mean, scale = pop_std / np.sqrt(n)))
+
+
+Here the z score is greater than 1.64, the p-value is less than 0.05, also the confidence interval do not contain the value in the null hypothesis
+(i.e. 60), thus we reject the null hypothesis and conclude that the average time to get items delivered is more than 60 minutes.
+Let us plot the acceptance and rejection region for a right-tailed test with 95% confidence
+
+# consider a random variable 'X' that follows a standard normal distribution
+# pass the required number of observations to the parameter, 'size'
+# set 'random_state' to obtain the same observations every time you run the code
+X = stats.norm.rvs(size = 1000000, random_state = 20)
+# plot the distribution of X
+# pass the data to the parameter, 'a'
+# 'hist=False' does not return the histogram
+# 'cumulative=False' in 'kde_kws' does not return the cumulative kernel density estimator
+ax = sns.distplot(a = X, hist = False, kde_kws = dict(cumulative=False))
+# set the limit for y-axis
+plt.ylim(0, 0.42)
+# use 'stats.norm.isf()' to calculate the critical z-value for alpha = 0.05
+# pass the value of 'alpha' to the parameter 'q'
+z = stats.norm.isf(q = 0.05)
+# plot a vertical line at z-value
+x, y = [z, z], [0, 0.3]
+plt.plot(x, y, color = 'black')
+# plot a vertical line at z-score value
+x, y = [z_score, z_score], [0, 0.013]
+plt.plot(x, y, color = 'black')
+# add the color to the right of the z-value
+# get the data for x and y axes
+l1 = ax.lines[0]
+x1 = l1.get_xydata()[:,0]
+y1 = l1.get_xydata()[:,1]
+# fill the color for the region where x-values are greater than the critical z-value
+# pass the condition to shade the required region
+# pass the required color to the parameter, 'color'
+ax.fill_between(x1[x1 >= z], y1[x1 >= z], color = 'lightblue')
+# use 'annonate' function to draw an arrow between points xy and xytext
+# 's' is a argument to write text
+# we can change the facecolor and arrowstyle; this is only for representation purpose
+plt.annotate(text = 'Mean (μ)', xy = (0, 0), xytext = (-0.3, 0.04), arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+plt.annotate(text = 'α = 0.05\n(Rejection Region for H0)', xy = (2, 0.025), xytext = (2, 0.075),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+plt.annotate(text = 'z_crit = '+ str(round(z,2)), xy = (z, 0), xytext = (z-1, 0.04),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+# use below code to print the values in the graph
+# 'x' and 'y' gives position of the text
+# 's' is the text
+plt.text(x = -1.1, y = 0.2, s = 'Acceptance Region for H0 (1 - α)')
+# assign the x-axis labels
+
+# pass the position of labels to the parameter, 'ticks'
+# pass the required labels to the parameter, 'labels'
+plt.xticks(ticks = [-4, -2, 0, 2, 4, round(z_score,2)],
+labels = [-4, -2, 0, 2, 4, 'z_test = '+str(round(z_score,2))])
+# set plot and axes labels
+# set text size using 'fontsize'
+plt.xlabel('Z', fontsize = 15)
+plt.ylabel('Probability', fontsize = 15)
+plt.title('Right-Tailed Test', fontsize = 15)
+# display the plot
+plt.show()
+
+
+The above plot shows that the test statistic value is in the rejection region, which implies we reject and conclude that the average time to
+get items delivered is more than 60 minutes.
+
+5. Error
+The error can occur while choosing the correct hypothesis based on the statistical tests. Two types of errors are Type I and Type II error.
+This kind of error occurs when we reject the null hypothesis even if it is true. It is equivalent to a false positive conclusion. The probability
+of type I error is given by the value of , level of significance
+
+Type II Error
+This kind of error occurs when we fail to reject the null hypothesis even if it is wrong. It is equivalent to a false negative conclusion. The
+probability of type II error is given by the value of Beta.
+
+5.1 Power of Hypothesis Test
+
+The probability of correctly rejecting a false null hypothesis is defined as the Power of a test. It is calculated as 1-β . It is the probability of
+avoiding the type II error. The power of the test lies between 0 to 1. The value close to 1 indicates that the test is able to reject the false null
+hypothesis correctly
+
+
+1. We need to determine if girls' score on average is higher than 300 in the GRE (for higher studies). The standard deviation of
+the population is 20. We collected the data of 40 girls by using random sampling and recorded their marks. Set ⍺ value
+(significance level) to 0.05 to calculate the power of the test.
+
+
+
+GRE scores = [311, 313, 309, 307, 302, 313, 305, 336, 322, 300, 335, 312, 282, 314, 310, 316, 301, 315, 299, 298, 308,
+315, 306, 321, 276, 306, 324, 308, 334, 277, 319, 322, 298, 300, 293, 333,305, 302, 317, 287]
+keyboard_arrow_down Example:
+Let us check the normality of the data.
+# given GRE scores
+scores = [311, 313, 309, 307, 302, 313, 305, 336, 322, 300, 335, 312, 282, 314, 310, 316, 301, 315, 299, 298, 308, 315, 306,
+321, 276, 306, 324, 308, 334, 277, 319, 322, 298, 300, 293, 333,305, 302, 317, 287]
+# perform Shapiro-Wilk test to test the normality
+# shapiro() returns a tuple having the values of test statistics and the corresponding p-value
+# pass the sample data to perform the test
+stat, p_value = shapiro(scores)
+# print the test statistic and corresponding p-value
+print('Test statistic:', stat)
+print('P-Value:', p_value)
+
+
+From the above result, we can see that the p-value is greater than 0.05, thus we can say that the data is normally distributed.
+The null and alternative hypothesis is:
+H0
+: μ ≤ 300
+
+H1
+: 
+μ > 300
+Calculate the critical z-value for one-tailed test.
+# calculate the z-value for 95% of confidence level
+# use 'stats.norm.isf()' to find the z-value corresponding to the upper tail probability 'q'
+# pass the value of 'alpha' to the parameter 'q', here alpha = 0.05
+# use 'round()' to round-off the value to 4 digits
+z_val = np.abs(round(stats.norm.isf(q = 0.05), 4))
+print('Critical value for one-tailed Z-test:', z_val)
+
+
+# import the function to calculate the power of test
+from statsmodels.stats import power
+# given GRE scores
+scores = [311, 313, 309, 307, 302, 313, 305, 336, 322, 300, 335, 312, 282, 314, 310, 316, 301, 315, 299, 298, 308, 315, 306,
+321, 276, 306, 324, 308, 334, 277, 319, 322, 298, 300, 293, 333,305, 302, 317, 287]
+# number of observations
+num_obs = len(scores)
+# calculate the sample mean
+samp_mean = np.mean(scores)
+# null hypothesis value
+hypo_mean = 300
+# population standard deviation
+pop_sd = 20
+# find the b such that, P(X > b) = alpha = 0.05
+# b is calculated for the below plot
+
+b = hypo_mean + (z_val*pop_sd)/np.sqrt(num_obs)
+# use 'zt_ind_solve_power()' to calculate the power of the z-test
+# keep the value of exact one parameter as 'None' to calculate the value of that parameter using remaining values
+# calculate the 'effect_size' using the sample_mean, null hypothesis value and population standard deviation
+# pass the sample size to the parameter, 'nobs1'
+# pass the value of alpha to the parameter, 'alpha'
+# pass 'None' to the parameter 'power' as we want to calculate its value
+# for one sample test, consider the 'ratio' as 0
+# pass the alternative for one-tailed test to the parameter, 'alternative'
+power = power.zt_ind_solve_power(effect_size = (samp_mean - hypo_mean)/pop_sd,
+nobs1 = num_obs,
+alpha = 0.05,
+power = None,
+ratio = 0,
+alternative = 'larger')
+print('Power of the test:', power)
+
+
+Here the power of the test is 0.87. Thus we can say that there is 87% chance that the test rejects a false null hypothesis. The higher value of
+power indicates the more powerful test.
+Let us visualize the region of the type I error, type II error and the power of the test
+
+Large Sample Test
+If the sample size is sufficiently large (usually, n > 30) then we use the Z-test . If population standard deviation ( ) is unknown, then the
+sample standard deviation (s) is used to calculate the test statistic.
+
+6.1 One Sample Z Test
+Let us perform one sample Z test for the population mean. We compare the population mean with a specific value 
+The null and alternative hypothesis is given as:
+ or or 
+ or or 
+H0 : μ = μ0 μ ≥ μ0 μ ≤ μ0
+H1 : μ ≠ μ0 μ < μ0 μ > μ0
+Consider a normal population with standard deviation . The test statistic for one sample Z-test is given as:
+Where,
+: Sample mean
+: Population standard deviation
+: Sample size
+Under the test statistic follows a standard normal distribution.
+If the population standard deviation ( ) is unknown, use the sample standard deviation (s). Here, 
+σ
+Z =
+X−
+¯¯¯¯ μ0
+σ
+√(n)
+X
+¯¯¯¯
+σ
+n
+H0
+σ s
+2 =
+∑ ( −
+n
+i=1 xi x¯)
+2
+n−1
+
+
+
+Example:1. We need to determine if girls' score on average higher than 65 in the
+reading test. We collected the data of 517 girls by using random sampling from a
+normally distributed population and recorded their marks. Set ⍺ value (significance level)  to 0.05.
+
+Consider the reading score for female students given in the CSV 
+
+# read the students performance data
+df_student = pd.read_csv(path9)
+!ls /content/drive/MyDrive/Dataset/
+ display the first two observations
+df_student.head(2)
+
+
+# find the number of female students in the dataframe
+df_student.gender.value_counts()
+
+There are 517 female studens in the dataset. Consider the reading score of these students.
+# given reading scores
+# consider the subset of the given dataframe 'df_student'
+scores = df_student[(df_student['gender'] == 'female')]['reading score']
+scores.head()
+
+
+Let us check the normality of the data.
+# perform Shapiro-Wilk test to test the normality
+# shapiro() returns a tuple having the values of test statistics and the corresponding p-value
+# pass the reading scores of female students to perform the test
+stat, p_value = shapiro(scores)
+# print the test statistic and corresponding p-value
+print('Test statistic:', stat)
+print('P-Value:', p_value)
+
+
+From the above result, we can see that the p-value is greater than 0.05, thus we can say that the data is normally distributed.
+The null and alternative hypothesis is:
+
+H0
+: μ ≤ 65
+
+H1
+: μ > 65
+
+Here ⍺ = 0.05, for a one-tailed test calculate the critical z-value.
+ # calculate the z-value for 95% of confidence level
+# use 'stats.norm.isf()' to find the z-value corresponding to the upper tail probability 'q'
+# pass the value of 'alpha' to the parameter 'q', here alpha = 0.05
+# use 'round()' to round-off the value to 2 digits
+z_val = np.abs(round(stats.norm.isf(q = 0.05), 2))
+print('Critical value for one-tailed Z-test:', z_val)
+
+
+i.e. if z is greater than 1.64 then we reject the null hypothesis.
+# 'ztest()' returns the test statistic and corresponding p-value
+# pass the sample data to the parameter, 'x1'
+# pass the value in null hypothesis to the parameter, 'value'
+# pass the one-tailed condition to the parameter, 'alternative'
+z_score, pval = stests.ztest(x1 = scores, value = 65, alternative = 'larger')
+# print the test statistic and corresponding p-value
+print("Z-score: ", z_score)
+print("p-value: ", pval)
+
+
+# calculate the 95% confidence interval for the population mean
+# pass the sample mean to the parameter, 'loc'
+# pass the scaling factor (sample_std / n^(1/2)) to the parameter, 'scale'
+# use 'stdev()' to calculate the sample standard deviation
+print('Confidence interval:', stats.norm.interval(0.95, loc = np.mean(scores),
+scale = statistics.stdev(scores) / np.sqrt(len(scores))))
+
+
+Here the z score is greater than 1.64, the p-value is less than 0.05, also the confidence  interval does not contain the value in the null
+hypothesis (i.e. 65), thus we reject the null hypothesis and thus, we have enough evidence to conclude that on average girls' score higher
+marks than 65.
+
+Let us plot the acceptance and rejection region for a right-tailed test with 95% confidence
+# consider a random variable 'X' that follows a standard normal distribution
+# pass the required number of observations to the parameter, 'size'
+# set 'random_state' to obtain the same observations every time you run the code
+X = stats.norm.rvs(size = 2000000, random_state = 5)
+# plot the distribution of X
+# pass the data to the parameter, 'a'
+# 'hist=False' does not return the histogram
+# 'cumulative=False' in 'kde_kws' does not return the cumulative kernel density estimator
+ax = sns.distplot(a = X, hist = False, kde_kws = dict(cumulative=False))
+# set the limit for y-axis
+plt.ylim(0, 0.42)
+# use 'stats.norm.isf()' to calculate the critical z-value for alpha = 0.05
+# pass the value of 'alpha' to the parameter 'q'
+z = stats.norm.isf(q = 0.05)
+# plot a vertical line at z-value
+x, y = [z, z], [0, 0.3]
+plt.plot(x, y, color = 'black')
+# plot a vertical line at z-score value
+x, y = [z_score, z_score], [0, 0.015]
+plt.plot(x, y, color = 'black')
+# add the color to the right of the z-value
+# get the data for x and y axes
+l1 = ax.lines[0]
+x1 = l1.get_xydata()[:,0]
+y1 = l1.get_xydata()[:,1]
+
+# fill the color for the region where x-values are greater than the critical z-value
+# pass the condition to shade the required region
+# pass the required color to the parameter, 'color'
+ax.fill_between(x1[x1 >= z], y1[x1 >= z], color = 'lightblue')
+# use 'annonate' function to draw an arrow between points xy and xytext
+# 's' is a argument to write text
+# we can change the facecolor and arrowstyle; this is only for representation purpose
+plt.annotate(text = 'Mean (μ)', xy = (0, 0), xytext = (-0.3, 0.04), arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+plt.annotate(text = 'α = 0.05\n(Rejection Region for H0)', xy = (2, 0.025), xytext = (2, 0.075),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+plt.annotate(text = 'z_crit = '+ str(round(z,2)), xy = (z, 0), xytext = (z-1, 0.04),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+# use below code to print the values in the graph
+# 'x' and 'y' gives position of the text
+# 's' is the text
+plt.text(x = -1.1, y = 0.2, s = 'Acceptance Region for H0 (1 - α)')
+# assign the x-axis labels
+# pass the position of labels to the parameter, 'ticks'
+# pass the required labels to the parameter, 'labels'
+plt.xticks(ticks = [-4, -2, 0, 4, round(z_score,2)],
+labels = [-4, -2, 0, 4, 'z_test = '+str(round(z_score,2))])
+# set plot and axes labels
+# set text size using 'fontsize'
+plt.xlabel('Z', fontsize = 15)
+plt.ylabel('Probability', fontsize = 15)
+plt.title('Right-Tailed Test', fontsize = 15)
+# display the plot
+plt.show()
+
+
+The above plot shows that the test statistic value is in the rejection region, which implies that we reject H0 .
+
+
+2. The manager of a packaging process at a protein powder manufacturing plant
+wants to determine if the protein powder packing process is in control. The correct amount of protein powder per box is 350 grams on an average. A sample of 80
+boxes was drawn which gave a mean of 354.5 grams with a standard deviation of
+15. At 5% level of significance is there evidence to suggest that the weight is different from 350 grams.
+
+The null and alternative hypothesis is:
+H0
+: 
+H1
+: 
+Here ⍺ = 0.05, for a two-tailed test calculate the critical z-value.
+μ = 350
+μ ≠ 350
+# calculate the z-value for 95% of confidence level
+# use 'stats.norm.isf()' to find the z-value corresponding to the upper tail probability 'q'
+# pass the value of 'alpha/2' for a two-tailed to the parameter 'q', here alpha = 0.05
+# use 'round()' to round-off the value to 2 digits
+z_val = np.abs(round(stats.norm.isf(q = 0.05/2), 2))
+print('Critical value for two-tailed Z-test:', z_val)
+
+
+i.e. if z is less than -1.96 or z is greater than 1.96 then we reject the null hypothesis.
+# define a function to calculate the Z-test statistic
+# here the population mean is unknown, thus use the sample standard deviation
+# pass the population mean, sample standard deviation, sample size and sample mean as the function input
+def z_test(pop_mean, samp_std, n, samp_mean):
+# calculate the test statistic
+z_score = (samp_mean - pop_mean) / (samp_std / np.sqrt(n))
+# return the z-test value
+return z_score
+# given data
+n = 80
+pop_mean = 350
+samp_mean = 354.5
+samp_std = 15
+# calculate the test statistic using the function 'z_test'
+z_score = z_test(pop_mean, samp_std, n, samp_mean)
+print("Z-score:", z_score)
+
+
+# calculate the corresponding p-value for the test statistic
+# use 'sf()' to calculate P(Z > z_score)
+p_value = stats.norm.sf(z_score)
+# for a two-tailed test multiply the p-value by 2
+req_p = p_value*2
+print('p-value:', req_p)
+
+
+
+# calculate the 95% confidence interval for the population mean
+# pass the sample mean to the parameter, 'loc'
+# pass the scaling factor (sample_std / n^(1/2)) to the parameter, 'scale'
+print('Confidence interval:', stats.norm.interval(0.95, loc = samp_mean, scale = samp_std / np.sqrt(n)))
+
+
+
+Here the z score is greater than 1.96, the p-value is less than 0.05, also the confidence interval does not contain the value in the null
+hypothesis (i.e. 350), thus we reject the null hypothesis and thus, there is enough evidence to conclude that average weight per protein
+powder box is not 350.
+
+Two Sample Z Test
+
+Let us perform a two sample Z test for the population mean. We compare the means of the two independent populations. The samples are
+assumed to be taken from populations such that they follow a normal distribution. Also, the sample must have equal variance.
+The Shapiro-Wilk Test is used to check the normality of the data. The assumption of equal variances of the populations is tested using the
+Levene's Test . The hypothesis of the Levene's test is given as:
+H0
+: The variances are equal
+H1
+: The variances are not equal
+The levene() from scipy library performs a Levene's test.
+The null and alternative hypothesis of two sample Z-test is given as:
+ or or 
+ or or 
+H0 : μ1 − μ2 = μ0 μ1 − μ2 ≥ μ0 μ1 − μ2 ≤ μ0
+H1 : μ1 − μ2 ≠ μ0 μ1 − μ2 < μ0 μ1 − μ2 > μ0
+Consider two normally distributed independent populations. Let us take a sample of size ( ) from the first population with standard
+deviation ( ) and sample of size ( ) from a second population with standard deviation ( ) such that .
+The test statistic for two sample Z-test is given as:
+
+
+here,
+, : Mean of both the samples
+: Mean difference given in the null hypothesis
+: Standard deviation of both the populations
+: Size of samples from both the populations
+Under the test statistic follows a standard normal distribution.
+If standard deviations of populations are unknown, use the standard deviations of samples ( ) instead of and to calculate the
+test statistic. i.e.
+
+
+
+Example: 1. The training institute Nature Learning claims that the students trained in
+their institute have overall better performance than the students trained in their
+competitor institute Speak Global Learning. We have a sample data of 500 students
+from each institute along with their total score collected from independent normal
+populations. Frame a hypothesis and test the Nature Learning's claim with 99%
+confidence 
+
+
+Consider the total score for students given in the CSV 
+
+from google.colab import drive
+drive.mount('/content/drive')
+path9 = '/content/drive/MyDrive/Dataset/sem1_stats_class4_StudentsPerformance.csv'
+# read the students performance data
+df_student = pd.read_csv(path9)
+!ls /content/drive/MyDrive/Dataset/
+# read the students performance data
+#df_student = pd.read_csv('StudentsPerformance.csv')
+# display the first two observations
+df_student.head(2)
+
+
+
+# consider total score of the students trained from the institute 'Nature Learning'
+nl_scores = df_student[(df_student['training institute'] == 'Nature Learning')]['total score']
+# number of students trained from the institute 'Nature Learning'
+n_1 = len(nl_scores)
+# mean total score
+nl_mean = np.mean(nl_scores)
+# standard deviation of total score
+nl_std = statistics.stdev(nl_scores)
+# consider total score of the students trained from the 'Speak Global Learning' institute
+sgl_scores = df_student[(df_student['training institute'] == 'Speak Global Learning')]['total score']
+# number of students trained from the 'Speak Global Learning' institute
+n_2 = len(sgl_scores)
+# mean total score
+sgl_mean = np.mean(sgl_scores)
+# standard deviation of total score
+sgl_std = statistics.stdev(sgl_scores)
+Let us check the normality of total score for the students trained from both the institutes.
+# perform Shapiro-Wilk test
+# shapiro() returns a tuple having the values of test statistics and the corresponding p-value
+# pass the total score students to perform the test
+stat, p_value = shapiro(df_student['total score'])
+# print the test statistic and corresponding p-value
+print('Test statistic:', stat)
+print('P-Value:', p_value)
+
+
+From the above result, we can see that the p-value is greater than 0.05, thus we can say that the total scores of the students trained from
+both the institutes are normally distributed.
+Let us check the equality of variances.
+# perform Levene's test
+# levene() returns a tuple having the values of test statistics and the corresponding p-value
+# pass the total scores of students trained from 'Nature Learning' and 'Speak Global Learning' institutes to perform the test
+stat, p_value = stats.levene(nl_scores, sgl_scores)
+# print the test statistic and corresponding p-value
+print('Test statistic:', stat)
+print('P-Value:', p_value)
+
+
+
+From the above result, we can see that the p-value is greater than 0.05, thus we can say that the population variances are equal.
+The null and alternative hypothesis is:
+H0
+: 
+H1
+: 
+μ1 − μ2 ≤ 0
+μ1 − μ2 > 0
+
+
+Here ⍺ = 0.01, for a one-tailed test calculate the critical z-value.
+# calculate the z-value for 99% of confidence level
+# use 'stats.norm.isf()' to find the z-value corresponding to the upper tail probability 'q'
+# pass the value of 'alpha' to the parameter 'q', here alpha = 0.01
+# use 'round()' to round-off the value to 2 digits
+z_val = np.abs(round(stats.norm.isf(q = 0.01), 2))
+print('Critical value for one-tailed Z-test:', z_val)
+
+
+i.e. if z is greater than 2.33 then we reject the null hypothesis.
+# 'ztest()' returns the test statistic and corresponding p-value
+# pass the scores of students from 'Nature Learning' to the parameter, 'x1'
+# pass the scores of students from 'Speak Global Learning' to the parameter, 'x2'
+# pass the value in null hypothesis to the parameter, 'value'
+# pass the one-tailed condition to the parameter, 'alternative'
+z_score, pval = stests.ztest(x1 = nl_scores, x2 = sgl_scores, value = 0, alternative = 'larger')
+# print the test statistic and corresponding p-value
+print("Z-score: ", z_score)
+print("p-value: ", pval)
+
+
+# calculate the 99% confidence interval for the population mean
+# pass the difference between the sample means to the parameter, 'loc'
+# pass the scaling factor np.sqrt((nl_std^2 / n1 + (sgl_std^2 / n2)) to the parameter, 'scale'
+print('Confidence interval:', stats.norm.interval(0.99, loc = nl_mean - sgl_mean,
+scale = np.sqrt(((nl_std**2) / n_1) + ((sgl_std**2) / n_2))))
+
+
+
+Here the z score is less than 2.33, the p-value is greater than 0.01, also the confidence interval contains the value in the null hypothesis (i.e.
+0), thus we fail to reject (i.e. accept) the null hypothesis and we do not have enough evidence to conclude that the claim of the 'Nature
+Learning' institute that their students perform better than the students from 'Speak Global Learning' institute is correct.
+
+Let us plot the acceptance and rejection region for a right-tailed test with 99% confidence
+
+# consider a random variable 'X' that follows a standard normal distribution
+# pass the required number of observations to the parameter, 'size'
+# set 'random_state' to obtain the same observations every time you run the code
+X = stats.norm.rvs(size = 2000000, random_state = 18)
+# plot the distribution of X
+# pass the data to the parameter, 'a'
+# 'hist=False' does not return the histogram
+# 'cumulative=False' in 'kde_kws' does not return the cumulative kernel density estimator
+ax = sns.distplot(a = X, hist = False, kde_kws = dict(cumulative=False))
+# set the limit for y-axis
+plt.ylim(0, 0.42)
+# use 'stats.norm.isf()' to calculate the critical z-value for alpha = 0.01
+# pass the value of 'alpha' to the parameter 'q'
+z = stats.norm.isf(q = 0.01)
+# plot a vertical line at z-value
+x, y = [z, z], [0, 0.3]
+plt.plot(x, y, color = 'black')
+# plot a vertical line at z-score value
+x, y = [z_score, z_score], [0, 0.03]
+plt.plot(x, y, color = 'black')
+# add the color to the right of the z-value
+# get the data for x and y axes
+l1 = ax.lines[0]
+x1 = l1.get_xydata()[:,0]
+y1 = l1.get_xydata()[:,1]
+# fill the color for the region where x-values are greater than the critical z-value
+# pass the condition to shade the required region
+# pass the required color to the parameter, 'color'
+
+
+# use 'annonate' function to draw an arrow between points xy and xytext
+# 's' is a argument to write text
+# we can change the facecolor and arrowstyle; this is only for representation purpose
+plt.annotate(text = 'α = 0.01\n(Rejection Region for H0)', xy = (2.5, 0.008), xytext = (2.5, 0.058),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+plt.annotate(text = 'z_crit = '+ str(round(z,2)), xy = (z, 0.2), xytext = (z-1.1, 0.24),
+arrowprops = dict(facecolor = 'black', arrowstyle = 'simple'))
+# use below code to print the values in the graph
+# 'x' and 'y' gives position of the text
+# 's' is the text
+plt.text(x = -1.1, y = 0.2, s = 'Acceptance Region for H0 (1 - α)')
+# assign the x-axis labels
+# pass the position of labels to the parameter, 'ticks'
+# pass the required labels to the parameter, 'labels'
+plt.xticks(ticks = [-4, -2, 2, 4, round(z_score,2)],
+labels = [-4, -2, 2, 4, 'z_test = '+str(round(z_score,2))])
+# set plot and axes labels
+# set text size using 'fontsize'
+plt.xlabel('Z', fontsize = 15)
+plt.ylabel('Probability', fontsize = 15)
+plt.title('Right-Tailed Test', fontsize = 15)
+# display the plot
+plt.show()
+
+The above plot shows that the test statistic value is in the acceptance region, which implies we fail to reject (i.e. accept) H0 .
+
+
+A study was carried out to understand amount of haemoglobin in blood for males
+and females. A random sample of 160 males and 180 females have means of 13
+keyboard_arrow_down g/dl and 15 g/dl. The two samples have standard deviation of 4.1 g/dl for male
+
+donors and 3.5 g/dl for female donor . Can it be said the population means of
+
+
+The null and alternative hypothesis is:
+H0
+: 
+H1
+: 
+Here ⍺ = 0.01, for a two-tailed test calculate the critical z-value.
+μ1 − μ2 = 0
+μ1 − μ2 ≠ 0
+# calculate the z-value for 99% of confidence level
+# use 'stats.norm.isf()' to find the z-value corresponding to the upper tail probability 'q'
+# pass the value of 'alpha/2' for a two-tailed test to the parameter 'q', here alpha = 0.01
+# use 'round()' to round-off the value to 2 digits
+z_val = np.abs(round(stats.norm.isf(q = 0.01/2), 2))
+print('Critical value for two-tailed Z-test:', z_val)
+Critical value for two-tailed Z-test: 2.58
+i.e. if z is less than -2.58 or z is greater than 2.58 then we reject the null hypothesis.
+# define a function to calculate the test statistic and corresponding p-value
+# here the standard deviations for populations are unknown, thus use the sample standard deviations
+# pass the sample mean, sample standard deviation and sample size for both the samples as the function input
+# 'value' denotes the value in null hypothesis
+def TwoSampZTest(samp_mean_1, samp_mean_2, samp_std_1, samp_std_2, value, n1, n2):
+# calculate the test statistic
+denominator = np.sqrt((samp_std_1**2 / n1) + (samp_std_2**2 / n2))
+zscore = ((samp_mean_1 - samp_mean_2) - (value)) / denominator
+# return the z-score
+return zscore
+# given data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

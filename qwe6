@@ -1,3 +1,613 @@
+# Normal Prob (Sales < 10k)
+p_n = st.norm.cdf(10000, loc=df['Sales'].mean(), scale=df['Sales'].std())
+
+# Poisson (Exact 20 or <= 20)
+lam = df['Order_Quan'].mean()
+p_pe = st.poisson.pmf(20, mu=lam) 
+p_pc = st.poisson.cdf(20, mu=lam)
+
+# Z-Test (Pop SD known)
+z = (df['Sales'].mean() - 9000) / (1500 / np.sqrt(len(df['Sales'].dropna())))
+p_zl = st.norm.cdf(z); p_zr = 1 - p_zl; p_z2 = 2 * (1 - st.norm.cdf(abs(z)))
+
+# 1-Samp T (Pop SD unknown)
+p_1s = st.ttest_1samp(df['Sales'].dropna(), popmean=9000)[1]
+
+# 2-Samp T (Indep)
+p_2s = st.ttest_ind(g1, g2, equal_var=True)[1]
+
+# Paired & Wilcoxon
+p_pr = st.ttest_rel(after, before, alternative='greater')[1]
+p_wx = st.wilcoxon(after, before, alternative='greater')[1]
+
+# ANOVA (3+ Grps)
+p_a1 = st.f_oneway(g1, g2, g3)[1]
+a_tb = sm.stats.anova_lm(ols("Sales ~ C(Segment)", data=df).fit(), typ=2)
+
+# Chi-Sq
+p_c1 = st.chisquare(obs, exp)[1]  # Goodness of Fit
+p_c2 = st.chi2_contingency(pd.crosstab(df["Segment"], df["Products"]))[1] # Indep
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+import pandas as pd; import numpy as np; import seaborn as sns
+import matplotlib.pyplot as plt; import statsmodels.api as sm;import scipy.stats as st
+file4 = r'C:\Users\Sweta\Music\PES_STATS_EXAM\DATA\3 purchase.csv'; alpha = 0.05
+df = pd.read_csv(file4) ; c1 = df['Sales'].dropna() ; CC1 = 'Customer_Segment'
+dfn = df.select_dtypes(include=np.number)
+#sm.qqplot(c1, line='s'); plt.title("Q-Q Plot for Sales");
+#sns.histplot(x="Sales", hue=CC1, data=df, kde=True); 
+#sns.boxplot(x=CC1, y='Sales', data=df); plt.xticks(rotation=15); 
+#sns.pairplot(dfn); 
+#sns.scatterplot(x="Profit", y="Sales", data=df, hue=CC1); plt.show()
+
+# 1. Normal Probability (Sales < 10000)
+mu = df['Sales'].mean() ;  sigma = df['Sales'].std()
+prob_less_10k = st.norm.cdf(10000, loc=mu, scale=sigma)
+# 2. Poisson Probability (Exact 20 Order_Quan)
+lam = df['Order_Quan'].mean()
+prob_exact_20 = st.poisson.pmf(20, mu=lam)
+prob_less_equal_20 = st.poisson.cdf(20, mu=lam)
+
+# 3. Z-Test (1 Group vs Target --> POPULATION SD IS GIVEN)
+xbar = df['Sales'].mean() ;  n = len(df['Sales'].dropna())
+pop_sigma = 1500          ;  z = (xbar - 9000) / (pop_sigma / np.sqrt(n))
+# The 3 different Z-Test P-values:
+p_ztest_left_tailed  = st.norm.cdf(z)                 # Alternative: "Less than"
+p_ztest_right_tailed = 1 - st.norm.cdf(z)             # Alternative: "Greater than"
+p_ztest_two_tailed   = 2 * (1 - st.norm.cdf(abs(z)))  # Alternative: "Not equal to"
+
+# 4. 1-Sample T-Test (1 Group vs Target --> Population SD UNKNOWN)
+p2_1samp = st.ttest_1samp(df['Sales'].dropna(), popmean=9000)[1]
+p_left_1samp  = p2_1samp/2 if t_1samp < 0 else 1 - p2_1samp/2
+p_right_1samp = p2_1samp/2 if t_1samp > 0 else 1 - p2_1samp/2
+
+# 5. 2-Sample T-Test (Independent Groups)
+g1 = df[df['Customer_Segment'] == 'CORPORATE']['Sales'].dropna()
+g2 = df[df['Customer_Segment'] == 'HOME OFFICE']['Sales'].dropna()
+p_2samp = st.ttest_ind(g1, g2, equal_var=True)[1]
+
+# 6. Paired T-Test & Wilcoxon (Before vs After Dummy Data)
+before = np.array([121, 2, 3])
+after  = np.array([130, 4, 8])
+differences = after - before
+
+p_shapiro_diff = st.shapiro(differences)[1]
+p_paired       = st.ttest_rel(after, before, alternative='greater')[1]
+p_wilcoxon     = st.wilcoxon(after, before, alternative='greater')[1]
+
+df['Difference'] = df['Before'] - df['After']
+t, p_val = st.ttest_1samp(df['Difference'], 0, alternative='greater')
+
+# 7. ANOVA (3+ Independent Groups)
+groups = [g for name, g in df.dropna(subset=['Sales', 'Customer_Segment']).groupby('Customer_Segment')['Sales']]
+p_anova = st.f_oneway(*groups)[1]
+
+# 8A. Chi-Square Goodness of Fit (1D array)
+observed = np.array([1124, 1125, 1110, 1120, 1126, 1115])
+expected = np.full(len(observed), observed.sum() / len(observed))
+p_chi_fit = st.chisquare(observed, expected)[1]
+
+# 8B. Chi-Square Test of Independence (2D Crosstab)
+contingency_table = pd.crosstab(df["Customer_Segment"], df["Products"])
+p_chi_indep = st.chi2_contingency(contingency_table)[1]
+
+from statsmodels.formula.api import ols
+model = ols("Value ~ C(Group)", data=df).fit()
+anova_table = sm.stats.anova_lm(model, typ=2)
+
+print("Reject H0" if p < alpha else "Fail to reject H0")
+
+
+#####################################################################################
+'''                         1. Importanttttttttt                           '''
+#####################################################################################
+a = [1,2,3]; df = pd.DataFrame({'Column_A': a, 'Column_B': b})
+
+df[df["c1"] == 10].
+groupby(["Cat1", "Cat2"], as_index=False)["Value"].mean().
+sort_values(by=["Cat1", "Value"], ascending=[True, False])
+
+c1 = df["col"].dropna() #df[df['Stream_HSC'] == 'Commerce']['Salary'].dropna()
+CC1='Course_Degree'; dfn = df.select_dtypes(include=np.number) #"object" 
+ 
+sm.qqplot(c1, line='s')
+sns.histplot   (c1, kde=True)
+sns.histplot   (x="Salary" , hue=CC1  , data=df, kde=True)
+sns.boxplot    (x=CC1  , y='Salary' , data=df)
+sns.pairplot   (dfn)
+sns.scatterplot(x="Percent_SSC" , y="Salary" , data=df , hue=CC1); plt.show()
+
+cv = dfn.std() / dfn.mean(); correlation = st.pearsonr(d["x"], d["y"])
+'''----------------------------------------------'''
+before = df1['before_score'].dropna().tolist(); diff = after-before;
+st.shapiro(diff)<alpha
+st.ttest_rel(after, before, alternative = greater)[1]<alpha; #wilcoxon
+'''----------------------------------------------'''
+#Normal Distribuitin & <10 ? >10 ?  between 10 & 12
+a = st.norm.cdf(x, loc=mu, scale=sigma) #1-a, a-b
+#Poisson - >>> EXACT NUMER NOT CONTINUUS VALUE LIKE KG
+st.poisson.pmf(x, mu=lam) #exactly  ; 
+st.poisson.cdf(x, mu=lam) #less than or equal to 
+'''------------------------------------------------''' 
+print("Reject H0" if p < alpha else "Fail to reject H0")   
+
+# --- HOW TO CHOOSE A TEST ---
+# Z-TEST     : 1 Group vs Target --> POPULATION SD IS GIVEN.
+                    z = (xbar - mu)/(sigma/np.sqrt(n))
+                    p_right =    1- st.norm.cdf(z)        # right
+                    p_left  =       st.norm.cdf(z)        # left 
+                    p_two   = 2*(1- st.norm.cdf(abs(z)))  # two-tailed
+
+# 1-SAMPLE T : 1 Group vs Target --> Population SD is UNKNOWN.
+                    st.ttest_1samp(c1, popmean=2280, alternative="greater")
+                >   p_left = p2/2 if t < 0 else 1-p2/2
+                    p_right = p2/2 if t > 0 else 1-p2/2
+                >   df['Difference'] = df['Before'] - df['After']   #diabetes dcrease bef after
+                    t, p2 = st.ttest_1samp(df['Difference'], 0, alternative='greater') 
+# 2-Sample t   : 2 Independent groups (A vs B)
+                    st.ttest_ind(g1, g2, equal_var=True)[1] 
+# PAIRED T      : 1 Group tested 2 times -> "Before vs After" ; st.ttest_rel(after, before)        
+                    before = np.array([121, 2, 3]); after = np.array([130, 4,8]); 
+                    differences = after - before;
+                    p_shapiro = stats.shapiro(differences)[1]
+                    v1 = stats.ttest_rel(ht_after, ht_before, alternative='greater')[1]
+                    v2 = stats.wilcoxon(ht_after, ht_before, alternative='greater')[1] 
+# ANOVA        : 3+ Independent groups -> "Machine A vs B vs C", "3 locations".
+                    df[df['BM'] == '1']['Sales']
+                    st.f_oneway(paper, telephones, binder, computer)[1]
+# Chi-Square   : Categorical data (Counts/Frequencies) 
+# Shapiro-Wilk : Checks for Normality (required before t-tests/ANOVA)
+#                p > 0.05 -> Normal (Use t-test)
+#                p < 0.05 -> Not Normal (Use Wilcoxon / Non-parametric)
+
+ # chi-square
+observed = np.array([1124,1125,1110,1120,1126,1115])
+expected = np.full(len(observed), observed.sum()/len(observed))
+st.chisquare(observed, expected)
+st.chi2_contingency(pd.crosstab(df["cat1"], df["cat2"]))
+
+# ANOVA 
+df = pd.DataFrame({  'Nozzle_1': [0.78, ],    'Nozzle_2': [0.85, ],})
+p  = st.f_oneway(df['Nozzle_1'], ... , df['Nozzle_5'])[1]
+st.f_oneway(g1, g2, g3)
+groups = [g["Value"] for _, g in df[["Group","Value"]].dropna().groupby("Group")]
+st.f_oneway(*groups)
+sm.stats.anova_lm(ols("Value ~ C(Group)", data=df).fit(), typ=2)
+# ANOVA 
+groups = [g['Salary'].dropna() for _, g in df[['Specialization_MBA', 'Salary']].dropna().groupby('Specialization_MBA')]
+p = st.f_oneway(*groups)[1]
+print(f'ANOVA F-statistic: {f_stat:.4f}, p-value: {p_anova:.4f}')
+
+#####################################################################################
+'''                       Stat Testing                                            '''
+#####################################################################################
+
+
+# chi-square
+observed = np.array([1124,1125,1110,1120,1126,1115])
+expected = np.full(len(observed), observed.sum()/len(observed))
+st.chisquare(observed, expected)
+st.chi2_contingency(pd.crosstab(df["cat1"], df["cat2"]))
+
+# ANOVA
+data = {
+    'Nozzle_1': [0.78, 0.8, 0.81, 0.75, 0.77, 0.78],
+    'Nozzle_2': [0.85, 0.85, 0.92, 0.86, 0.81, 0.83],
+}
+df_nozzle = pd.DataFrame(data)
+f, p = st.f_oneway(df_nozzle['Nozzle_1'], ... , df_nozzle['Nozzle_5'])
+st.f_oneway(g1, g2, g3)
+
+groups = [g["Value"] for _, g in df[["Group","Value"]].dropna().groupby("Group")]
+st.f_oneway(*groups)
+sm.stats.anova_lm(ols("Value ~ C(Group)", data=df).fit(), typ=2)
+
+
+
+
+#####################################################################################
+'''                        Paired t-test full example                            '''
+#####################################################################################
+# (reading from excel, plotting, calculating right-tail) 
+#  1. Load the Excel file
+file_path = r"c:\Users\Sweta\Music\PES_STATS_EXAM\DATA\1 paired_data.xlsx"
+df_paired = pd.read_excel(file_path)
+before = df_paired["before_score"].dropna().tolist()
+after  = df_paired["after_score"].dropna().tolist()
+#before = [23, 38, 35, 45, 32, 29]
+alpha = 0.05
+
+# 1. Normality check (visual)
+sns.histplot(before, kde=True, color="blue", label="Before")
+sns.histplot(after, kde=True, color="orange", label="After")
+plt.legend()
+plt.title("Normality Check")
+plt.show()
+
+# 2. H0: mean_after <= mean_before. H1: mean_after > mean_before
+# 3. Paired t-test
+t, p2 = st.ttest_rel(after, before)
+
+# We want to test if after > before (right-tailed)
+p_right = p2/2 if t > 0 else 1-p2/2
+
+print("t-statistic:", t)
+print("p-value (right-tailed):", p_right)
+
+if p_right < alpha:
+    print("Reject H0. Course was effective.")
+else:
+    print("Fail to reject H0.")
+
+
+#####################################################################################
+'''                         Plots                                                 '''
+#####################################################################################
+# plots 
+c1 = df_adm['Salary'].dropna(); c2 = df_adm['Percent_MBA'];  
+sns.histplot(c1, kde=True); 
+sns.histplot(c1, bins=15, kde=True, ax=axes[0])
+sns.histplot(data=df, x="charges", hue="catagory_smoker", kde=True); plt.show()
+sns.boxplot(x="cat", y="val", data=df); plt.show()
+sns.scatterplot(x="x", y="y", data=df); plt.show()
+sns.scatterplot(data=df, x="x", y="y", hue="cat"); plt.show()
+sns.pairplot(df.select_dtypes(include=np.number)); plt.show()
+sns.heatmap(df.select_dtypes(include=np.number).corr(), annot=True); plt.show()
+sns.boxplot(x='Specialization_MBA', y='Salary', data=df); plt.show()
+
+#  Scatter plot for all variables against Salary
+sns.pairplot(df.select_dtypes(include=np.number), y_vars=['Salary'], 
+             x_vars=df.select_dtypes(include=np.number).columns.drop('Salary')); plt.show()
+
+# plot labels
+plt.title("Title"); plt.xlabel("X label"); plt.ylabel("Y label")
+plt.xticks(rotation=45); plt.grid(True); plt.show()
+ 
+# Plot regions
+se = sigma/np.sqrt(n); a = mu - 4*se; b = mu + 4*se; c = 1000
+x_vals = np.linspace(a, b, c)
+y_vals = st.norm.pdf(x_vals, mu, se)
+plt.plot(x_vals, y_vals)
+
+critical_val = st.norm.ppf(alpha, mu, sigma/np.sqrt(n))
+plt.axvline(critical_val, color='r', linestyle='--', label='Critical Value')
+plt.axvline(xbar, color='g', linestyle='-', label='Sample Mean')
+plt.fill_between(x_vals, y_vals, where=(x_vals < critical_val), color='red', alpha=0.3, label='Rejection Region')
+plt.legend()
+plt.title('Acceptance and Rejection Regions')
+plt.show()
+
+# normal curve / rejection line
+xx = np.linspace(-4, 4, 1000)
+plt.plot(xx, st.norm.pdf(xx)); plt.axvline(z, linestyle="--"); plt.show()
+
+#Plot2: Normality check (visual)
+sns.histplot(before, kde=True, color="blue", label="Before")
+sns.histplot(after, kde=True, color="orange", label="After")
+plt.legend()
+plt.title("Normality Check")
+plt.show()
+
+# histplot
+# 4a.ii) Histogram for Salary and Percentage of marks in MBA
+plt.figure(figsize=(10, 4))
+plt.subplot(1, 2, 1)
+sns.histplot(df['Salary'].dropna(), kde=True)
+plt.title('Salary Histogram')
+plt.subplot(1, 2, 2)
+sns.histplot(df['Percent_MBA'].dropna(), kde=True)
+plt.title('MBA Percentage Histogram')
+plt.show()
+print('Salary Skewness:', df['Salary'].skew()          )
+print('Salary Kurtosis:', df['Salary'].kurtosis()      )
+print('MBA % Skewness:' , df['Percent_MBA'].skew()     )
+print('MBA % Kurtosis:' , df['Percent_MBA'].kurtosis() )
+
+#####################################################################################
+'''                         1. Imports                                            '''
+#####################################################################################
+import pandas as pd             ;           import numpy as np
+import matplotlib.pyplot as plt ;           import seaborn as sns
+import statsmodels.api as sm    ;           import statistics
+from statsmodels.formula.api import ols 
+from statsmodels.stats.anova import anova_lm
+from statsmodels.stats import weightstats as stests
+import scipy.stats as stats     ;           
+from scipy.stats import shapiro, norm, chi2_contingency, chi2, chisquare
+from warnings import filterwarnings
+filterwarnings("ignore")
+
+#####################################################################################
+'''                      2. Data Cleaning & Exploration                           '''
+#####################################################################################
+
+# Loading & Inspection
+# df = pd.read_csv("file.csv")     #read_excel               # Load CSV
+# df.head(); df.info(); df.describe(); df.isnull().sum()     # Basic overview
+# df["col"].value_counts(); df["col"].unique()               # Categorical counts
+print(f"Std Dev Salary for them   : {salary_commerce.std():.2f}")
+
+# Column Selection & Renaming
+df.rename(columns={"Old Name": "new_name"}, inplace=True)    # Rename columns
+dfn = df.select_dtypes(include=np.number)                    # Get numerical df
+dfc = df.select_dtypes(include="object")                     # Get categorical df
+numerical_cols = dfn.columns.tolist()                        # Numerical list
+categorical_cols = dfc.columns.tolist()                      # Categorical list
+
+    # Drop column
+    if 'Salary' in df: df.drop(columns=['Salary'], inplace=True) 
+    if 'Salary' in df:  # We are plotting against Salary, so remove it from the independent variable list
+        df.remove('Salary') 
+
+# Missing Data & Duplicates
+df.dropna(inplace=True)                                      # Drop rows with NA
+df.drop_duplicates(inplace=True)                             # Drop exact duplicates
+df["col"] = df["col"].fillna(df["col"].median())             # Impute num with median
+df["cat"] = df["cat"].fillna(df["cat"].mode()[0])            # Impute cat with mode
+df['col'] = pd.to_numeric(df['col'].astype(str).str.replace(',', ''), errors='coerce') # String to Float
+
+# Outlier Detection & Removal (IQR Method)
+Q1, Q3 = df["col"].quantile([0.25, 0.75])                    # Find quartiles
+IQR = Q3 - Q1                                                # Calculate IQR
+lower, upper = Q1 - 1.5 * IQR, Q3 + 1.5 * IQR                # Define bounds
+df_clean = df[(df["col"] >= lower) & (df["col"] <= upper)]   # Filter outliers
+
+# Replace
+df["Fat_Content"] = df["Fat_Content"].replace({"LF":"Low Fat"}) # Replace values
+
+df["Item_Fat_Content"] = df["Item_Fat_Content"].replace({
+    "LF":"Low Fat", "low fat":"Low Fat", "reg":"Regular"
+})
+
+def clean_name(x):
+    if "High" in x: return "High"
+    elif "Low" in x: return "Low"
+    return x
+df["Category"] = df["Category"].apply(clean_name)            # Apply custom func
+
+# SQL: SELECT Cat1, Cat2, AVG(Value) FROM df 
+# WHERE c1 = 10 GROUP BY Cat1, Cat2 ORDER BY Cat1 ASC, AVG(Value) DESC
+df[df["c1"] == 10].
+groupby(["Cat1", "Cat2"], as_index=False)["Value"].mean().
+sort_values(by=["Cat1", "Value"], ascending=[True, False])
+
+   
+# Filtering & Grouping
+c1, c2 = df['Stream_HSC'], df['Status'] 
+salary_commerce = df[(c1 == 'Commerce') & (c2 == 'Placed')]['Salary'].dropna() # Multi-condition
+g1              = df[c1 == 'Management']['Salary'].dropna()  # Single-condition
+
+df.groupby("Category")["Value"].mean().sort_values(ascending=False) # Group mean & sort
+df.groupby("Category")["Value"].agg(["mean", "median", "std", "count"]) # Group multi-stats
+df.groupby(["Category", "Status"])["Value"].mean()           # Multi-group mean
+df[df["Category"].isin(["Management", "Commerce"])]          # Filter by list
+
+# Crosstabs & Binning
+pd.crosstab(df["Category1"], df["Category2"], margins=True)  # Frequencies w/ totals
+pd.crosstab(df["Category1"], df["Category2"], normalize="index") * 100   # Row-wise percentages
+pd.crosstab(df["Category1"], df["Category2"], normalize="columns") * 100 # Column-wise percentages
+df["Binned"] = pd.cut(df["Value"], bins=3, labels=["L","M","H"])         # Equal-width binning
+df["Binned_q"] = pd.qcut(df["Value"], q=3, labels=["L","M","H"])         # Equal-frequency binning
+
+#####################################################################################
+'''                    3. Descriptive Stats & Distributions                       '''
+#####################################################################################
+
+
+# print CV to find high variability or Order
+dfn = df.select_dtypes(include=np.number);  
+cv = dfn.std() / dfn.mean(); cv = cv.sort_values(ascending=False) ; print(cv)
+print("Most variable:", df.select_dtypes(include=np.number).std().idxmax())
+
+df[df['Stream_HSC'] == 'Commerce']['Salary'].dropna()
+
+# correlation
+d = df[["x","y"]].dropna();  st.pearsonr(d["x"], d["y"])
+
+# confidence interval
+x = np.array([55.291,59.718,62.688,63.886,66.458,68.548,
+              69.857,70.833,70.237,69.787,68.793,66.388])
+st.t.interval(0.95, len(x)-1, loc=np.mean(x),
+              scale=np.std(x, ddof=1)/np.sqrt(len(x)))
+
+# Central Tendency, Dispersion & Shape
+c1 = df["col"].dropna()
+print("Mean:", c1.mean(), "Median:", c1.median(), "Mode:", c1.mode()[0])
+print("Std Dev:", c1.std(), "Variance:", c1.var())
+print("Skewness:", c1.skew(), "Kurtosis:", c1.kurtosis())
+
+    # Subsetting specific groups to check their stats
+    salary_commerce = df[df['Stream_HSC'] == 'Commerce']['Salary'].dropna()
+    print("Size:", len(salary_commerce), "Mean:", salary_commerce.mean(), 
+        "Std:", salary_commerce.std())
+
+ 
+#####################################################################################
+'''                       Normal vs Poission                                   '''
+#####################################################################################
+# normal distribution  >>>> continuous value, mean & sd will be given
+a = st.norm.cdf(x, loc=mu, scale=sigma) # Less than x
+1 - a                                   # Greater than x
+a - b                                   # Between a and b
+st.norm.ppf(probability, loc=mu, scale=sigma)  
+# Find value (e.g., probability=0.05 for exceeded by 95%)
+
+# poisson >>>  discrete # number of occurrences/rate/avg
+st.poisson.pmf(x, mu=lam)    # Exactly x events (e.g., exactly 1 sale)
+st.poisson.cdf(x, mu=lam)    # x or fewer events (e.g., 0 or 1 sale if x=1)
+1-st.poisson.cdf(x, mu=lam)  # More than x events (e.g., 2 or more sales if x=1)
+
+#pmf = exactly
+#cdf = up to / less than    ;1 - cdf = more than / greater than
+#ppf = find value
+
+#####################################################################################
+'''                       How to Test                                            '''
+#####################################################################################
+''' 
+#------------------------------------------------------------------           
+# --- HYPOTHESIS TESTING RULES ---
+# * The claim usually goes into H1 (unless the claim explicitly includes equality)
+# * H0 MUST ALWAYS contain the equality (=, <=, >=)
+# Claim: "less than X"    -> H1: mu < X   -> H0: mu >= X
+# Claim: "greater than X" -> H1: mu > X   -> H0: mu <= X
+# Claim: "differs from X" -> H1: mu != X  -> H0: mu == X
+
+# --- TAIL RULES (Based on H1 / Exam Keywords) --- 
+# H1: mu < X   -> Left-tailed test  (Keywords: Less than, Decrease, Drop, Worse)
+# H1: mu > X   -> Right-tailed test (Keywords: Greater than, Increase, Improve, Effective)
+# H1: mu != X  -> Two-tailed test   (Keywords: Difference, Changed, Not equal)
+
+# --- HOW TO CHOOSE A TEST ---
+?is normall distributin mentioned? poplulation sd is given?
+# Z-test         : Like 1-sample t-test, but POPULATION standard deviation is given.
+# 1-Sample t-test: ONE group, comparing mean to a target number.
+# 2-Sample t-test: Comparing means of TWO INDEPENDENT groups  (e.g., A vs B).
+# Paired   t-test: Comparing means of SAME group at TWO times (e.g., Before vs After).
+# ANOVA          : Comparing means of THREE OR MORE independent groups.
+# Chi-Square     : Categorical data (counts/frequencies) for independence/fit.
+#------------------------------------------------------------------            '''
+
+print("Reject H0" if p < alpha else "Fail to reject H0")   
+print('Reject H0. Commerce > Science.' if p_right_s < 0.05 else 'Fail to reject H0. Commerce not > Science.')   
+
+#####################################################################################
+'''                       Stat Testing                                            '''
+#####################################################################################
+# z-test 
+mu = 18          # population_mean_hypothesized (μ0)
+sigma = 1.7      # population_std_dev (σ) 
+n = 40           # sample_size (n)
+xbar = 17.5      # sample_mean (x̄)
+alpha = 0.01     # significance_level (α)
+
+z = (xbar - mu)/(sigma/np.sqrt(n))
+p_right =    1- st.norm.cdf(z)                # right
+p_left  =       st.norm.cdf(z)                # left 
+p_two   = 2*(1- st.norm.cdf(abs(z)))          # two-tailed
+#------------------------------------------------------------------ 
+
+
+ 
+# t-tests
+c1= df["col"]       ; st.ttest_1samp(c1.dropna(), popmean=2280, alternative="greater")  
+g1=[],g2=[]         ; st.ttest_ind(g1, g2, equal_var=True)                                     
+after=[],before=[]  ; st.ttest_rel(after, before)                                              
+
+df['Difference'] = df['Before'] - df['After']   #diabetes dcrease bef after
+t, p2 = st.ttest_1samp(df['Difference'], 0, alternative='greater') 
+
+# one-tailed p from two-tailed t-test
+t, p2 = st.ttest_1samp(x, popmean)
+p_left = p2/2 if t < 0 else 1-p2/2
+p_right = p2/2 if t > 0 else 1-p2/2
+
+
+# normality # shapiro test (detailed)
+c1= df["col"].dropna() 
+p_value = st.shapiro(c1)[1]
+sm.qqplot(c1, line="s"); plt.show()
+print(f'Shapiro test p-value: {p_et:.4f}')
+
+# 1. Normality Check (Shapiro-Wilk)      # b = b = df['your_column_name'].dropna().to_numpy()
+before = np.array([121, 2, 3]); 
+after = np.array([130, 4,8]); 
+differences = after - before;
+_, p_shapiro = stats.shapiro(differences)
+v1 = stats.ttest_rel(ht_after, ht_before, alternative='greater')[1]
+v2 = stats.wilcoxon(ht_after, ht_before, alternative='greater')[1] 
+if p_shapiro > 0.05:
+    print(f"Normal. Paired t-test p-value: {v1 = :.4f}")
+else:
+    print(f"Not Normal. Wilcoxon p-value: { v2:.4f}") 
+
+
+# chi-square
+observed = np.array([1124,1125,1110,1120,1126,1115])
+expected = np.full(len(observed), observed.sum()/len(observed))
+st.chisquare(observed, expected)
+st.chi2_contingency(pd.crosstab(df["cat1"], df["cat2"]))
+
+# ANOVA
+data = {
+    'Nozzle_1': [0.78, 0.8, 0.81, 0.75, 0.77, 0.78],
+    'Nozzle_2': [0.85, 0.85, 0.92, 0.86, 0.81, 0.83],
+}
+df_nozzle = pd.DataFrame(data)
+f, p = st.f_oneway(df_nozzle['Nozzle_1'], ... , df_nozzle['Nozzle_5'])
+st.f_oneway(g1, g2, g3)
+
+groups = [g["Value"] for _, g in df[["Group","Value"]].dropna().groupby("Group")]
+st.f_oneway(*groups)
+sm.stats.anova_lm(ols("Value ~ C(Group)", data=df).fit(), typ=2)
+
+
+
+
+#####################################################################################
+'''                         Theory                                                '''
+#####################################################################################
+'''
+
+#### Skewness and Kurtosis
+**Skewness:**
+  - A skewness value close to 0 indicates a symmetrical distribution.
+  - Positive skewness indicates a tail on the right side (right-skewed). Mean > Median.
+  - Negative skewness indicates a tail on the left side (left-skewed). Mean < Median.
+
+**Kurtosis:**
+  - Kurtosis measures the 'tailedness' of the distribution.
+  - A kurtosis value close to 0 (for Fisher's kurtosis, which is standard in pandas) indicates a mesokurtic distribution, similar to a normal distribution.
+  - Positive kurtosis (leptokurtic) indicates heavy tails or more outliers than a normal distribution.
+  - Negative kurtosis (platykurtic) indicates light tails or fewer outliers than a normal distribution.
+
+
+#---scatter 
+
+Correlation
+Positive : If points generally go up from left to right, it suggests a positive relationship. 
+           As the independent variable increases, Salary tends to increase.
+Negative : If points generally go down from left to right, it suggests a negative relationship. 
+           As the independent variable increases, Salary tends to decrease.
+No Apparent : If points are scattered randomly with no clear pattern, it suggests 
+              little to no linear relationship between the variable and Salary.
+trength of Relationship:
+           Strong: Points cluster closely around an imaginary line.
+           Weak: Points are widely spread.
+Outliers:  Individual points that deviate significantly from the overall pattern might be outliers 
+           and could influence the perceived relationship.
+Specific Variable Observations (example for some common variables):**
+  - Percent_SSC, Percent_HSC, Percent_Degree, Percent_MBA:
+           Often, higher percentages in academics might correlate positively with higher salaries, 
+           but this is not always linear or strong. The plots will show if there's any visible trend.
+  - Experience_Yrs: 
+           Generally, more experience tends to correlate with higher salaries, 
+           which might be visible as a positive trend.
+  - Percentile_ET: Performance in entrance tests could show some positive relationship with salary.
+'''
+
+df_france=df_ap[df_ap['Country']=='France']
+df_france1=df_france[['InvoiceNo','Description','Quantity']]
+df_france2=df_france1[~df_france1['InvoiceNo'].str.startswith('C')]
+df_france3=df_france.groupby(['InvoiceNo','Description'])['Quantity'].sum()
+df_france4=df_france3.unstack()
+df_france5=df_france4.reset_index()
+df_france6=df_france5.fillna(0)
+df_france7=df_france6.set_index('InvoiceNo')
+
+def encode(x):
+    return 1 if x>0.0 else 0
+df_france8=df_france7.applymap(encode)
+df_france8.head()
+
+ap1=apriori(df_france8,min_support=0.07,use_colnames=True)
+
+rules=association_rules(ap1,metric='lift',min_threshold=1)
+rules=rules.sort_values(by='lift',ascending=False)
+rules.head()
+s
+
+
 #####################################################################################
 '''                         1. Importanttttttttt                           '''
 #####################################################################################

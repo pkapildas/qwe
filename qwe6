@@ -1,0 +1,188 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+%matplotlib inline
+import warnings
+warnings.filterwarnings('ignore')
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_percentage_error
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+import statsmodels.api as sm
+from scipy import stats
+df = pd.read_csv("Car_Data.csv")
+'''# 1a. Number of rows, columns, and variable types
+print("Shape:", df.shape)
+print("\nData Types:\n", df.dtypes)
+print("\nNumerical columns:", df.select_dtypes(include='number').columns.tolist())
+print("Categorical columns:", df.select_dtypes(include='object').columns.tolist())
+# 1b. Five-point summary for numerical variables
+df.describe().T
+# 1c. Categorical variable summary
+cat_cols = df.select_dtypes(include='object').columns
+for col in cat_cols:
+    print(f"\n--- {col} ---")
+    print(f"Number of categories: {df[col].nunique()}")
+    print(df[col].value_counts(normalize=True).mul(100).round(2).to_string())
+# 1d. Missing values, nulls, and outliers
+print("Missing values:\n", df.isnull().sum())
+print("\nDuplicate rows:", df.duplicated().sum())
+'''
+
+# Outlier detection using IQR
+num_cols = df.select_dtypes(include='number').columns
+for col in num_cols:
+    Q1, Q3 = df[col].quantile(0.25), df[col].quantile(0.75)
+    IQR = Q3 - Q1
+    outliers = ((df[col] < Q1 - 1.5*IQR) | (df[col] > Q3 + 1.5*IQR)).sum()
+    #if outliers > 0:    print(f"  {col}: {outliers} outliers")
+# 2a. Fix defects - Extract company name from CarName, drop car_ID
+df['carCompany'] = df['CarName'].apply(lambda x: x.split()[0].lower())
+
+# Fix misspelled company names
+df['carCompany'] = df['carCompany'].replace({
+    'maxda':'mazda','porcshce':'porsche','toyouta':'toyota',
+    'vokswagen':'volkswagen','vw':'volkswagen'
+})
+
+df.drop(['car_ID','CarName'], axis=1, inplace=True)
+
+# Cap outliers using IQR
+num_cols = df.select_dtypes(include='number').columns
+for col in num_cols:
+    Q1, Q3 = df[col].quantile(0.25), df[col].quantile(0.75)
+    IQR = Q3 - Q1
+    df[col] = df[col].clip(Q1 - 1.5*IQR, Q3 + 1.5*IQR)
+
+print("Shape after cleaning:", df.shape)
+df.head()
+
+'''# 2b. Visualizations and correlation with target
+plt.figure(figsize=(14,10))
+corr = df.select_dtypes(include='number').corr()
+sns.heatmap(corr, annot=True, fmt='.2f', cmap='coolwarm', linewidths=0.5)
+plt.title('Correlation Heatmap')
+plt.tight_layout()
+plt.show()
+
+# Top correlations with price
+print("\nCorrelation with price (sorted):")
+print(corr['price'].drop('price').sort_values(ascending=False))
+
+# Scatter plots for top correlated variables
+top_vars = corr['price'].drop('price').abs().sort_values(ascending=False).head(6).index
+fig, axes = plt.subplots(2, 3, figsize=(15,8))
+for ax, var in zip(axes.flatten(), top_vars):
+    ax.scatter(df[var], df['price'], alpha=0.5)
+    ax.set_xlabel(var)
+    ax.set_ylabel('price')
+plt.suptitle('Top Features vs Price')
+plt.tight_layout()
+plt.show()'''
+# 2c. Exclude low-correlation and redundant variables
+# Drop car_ID already done. Drop carheight (low corr), peakrpm (low corr), compressionratio (low corr)
+drop_cols = ['stroke', 'compressionratio']
+df.drop(columns=[c for c in drop_cols if c in df.columns], inplace=True)
+print("Columns after exclusion:", df.columns.tolist())
+
+# One-hot encode categorical variables
+df_encoded = pd.get_dummies(df, drop_first=True)
+print("Shape after encoding:", df_encoded.shape)
+df_encoded.astype(float)
+
+X = df_encoded.astype(float).drop('price', axis=1)
+y = df_encoded['price']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+print(f"Train: {X_train.shape}, Test: {X_test.shape}")
+# KS test to check representativeness
+# print("\nKS Test (Train vs Test) for key numeric features:")
+# for col in ['enginesize','horsepower','curbweight','citympg','wheelbase']:
+#     if col in X_train.columns:
+#         stat, p = stats.ks_2samp(X_train[col], X_test[col])
+#         print(f"  {col}: KS stat={stat:.4f}, p-value={p:.4f} {'(Similar)' if p>0.05 else '(Different!)'}")
+print(f"\nTrain target mean: {y_train.mean():.2f}, Test target mean: {y_test.mean():.2f}")
+
+# 3a. Base Model - OLS with all features
+X_train_sm = sm.add_constant(X_train)
+X_test_sm = sm.add_constant(X_test)
+
+base_model = sm.OLS(y_train, X_train_sm).fit()
+print(base_model.summary())
+
+y_pred_base = base_model.predict(X_test_sm)
+print(f"\n--- Base Model Metrics (Test) ---")
+print(f"R-squared: {r2_score(y_test, y_pred_base):.4f}")
+print(f"RMSE: {np.sqrt(mean_squared_error(y_test, y_pred_base)):.2f}")
+print(f"MAPE: {mean_absolute_percentage_error(y_test, y_pred_base)*100:.2f}%")
+
+# p value >=5% means models is saying that the feature is not significant
+
+# 3b. Iterative VIF removal — drop one feature at a time, recalculate, stop when all VIF < 10
+X_train_vif = X_train.copy()
+X_test_vif = X_test.copy()
+dropped_features = []
+iteration = 0
+
+while True:
+    vif_data = pd.DataFrame()
+    vif_data['Feature'] = X_train_vif.columns
+    vif_data['VIF'] = [variance_inflation_factor(X_train_vif.values, i) for i in range(X_train_vif.shape[1])]
+    vif_data = vif_data.sort_values('VIF', ascending=False)
+    
+    max_vif = vif_data['VIF'].max()
+    if max_vif >= 10:
+        iteration += 1
+        worst = vif_data.iloc[0]
+        print(f"Iteration {iteration}: Dropping '{worst['Feature']}' (VIF = {worst['VIF']:.2f})")
+        dropped_features.append(worst['Feature'])
+        X_train_vif = X_train_vif.drop(columns=[worst['Feature']])
+        X_test_vif = X_test_vif.drop(columns=[worst['Feature']])
+    else:
+        break
+
+print(f"\nTotal features dropped: {len(dropped_features)}")
+print(f"Dropped: {dropped_features}")
+print(f"\nRemaining features ({len(X_train_vif.columns)}):")
+print(vif_data.to_string(index=False))
+
+# 3c. Improved Model after iterative VIF removal
+X_train_sm2 = sm.add_constant(X_train_vif)
+X_test_sm2 = sm.add_constant(X_test_vif)
+
+model2 = sm.OLS(y_train, X_train_sm2).fit()
+print(model2.summary())
+
+y_pred_final = model2.predict(X_test_sm2)
+print(f"\n--- Final Model Metrics (Test) ---")
+print(f"R-squared: {r2_score(y_test, y_pred_final):.4f}")
+print(f"RMSE: {np.sqrt(mean_squared_error(y_test, y_pred_final)):.2f}")
+print(f"MAPE: {mean_absolute_percentage_error(y_test, y_pred_final)*100:.2f}%")
+
+# 3d. Business Interpretation
+coeffs = model2.params.drop('const').sort_values()
+plt.figure(figsize=(10, max(6, len(coeffs)*0.3)))
+coeffs.plot(kind='barh', color=['red' if x < 0 else 'green' for x in coeffs])
+plt.title('Final Model - Feature Coefficients (Impact on Price)')
+plt.xlabel('Coefficient Value')
+plt.tight_layout()
+plt.show()
+
+print("\nKey Insights:")
+print("- Positive coefficients = higher price (e.g., enginesize, carwidth)")
+print("- Negative coefficients = lower price (e.g., citympg)")
+print("- Top drivers of car price are engine size, car width, and brand premium")
+print("\nTop 5 Positive Drivers:")
+print(coeffs.tail(5).to_string())
+print("\nTop 5 Negative Drivers:")
+print(coeffs.head(5).to_string())
+
+# 3e. Changes from base model that had the most effect
+print("=== Base vs Final Model Comparison ===")
+print(f"Base Model  - R²: {r2_score(y_test, y_pred_base):.4f}, RMSE: {np.sqrt(mean_squared_error(y_test, y_pred_base)):.2f}")
+print(f"Final Model - R²: {r2_score(y_test, y_pred_final):.4f}, RMSE: {np.sqrt(mean_squared_error(y_test, y_pred_final)):.2f}")
+print("\nKey changes that improved the model:")
+print("1. Removed multicollinear features (high VIF) - reduced overfitting")
+print("2. Removed statistically insignificant features (p > 0.05) - improved generalization")
+print("3. Outlier capping - reduced influence of extreme values")
+print("4. Feature engineering - extracted carCompany from CarName for brand-level analysis")

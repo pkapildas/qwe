@@ -1,4 +1,95 @@
+1. Creating Matrices and Vectors   
+# 1D Array (Vector):    
+import numpy as np    
+vector = np.array([1, 2, 3])  
+# 2D Array (Matrix):  
+matrix = np.array([[1, 2, 3], [4, 5, 6]])   
+# Identity Matrix:   
+  identity_matrix = np.eye(3)  # 3x3 identity matrix
 
+2. Matrix Operations  
+ # Matrix Transpose:    
+  transposed_matrix = np.transpose(matrix)   
+# Matrix Multiplication:     
+result = np.dot(matrix1, matrix2)  
+ # Element-wise Multiplication:   
+   element_wise_product = matrix1 * matrix2   
+# Matrix Inverse:   
+inverse_matrix = np.linalg.inv(matrix)
+
+
+3. Solving Linear Equations   
+# Solving Ax = b:    
+coefficients = np.array([[2, 3], [1, -2]])    
+constants = np.array([8, -4])  
+solution = np.linalg.solve(coefficients, constants)
+
+4. Eigenvalues and Eigenvectors   
+# Calculating Eigenvalues and Eigenvectors:    
+ eigenvalues, eigenvectors = np.linalg.eig(matrix)
+
+5. Matrix Decomposition   
+# Singular Value Decomposition (SVD):  
+   U, S, V = np.linalg.svd(matrix)   
+# QR Decomposition:   
+  Q, R = np.linalg.qr(matrix)
+
+6. Matrix Norms and Determinant   
+# Matrix or Vector Norm:  
+   norm = np.linalg.norm(vector)  
+ # Determinant of a Matrix:  
+    determinant = np.linalg.det(matrix)
+
+7. Applying Operations on Arrays   
+# Summation or Mean:  
+  total_sum = np.sum(matrix) 
+mean_value = np.mean(matrix)   
+#Maximum or Minimum Value:   
+  max_value = np.max(matrix)
+     min_value = np.min(matrix)
+
+
+8. Matrix Transformation   
+#Scaling Transformation:     
+scaling_matrix = np.array([[2, 0], [0, 3]])    
+scaled_matrix = np.dot(scaling_matrix, matrix)   
+# Translation Transformation:     
+translation_matrix = np.array([[1, 0, tx], [0, 1, ty], [0, 0, 1]])   
+translated_matrix = np.dot(translation_matrix, np.vstack([matrix.T, np.ones(len(matrix))])).T  
+# Rotation Transformation (2D):    
+theta = np.radians(45)  # Rotation angle in radians   
+rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])   
+rotated_matrix = np.dot(rotation_matrix, matrix.T).T
+
+#9. Gram-Schmidt Process for Orthogonalization 
+def gram_schmidt(matrix):     
+   Q, R = np.linalg.qr(matrix)   
+   return Q
+
+#10. Additional Linear Algebra Operations   
+# # Trace of a Matrix:   
+  trace = np.trace(matrix)   
+# Kronecker Product:   
+  kron_product = np.kron(matrix1, matrix2)   
+# Matrix Power:  
+   matrix_power = np.linalg.matrix_power(matrix, power) 
+# Pseudo Inverse (Moore-Penrose):  
+   pseudo_inverse = np.linalg.pinv(matrix)
+
+11. Vector Operations   
+# Dot Product of Vectors:  
+   dot_product = np.dot(vector1, vector2)   
+# Cross Product of Vectors:    
+cross_product = np.cross(vector1, vector2)
+
+
+#12. Norms and Distances   
+#Frobenius Norm of a Matrix:     
+frob_norm = np.linalg.norm(matrix, ord='fro')  
+# Manhattan Distance (L1 Norm):    
+ manhattan_dist = np.linalg.norm(vector1 - vector2, ord=1)  
+# Euclidean Distance (L2 Norm):   
+  euclidean_dist = np.linalg.norm(vector1 - vector2)
 
 ==================================================
 # 1D Array (Vector):   

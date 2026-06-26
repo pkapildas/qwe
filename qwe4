@@ -261,20 +261,15 @@ y = np.column_stack((v1,v2, v3))
 print('result ')
 print(y)
 
-- Find Covariance matrix ?
-
+Q- Find Covariance matrix ?
 x = [1.23, 2.12, 3.34, 4.5]
- 
 y = [2.56, 2.89, 3.76, 3.95]
-
-
 x1 = np.array( [ [1.23, 2.12, 3.34, 4.5], [2.56, 2.89, 3.76, 3.95]])
-
 print(x1)
 np.cov(x1)
 
 
-- Consider the following Data 
+Q- Consider the following Data 
 - height=[167,145,170,180,189,155,163,178,173,176]
 - weight=[83.5,72.5,85,90,94.5,77.5,81.5,89,86.5,88]
 

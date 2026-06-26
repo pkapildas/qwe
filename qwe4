@@ -311,13 +311,13 @@ plt.show()
 print(f"Optimal Value of w : {w}")
 
 
-Find Scalar and Vector Projection of u on v
+Q23 Find Scalar and Vector Projection of u on v
 u = [6,7,8] v= [2,3,-1]
 
 Verify Q is orthogonal
 
 
- Scalar Projection of u on v
+# Scalar Projection of u on v
 u = np.array([6,7,8])
 v = np.array([2,3,-1])
 sc_proj = np.dot(u, v) / np.linalg.norm(v)   # u.v/||v||
@@ -411,3 +411,9 @@ def PCA(X , num_components):
 
 
 =========
+
+The Following table lists the weight and heights of 5 boys Find the covariance matrix for the data.
+x = [120,125,125,135,145]
+y = [61,60,64,68,72]
+X = np.stack((x, y), axis=0)
+np.cov(X)

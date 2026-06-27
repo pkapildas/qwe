@@ -1,1 +1,2036 @@
-=
+import sympy as sp
+n = 1                       ;   x = sp.Symbol('x')       ;      
+f = 12*x**2 + 12*x + 6      ;   
+f       = sp.expand(f)            ;   print(n, f); n += 1   
+f1      = sp.diff(f, x)          ;   print(n, f1); n += 1   # First derivative
+f2      = sp.diff(f, x, 2)       ;   print(n, f2); n += 1 
+cp      = sp.solve(f1, x)[0]     ;   print(n, "x value where slope = 0", cp); n += 1    
+f_at_cp = f.subs(x, cp)        ;   print(n, "Function value at critical point", f_at_cp); n += 1
+
+if f2 > 0: 
+    print(n, "Convex / Minimum"); n += 1
+elif f2 < 0: 
+    print(n, "Concave / Maximum"); n += 1
+else:
+    print(n, "No clear max/min"); n += 1
+
+MR_at_7 = f1.subs(x, 7)     ;   print(n, MR_at_7); n += 1
+
+#2 Partial Derivatives
+x,y=sp.symbols('x y')
+f=x**2 + y**2           ; f2 = 12*x**2 + 12*y + 6 
+print(n,"f",f);n+=1
+print(n," Partial derivative w.r.t x         ",sp.diff(f,x));n+=1
+print(n,"Partial derivative w.r.t y         ",sp.diff(f,y));n+=1
+print(n,"Partial derivative w.r.t x at (1,1)",sp.diff(f,x).subs({x:1,y:1}));n+=1
+# 4 Gradient
+gradient = [sp.diff(f, x), sp.diff(f, y)]      ; print(n, "Gradient", gradient); n += 1
+
+#5 Hessian
+H=sp.hessian(f,[x,y])                          ; print(n,"Hessian",H);n+=1
+
+#6 Jacobian
+
+J=sp.Matrix([f,f2]).jacobian([x,y])
+print(n,"Jacobian",J);n+=1
+sp.pprint(J) 
+
+# 5 Hessian
+H = sp.Matrix([
+    [sp.diff(f, x, x), sp.diff(f, x, y)],
+    [sp.diff(f, y, x), sp.diff(f, y, y)]    ]) ; print(n,"Hessian", H); n += 1
+=================================================================================================
+
+import builtins
+from numpy import array, eye, ones, dot, cross, kron, column_stack, cov, isclose, sum, mean, min
+from numpy.linalg import norm, det, inv, matrix_rank, eig, svd, qr, solve, pinv
+import sympy as sp
+
+a=array([1,2,3]); b=array([4,5,6])
+A=array([[1,2],[3,4]])
+B=array([[5,6],[7,8]])
+M=array([[1,2,3],[4,5,6]])
+
+c1=column_stack((a,b))
+c2=column_stack((M,ones((M.shape[0],1))))
+
+Const=array([10,20])
+
+eig_val,eig_vec=eig(A)
+U,S,VT=svd(M)
+Q,R=qr(M)
+cos_theta=dot(a,b)/(norm(a)*norm(b))
+
+print("1.",A+B)                                  # Matrix addition
+print("2.",A-B)                                  # Matrix subtraction
+print("3.",A*B)                                  # Element-wise multiplication
+print("4.",A@B)                                  # Matrix multiplication
+print("5.",dot(a,b))                             # Dot (inner) product of vectors
+print("6.",cross(a,b))                           # Cross product of vectors (3D)
+print("7.",kron(A,B))                            # Kronecker product
+print("8.",M.T)                                  # Transpose of matrix
+print("9.",eye(2))                               # 2×2 Identity matrix
+print("10.",ones((M.shape[0],1)))                # Column vector of ones
+print("11.",c1)                                  # First column of matrix M
+print("12.",c2)                                  # Second column of matrix M
+print("13.",sum(M))                              # Column-wise sum
+print("14.",mean(M))                             # Mean of all elements
+print("15.",min(M))                              # Minimum element
+print("16.",builtins.max(M.flatten()))           # Maximum element
+print("17.",norm(a))                             # Euclidean (L2) norm of vector
+print("18.",norm(B))                             # Matrix norm (default: Frobenius)
+print("19.",norm(M,ord='fro'))                   # Frobenius norm of matrix
+print("20.",det(A))                              # Determinant of matrix
+print("21.",A.trace())                           # Trace (sum of diagonal elements)
+print("22.",inv(A))                              # Inverse of matrix
+print("23.",matrix_rank(A))                      # Rank of matrix
+print("24.",pinv(A))                             # Moore-Penrose pseudoinverse
+print("25.",det(inv(A)))                         # Determinant of inverse (=1/det(A))
+print("26.",A@inv(A))                            # Identity matrix (if A is invertible)
+print("34.",solve(A,Const))                      # Solve AX = Const
+print("35.",isclose(dot(a,b),0))                 # Check if vectors are orthogonal
+print("36.",isclose(det(A),0))                   # Check if matrix is singular
+print("38.",cov(a,b))                            # Covariance matrix of two vectors
+print("39.",cov(c1,rowvar=False))                # Covariance matrix of dataset
+print("40.",M@a.T)                               # Matrix-vector multiplication
+
+x1,y1=2,3; x2,y2=5,10
+print("41.",builtins.max(abs(x1-x2),abs(y1-y2))) # Chebyshev distance (L∞ distance)
+
+ 
+PCA
+# ==========================================================================
+X = np.array([[2, 4],
+              [3, 5],
+              [5, 4],
+              [6, 7],
+              [7, 6]])
+
+X_centered = X - np.mean(X, axis=0)
+cov_matrix = np.cov(X_centered, rowvar=False)
+
+import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import StandardScaler
+iris = load_iris()
+X = iris.data
+X = StandardScaler().fit_transform(X)
+cov = np.cov(X.T)
+a,b = np.linalg.eig(cov)
+s = np.argsort(a)[::-1]
+a = a[s]
+b = b[:,s]
+a_sum = np.sum(a)
+a_ratio = a/a_sum
+a_cum = np.cumsum(a_ratio)
+k = np.argmax(a_cum>=0.95)+1
+P = b[:,:k]
+X_pca = X@P
+print("Covariance Matrix:  ",cov)
+print("Eigenvalues:  ",a)
+print("Eigenvectors:  ",b)
+print("Total Variance:  ",a_sum)
+print("Explained Variance Ratio:  ",a_ratio)
+print("Cumulative Explained Variance:  ",a_cum)
+print("Number of Principal Components =",k)
+print("Projection Matrix:  ",P)
+print("Reduced Data:  ",X_pca)
+
+# ==========================================================================
+# SECTION 2: GRADIENT DESCENT
+# ==========================================================================
+# Example of linear regression parameter updates using gradient descent.
+
+# GRADIENT DESCENT
+import numpy as np
+import matplotlib.pyplot as plt
+X = np.array([0,0.4,0.6,1])
+Y = np.array([0,1,0.48,0.95])
+a = 0.8 ;  b = 0.2   ;   lr = 0.1   ; iters = 2
+for i in range(iters):
+    Y_pred = a*X+b
+    error = Y-Y_pred
+    da = -2*np.sum(error*X)
+    db = -2*np.sum(error)
+    sse = np.sum(error**2)
+    a = a-lr*da
+    b = b-lr*db
+    print("Iteration",i+1)
+    print("a =",a)
+    print("b =",b)
+    print("SSE =",sse)
+plt.scatter(X,Y,label="Data")
+plt.plot(X,a*X+b,label="Line")
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.title("Gradient Descent")
+plt.legend()
+plt.grid(True)
+plt.show()
+# 12. GRADIENT DESCENT STEPS
+# ============================
+
+print("  Gradient Descent:")
+print("1. Initialize parameters")
+print("2. Compute predictions")
+print("3. Compute loss/error")
+print("4. Compute gradients")
+print("5. Update parameters")
+print("6. Repeat until convergence")
+
+# ==========================================================================
+# SECTION 3: IMAGE PROCESSING
+# ==========================================================================
+# Image loading, grayscale conversion, blur, edge detection, rotate, scale,
+# flip, and zoom demonstrations.
+
+# IMAGE
+from PIL import Image, ImageFilter, ImageOps
+from IPython.display import display
+
+image_path = r"C:\Users\Poonan\Downloads\QP_MATH\Jan24\MF ESA model QP and Sol (JAn24 onwards)\Lena.jpg"
+image = Image.open(image_path)
+
+g          = ImageOps.grayscale(image)
+blur     = g.filter(ImageFilter.GaussianBlur(radius=5))
+edge   = g.filter(ImageFilter.FIND_EDGES)
+rotate = image.rotate(45)
+scale   = image.resize((int(image.width*1.5),int(image.height*1.5)))
+flip      = image.transpose(Image.FLIP_LEFT_RIGHT)
+zoom_in = image.resize((int(image.width*1.5), int(image.height*1.5)))
+zoom_out = image.resize((int(image.width*0.5), int(image.height*0.5)))
+
+display(image)		display(g)		display(blur)		display(edge)
+display(rotate)		display(scale)		display(flip)
+display(zoom_in)		display(zoom_out)
+# ==========================================================================
+# SECTION 4: CALCULUS AND SYMBOLIC DERIVATIVES
+# ==========================================================================
+
+# 11. CHAIN RULE / PARTIAL DERIVATIVES
+# ==========================
+
+w1, w2 = sp.symbols('w1 w2')
+
+x_expr = 3*w1 + 2*w2
+y_expr = 5*w1 + 6*w2
+
+f = x_expr**2 + y_expr**2
+
+df_dw1 = sp.diff(f, w1)
+df_dw2 = sp.diff(f, w2)
+
+print("  Chain Rule / Partial Derivatives:")
+print("f =", f)
+print("∂f/∂w1 =", df_dw1)
+print("∂f/∂w2 =", df_dw2)
+print("∂f/∂w1 at (1,1) =", df_dw1.subs({w1: 1, w2: 1}))
+print("∂f/∂w2 at (1,1) =", df_dw2.subs({w1: 1, w2: 1}))
+
+# ==========================
+
+LA
+import numpy as np
+import sympy as sp			from numpy.linalg import inv,det,matrix_rank,eig,eigvals
+vector = np.array([1,2,3])			matrix = np.array([[1,2,3],[4,5,6]])
+I = np.eye(3)
+
+print("Vector =",vector)				print("Matrix =\n",matrix)
+print("Identity =\n",I)				print("Transpose =\n",matrix.T)
+print("Sum =",np.sum(matrix))			print("Mean =",np.mean(matrix))
+print("Max =",np.max(matrix))			print("Min =",np.min(matrix))
+print("Frobenius Norm =",np.linalg.norm(matrix,ord="fro"))
+
+A = np.array([[1,0],[0,4]])			B = np.array([[5,6],[7,8]])
+print("A+B =\n",A+B)			print("A-B =\n",A-B)
+print("A*B =\n",A*B)			print("A@B =\n",A@B)
+print("Trace =",np.trace(A))		print("Determinant =",det(A))
+print("Inverse =\n",inv(A))			print("Rank =",matrix_rank(A))
+print("Power A^2 =\n",np.linalg.matrix_power(A,2))
+print("Pseudo Inverse =\n",np.linalg.pinv(A))
+print("Kronecker Product =\n",np.kron(A,B))
+print("det(inv(A)) =",det(inv(A)))
+print("A@inv(A) =\n",A@inv(A))
+
+coefficients = np.array([[2,3],[1,-2]])
+constants = np.array([8,-4])
+print("Solution of Ax=b =",np.linalg.solve(coefficients,constants))
+
+vals,vecs = eig(A)
+print("Eigenvalues =",vals)
+print("Eigenvectors =\n",vecs)
+
+A2 = np.array([[0,0,0],[0,2,5],[0,0,-1]],dtype=float)
+vals,vecs = eig(A2)
+print("A2 Eigenvalues =",vals)
+print("A2 Eigenvectors =\n",vecs)
+
+A_svd = np.array([[4,0],[3,-5]],dtype=float)
+U,S,VT = np.linalg.svd(A_svd)
+print("SVD U =\n",U)
+print("SVD S =",S)
+print("SVD V^T =\n",VT)
+
+Q,R = np.linalg.qr(A_svd)
+print("QR Q =\n",Q)
+print("QR R =\n",R)
+
+u = np.array([1,0])
+v = np.array([0,4])
+
+dot = np.dot(u,v)
+norm_u = np.linalg.norm(u)
+norm_v = np.linalg.norm(v)
+
+print("u.v =",dot)
+print("||u|| =",norm_u)
+print("||v|| =",norm_v)
+print("Linearly Independent =",not np.isclose(det(A),0))
+print("Orthogonal =",np.isclose(dot,0))
+print("Orthonormal =",np.isclose(dot,0) and np.isclose(norm_u,1) and np.isclose(norm_v,1))
+
+e1 = np.array([1,0])
+e2 = np.array([0,1])
+print("[3,5] = 3e1 + 5e2 =",3*e1+5*e2)
+
+a = np.array([1,2])
+b = np.array([9,3])
+
+dot = np.dot(a,b)
+norm_a = np.linalg.norm(a)
+norm_b = np.linalg.norm(b)
+cos_theta = dot/(norm_a*norm_b)
+theta = np.degrees(np.arccos(np.clip(cos_theta,-1,1)))
+
+print("Dot Product =",dot)
+print("||a|| =",norm_a)
+print("||b|| =",norm_b)
+print("cos(theta) =",cos_theta)
+print("Angle =",theta,"degrees")
+print("Cross Product =",np.cross(np.array([1,2,3]),np.array([4,5,6])))
+
+diff = a-b
+print("||a-b||_1 =",np.linalg.norm(diff,1))
+print("||a-b||_2 =",np.linalg.norm(diff,2))
+print("Unit vector along a+b =",(a+b)/np.linalg.norm(a+b))
+
+x = np.array([1,2,3,4,5])
+y = np.array([7,8,9,10,11])
+X = np.column_stack([x,y])
+print("Covariance Matrix =\n",np.cov(X,rowvar=False))
+
+scale = np.array([[2,0],[0,3]])
+points = np.array([[1,2],[3,4],[5,6]])
+print("Scaled Points =\n",points@scale.T)
+
+theta = np.radians(45)
+R = np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
+print("Rotated Points =\n",points@R.T)
+
+tx,ty = 2,3
+T = np.array([[1,0,tx],[0,1,ty],[0,0,1]])
+points_h = np.column_stack([points,np.ones(len(points))])
+print("Translated Points =\n",(T@points_h.T).T[:,:2])
+
+def gram_schmidt(M):
+    Q,R = np.linalg.qr(M)
+    return Q
+
+M = np.array([[2,3,4],[1,2,1],[0,1,2]],dtype=float)
+print("Gram Schmidt Q =\n",gram_schmidt(M))
+
+A = np.array([[5,6,2],[4,7,1],[0,3,1]])
+B = np.array([[1,-2,1],[4,4,5],[5,5,1]])
+C = np.array([[1,0,1],[4,1,0],[2,0,1]])
+
+print("(AB)^T = B^TA^T :",np.allclose((A@B).T,B.T@A.T))
+print("(AB)^-1 = B^-1A^-1 :",np.allclose(inv(A@B),inv(B)@inv(A)))
+print("A(B+C)=AB+AC :",np.allclose(A@(B+C),A@B+A@C))
+print("(A^T)^-1=(A^-1)^T :",np.allclose(inv(A.T),inv(A).T))
+print("A^TA symmetric :",np.allclose((A.T@A).T,A.T@A))
+print("det(C^-1)=1/det(C) :",np.allclose(det(inv(C)),1/det(C)))
+
+w1,w2 = sp.symbols('w1 w2')
+x_expr = 3*w1+2*w2
+y_expr = 5*w1+6*w2
+f = x_expr**2+y_expr**2
+
+df_dw1 = sp.diff(f,w1)
+df_dw2 = sp.diff(f,w2)
+
+print("f =",f)
+print("df/dw1 =",df_dw1)
+print("df/dw2 =",df_dw2)
+print("df/dw1 at (1,1) =",df_dw1.subs({w1:1,w2:1}))
+print("df/dw2 at (1,1) =",df_dw2.subs({w1:1,w2:1}))
+
+# 6. LINEAR TRANSFORMATIONS
+# ================================
+transformations = {
+    "Identity transformation": np.array([[1, 0], [0, 1]]),
+    "Reflection in y-axis": np.array([[-1, 0], [0, 1]]),
+    "Reflection in x-axis": np.array([[1, 0], [0, -1]]),
+    "Reflection in origin": np.array([[-1, 0], [0, -1]]),
+    "Reflection in line y = x": np.array([[0, 1], [1, 0]]),
+    "Projection onto x-axis": np.array([[1, 0], [0, 0]]),
+    "Projection onto y-axis": np.array([[0, 0], [0, 1]]),
+    "Contraction by factor 2": np.array([[0.5, 0], [0, 0.5]])
+}
+
+v = np.array([4, 5])
+print("  Linear Transformations:")
+
+for name, matrix in transformations.items():
+    print(name, "=", matrix @ v)
+
+
+# 6. LINEAR TRANSFORMATIONS (REPEATED REVIEW EXAMPLE)
+# ================================
+transformations = {
+    "Identity transformation": np.array([[1, 0], [0, 1]]),
+    "Reflection in y-axis": np.array([[-1, 0], [0, 1]]),
+    "Reflection in x-axis": np.array([[1, 0], [0, -1]]),
+    "Reflection in origin": np.array([[-1, 0], [0, -1]]),
+    "Reflection in line y = x": np.array([[0, 1], [1, 0]]),
+    "Projection onto x-axis": np.array([[1, 0], [0, 0]]),
+    "Projection onto y-axis": np.array([[0, 0], [0, 1]]),
+    "Contraction by factor 2": np.array([[0.5, 0], [0, 0.5]])
+}
+
+v = np.array([4, 5])
+print("  Linear Transformations:")
+
+for name, matrix in transformations.items():
+    print(name, "=", matrix @ v)
+
+1 12*x**2 + 12*x + 6
+2 24*x + 12
+3 24
+4 x value where slope = 0 -1/2
+5 Function value at critical point 3
+6 Convex / Minimum
+7 180
+8 f x**2 + y**2
+9  Partial derivative w.r.t x          2*x
+10 Partial derivative w.r.t y          2*y
+11 Partial derivative w.r.t x at (1,1) 2
+12 Gradient [2*x, 2*y]
+13 Hessian Matrix([[2, 0], [0, 2]])
+14 Jacobian Matrix([[2*x, 2*y], [24*x, 12]])
+⎡2⋅x   2⋅y⎤
+⎢         ⎥
+⎣24⋅x  12 ⎦
+15 Hessian Matrix([[2, 0], [0, 2]])
+1. Creating Matrices and Vectors   
+# 1D Array (Vector):    
+import numpy as np    
+vector = np.array([1, 2, 3])  
+# 2D Array (Matrix):  
+matrix = np.array([[1, 2, 3], [4, 5, 6]])   
+# Identity Matrix:   
+  identity_matrix = np.eye(3)  # 3x3 identity matrix
+
+2. Matrix Operations  
+ # Matrix Transpose:    
+  transposed_matrix = np.transpose(matrix)   
+# Matrix Multiplication:     
+result = np.dot(matrix1, matrix2)  
+ # Element-wise Multiplication:   
+   element_wise_product = matrix1 * matrix2   
+# Matrix Inverse:   
+inverse_matrix = np.linalg.inv(matrix)
+
+
+3. Solving Linear Equations   
+# Solving Ax = b:    
+coefficients = np.array([[2, 3], [1, -2]])    
+constants = np.array([8, -4])  
+solution = np.linalg.solve(coefficients, constants)
+
+4. Eigenvalues and Eigenvectors   
+# Calculating Eigenvalues and Eigenvectors:    
+ eigenvalues, eigenvectors = np.linalg.eig(matrix)
+
+5. Matrix Decomposition   
+# Singular Value Decomposition (SVD):  
+   U, S, V = np.linalg.svd(matrix)   
+# QR Decomposition:   
+  Q, R = np.linalg.qr(matrix)
+
+6. Matrix Norms and Determinant   
+# Matrix or Vector Norm:  
+   norm = np.linalg.norm(vector)  
+ # Determinant of a Matrix:  
+    determinant = np.linalg.det(matrix)
+
+7. Applying Operations on Arrays   
+# Summation or Mean:  
+  total_sum = np.sum(matrix) 
+mean_value = np.mean(matrix)   
+#Maximum or Minimum Value:   
+  max_value = np.max(matrix)
+     min_value = np.min(matrix)
+
+
+8. Matrix Transformation   
+#Scaling Transformation:     
+scaling_matrix = np.array([[2, 0], [0, 3]])    
+scaled_matrix = np.dot(scaling_matrix, matrix)   
+# Translation Transformation:     
+translation_matrix = np.array([[1, 0, tx], [0, 1, ty], [0, 0, 1]])   
+translated_matrix = np.dot(translation_matrix, np.vstack([matrix.T, np.ones(len(matrix))])).T  
+# Rotation Transformation (2D):    
+theta = np.radians(45)  # Rotation angle in radians   
+rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])   
+rotated_matrix = np.dot(rotation_matrix, matrix.T).T
+
+#9. Gram-Schmidt Process for Orthogonalization 
+def gram_schmidt(matrix):     
+   Q, R = np.linalg.qr(matrix)   
+   return Q
+
+#10. Additional Linear Algebra Operations   
+# # Trace of a Matrix:   
+  trace = np.trace(matrix)   
+# Kronecker Product:   
+  kron_product = np.kron(matrix1, matrix2)   
+# Matrix Power:  
+   matrix_power = np.linalg.matrix_power(matrix, power) 
+# Pseudo Inverse (Moore-Penrose):  
+   pseudo_inverse = np.linalg.pinv(matrix)
+
+11. Vector Operations   
+# Dot Product of Vectors:  
+   dot_product = np.dot(vector1, vector2)   
+# Cross Product of Vectors:    
+cross_product = np.cross(vector1, vector2)
+
+
+#12. Norms and Distances   
+#Frobenius Norm of a Matrix:     
+frob_norm = np.linalg.norm(matrix, ord='fro')  
+# Manhattan Distance (L1 Norm):    
+ manhattan_dist = np.linalg.norm(vector1 - vector2, ord=1)  
+# Euclidean Distance (L2 Norm):   
+  euclidean_dist = np.linalg.norm(vector1 - vector2)
+
+==================================================
+# 1D Array (Vector):   
+
+import numpy as np    
+vector = np.array([1, 2, 3])   
+# 2D Array (Matrix):    
+matrix = np.array([[1, 2, 3], [4, 5, 6]])  
+# Identity Matrix:   
+identity_matrix = np.eye(3)  # 3x3 identity matrix
+
+#image is a 2D data, which is nothing but a matrix. Apply different matrix transformations on the following image
+
+from PIL import Image, ImageFilter
+from skimage import io
+import math
+
+img = Image.open('C:\cameraman.png')
+img
+#Q1 Is the cameraman coat have any packets in it ? Apply different transformations on this image to visually prove the answer for this question.
+gray_image = img.convert('L')
+
+# Apply the Sobel filter for edge detection
+edges = gray_image.filter(ImageFilter.FIND_EDGES)
+
+# Display the original image and the detected edges
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)
+plt.imshow(img)
+plt.title('Original Image')
+plt.subplot(1, 2, 2)
+plt.imshow(edges)
+plt.title('Edges Detected')
+plt.show()
+
+#Q2.	Create the negative version of this image
+#hint: 255-image graylevel values 
+# Convert the image to grayscale
+gray_image = img.convert('L')
+# Create the negative version of the image
+# Calculate the negative by subtracting from 255
+negative_image = Image.eval(gray_image, lambda x: 255 - x)
+# If you want to save the negative image to a file
+plt.imshow(negative_image)
+
+
+#Q3.	Rotate the image by an angles 45deg, 90 deg.
+# use image transformation
+# Rotate the image by 45 degrees
+rotated_45 = img.rotate(45)
+
+# Rotate the image by 90 degrees
+rotated_90 = img.rotate(90)
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 2, 1)
+plt.imshow(rotated_45)
+plt.title('Rotated by 45 degrees')
+
+plt.subplot(1, 2, 2)
+plt.imshow(rotated_90)
+plt.title('Rotated by 90 degrees')
+
+plt.show()
+
+
+#Q4 Horizontally flip the image
+
+# use image transformation and use vector dot product 
+flipped_image = img.transpose(Image.FLIP_LEFT_RIGHT)
+plt.figure(figsize=(10, 5))
+
+plt.imshow(flipped_image)
+plt.title('Flipped Image')
+plt.show()
+
+# Q5.	Zoom out the image using any matrix interpolation (up-sampling)
+# use image transformation and use vector dot product 
+# Define the new dimensions for the zoomed out image
+zoom_width = img.width // 2 
+zoom_height = img.height // 2 
+zoomed_out_image = img.resize((zoom_width, zoom_height), Image.BILINEAR)
+
+plt.imshow(zoomed_out_image)
+plt.title('Zoomed Out Image')
+plt.show()
+
+
+#Find singular value decomposition of 
+from scipy.linalg import svd
+A = np.array( ((1,2), (3 , 4), (5,6)))
+A
+
+U, s, V = svd(A)
+print(U)
+print(s)
+print(V)
+
+
+1. Generate a dummy dataset using
+-  np.random.seed(74)
+-  X = np.random.randint(10,50,100).reshape(20,5) 
+2. Preprocess the data Preprocess the data by subtracting the mean and dividing by the standard deviation of each attribute value. The resulting data should be zero-mean with variance 1.
+3. Compute the covriance matrix 
+4. obtain the eigenvalues and eigenvectors.
+5. Find principle components.
+
+
+X = np.random.randint(10,50,100).reshape(20,5)
+mean = np.mean(X, axis =0)
+std = np.std(X, axis =0)
+Xcen = X-mean 
+Xnorm = Xcen /std
+XnormCov = np.cov(Xnorm, rowvar =False)
+evals, evecs =np.linalg.eig(XnormCov)
+s_index = np.argsort(evals)[::-1]
+s_evals = evals[s_index]
+s_devecs= evecs[s_index]
+#np.transpose(s_devecs)
+PCs =  np.transpose(np.dot(np.transpose(s_devecs), np.transpose(Xnorm)))
+
+print(XnormCov)
+print(evals)
+print(evecs)
+print(PCs)
+
+
+#solve matric  A . X = B
+
+a = np.array([ [1,-1,1], [2,1, -3], [1,1,1] ])
+a
+b = np.array( [4,0,2])
+b
+x = np.linalg.solve(a,b)
+print(x)
+
+import sympy as sp
+sp.init_printing()
+x,y,z = sp.symbols('x,y,z')
+sol = sp.solve([x+(-1)*y+ z-4, 
+                2*x + y + (-3)*z -0 ,
+                x+y+z -2 ], [x,y,z])
+print(sol)
+
+
+Q.Convert the following matrix to an orthogonal matrix using Gram Schmidt Process?
+
+A = np.array( ((1,1,1), (-1, 0, 1), (1, 1, 2)))
+A
+u1, u2, u3 = A[:,0], A[:,1], A[:,2]
+w1 =u1
+# find magnitude of u1
+mag_w1 = np.linalg.norm(w1) 
+# do normalization 
+v1= w1/mag_w1
+print(v1.dot(v1))
+# remove vector projection of u2 in v1 from u2
+w2 =u2- (u2.dot(v1)) *v1 
+mag_w2 = np.linalg.norm(w2) 
+v2 = w2/mag_w2
+v2.dot(v2)
+# remove vector projection of u3 in v1 and v2 from u3
+w3 = u3- ((u3.dot(v1)) *v1) -  ((u3.dot(v2)) *v2)
+mag_w3 = np.linalg.norm(w3) 
+v3 = w3/mag_w3
+v3.dot(v3)
+
+y = np.column_stack((v1,v2, v3))
+print('result ')
+print(y)
+
+Q- Find Covariance matrix ?
+x = [1.23, 2.12, 3.34, 4.5]
+y = [2.56, 2.89, 3.76, 3.95]
+x1 = np.array( [ [1.23, 2.12, 3.34, 4.5], [2.56, 2.89, 3.76, 3.95]])
+print(x1)
+np.cov(x1)
+
+
+Q- Consider the following Data 
+- height=[167,145,170,180,189,155,163,178,173,176]
+- weight=[83.5,72.5,85,90,94.5,77.5,81.5,89,86.5,88]
+
+1. Define a loss function 
+2. Calculate derivative at each point 
+3. Run Gradient descent for Learning rate = 0.000001
+4. Calculate the optimal value of w
+5. For 60 Epoch plot cost
+
+
+import matplotlib.pyplot as plt
+height = np.array([167,145,170,180,189,155,163,178,173,176])
+weight= np.array([83.5,72.5,85,90,94.5,77.5,81.5,89,86.5,88])
+
+N =len(x)
+
+learn_rate = 0.000001
+error_rate =0.001
+epochs = 60 
+w=0
+costs =[]
+#Gradient Descent 
+for epoch in range(epochs):
+    predictions = w*height
+    errors = weight - predictions
+    cost = (errors **2 ).mean()
+    costs.append(cost)
+    gradient = -2 *(height *errors).mean()
+    w-= learn_rate * gradient
+    print(f"Epoch {epoch+1}/{epochs}, Cost :{cost}, w:{w}")
+    
+
+plt.title('Cost over Epochs ')
+plt.xlabel('Epoch ')
+plt.ylabel('Cost')
+plt.plot( range(epochs), costs)
+plt.show()
+
+print(f"Optimal Value of w : {w}")
+
+
+Q23 Find Scalar and Vector Projection of u on v
+u = [6,7,8] v= [2,3,-1]
+
+Verify Q is orthogonal
+
+
+# Scalar Projection of u on v
+u = np.array([6,7,8])
+v = np.array([2,3,-1])
+sc_proj = np.dot(u, v) / np.linalg.norm(v)   # u.v/||v||
+sc_proj
+
+
+# Vector projection of u on v
+vec_proj = (v * sc_proj)/ np.linalg.norm(v)   # (v * (np.dot(u,v)/np.linalg.norm(v)) / np.linalg.norm(v)  
+vec_proj
+
+
+from numpy import array
+from numpy.linalg import inv
+# define orthogonal matrix
+Q =1/3* array([ 
+[2,-2, 1],
+[1, 2, 2],
+[2,-1, -2]])
+print(Q)
+# inverse equivalence
+V = inv(Q)
+#print(Q.T)
+print(V)
+
+# identity equivalence
+I = Q.dot(Q.T)
+print(I)
+
+
+Q31 Find eigen values and eigen vectors for
+
+from numpy import linalg as LA
+import numpy as np
+
+a = np.array([[5, 6, 2],[4,7,19],[0,3,12]])
+w, v = np.linalg.eig(a)
+
+print(w)
+print(v)
+
+
+Q1.From sklearn.dataset import iris data
+Preprocess the data Preprocess the data by subtracting the mean and dividing by the standard deviation of each attribute value. The resulting data should be zero-mean with variance 1.
+Compute the covriance matrix
+Factorize the covariance matrix using singular value decomposition (SVD) and obtain the eigenvalues and eigenvectors.
+Find principle components.
+import pandas as pd
+ 
+#Get the IRIS dataset
+url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"
+data = pd.read_csv(url, names=['sepal length','sepal width','petal length','petal width','target'])
+ 
+#prepare the data
+x = data.iloc[:,0:4]
+ 
+#prepare the target
+target = data.iloc[:,4]
+ 
+#Applying it to PCA function
+mat_reduced = PCA(x , 2)
+ 
+#Creating a Pandas DataFrame of reduced Dataset
+principal_df = pd.DataFrame(mat_reduced , columns = ['PC1','PC2'])
+ 
+#Concat it with target variable to create a complete Dataset
+principal_df = pd.concat([principal_df , pd.DataFrame(target)] , axis = 1)
+
+def PCA(X , num_components):
+     
+    #Step-1
+    X_meaned = X - np.mean(X , axis = 0)
+     
+    #Step-2
+    cov_mat = np.cov(X_meaned , rowvar = False)
+     
+    #Step-3
+    eigen_values , eigen_vectors = np.linalg.eigh(cov_mat)
+     
+    #Step-4
+    sorted_index = np.argsort(eigen_values)[::-1]
+    sorted_eigenvalue = eigen_values[sorted_index]
+    sorted_eigenvectors = eigen_vectors[:,sorted_index]
+     
+    #Step-5
+    eigenvector_subset = sorted_eigenvectors[:,0:num_components]
+     
+    #Step-6
+    X_reduced = np.dot(eigenvector_subset.transpose() , X_meaned.transpose() ).transpose()
+     
+    return X_reduced
+
+
+=========
+
+The Following table lists the weight and heights of 5 boys Find the covariance matrix for the data.
+x = [120,125,125,135,145]
+y = [61,60,64,68,72]
+X = np.stack((x, y), axis=0)
+np.cov(X)
+
+# ==========================================================================
+# SECTION 6: NOTEBOOK CONTENT - Lab1 PCA Iris Dataset
+# ==========================================================================
+# Appended missing notebook content from Lab1_PCA_IrisDataset.ipynb
+# --------------------------------------------------------
+from sklearn import datasets
+iris = datasets.load_iris()
+X = iris.data
+y = iris.target
+#X
+X.shape
+iris.feature_names
+iris.target_names
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+import numpy as np
+# %matplotlib inline
+fig = plt.figure()
+ax = Axes3D(fig)
+
+for name, label in [('Setosa', 0), ('Versicolour', 1), ('Virginica', 2)]:
+    ax.text3D(X[y == label, 0].mean()-1.5,
+              X[y == label, 1].mean() + 1.5,
+              X[y == label, 2].mean(), name)
+# Change the order of labels, so that they match
+y_clr = np.choose(y, [1, 2, 0]).astype(float)
+ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=y_clr)
+
+#plt.show()
+from sklearn.decomposition import PCA
+pca = PCA(n_components=2)
+pca.fit(X)
+
+X_pca = pca.transform(X)
+#X_pca
+X_pca.shape
+plt.plot(X_pca[y == 0, 0], X_pca[y == 0, 1], 'bo', label='Setosa')
+plt.plot(X_pca[y == 1, 0], X_pca[y == 1, 1], 'go', label='Versicolour')
+plt.plot(X_pca[y == 2, 0], X_pca[y == 2, 1], 'ro', label='Virginica')
+plt.legend(loc=0)
+pca.components_
+#Explained variance represents the information explained using a particular 
+#principal components (eigenvectors)
+# Explained variance is calculated as ratio of eigenvalue of a articular principal component 
+# (eigenvector) with total eigenvalues
+pca.explained_variance_  #The amount of variance explained by each of the selected components
+pca.explained_variance_ratio_
+import numpy as np
+
+def PCA(X , num_components):
+    
+    #Step-1
+    X_meaned = X - np.mean(X , axis = 0)
+    
+    #Step-2
+    cov_mat = np.cov(X_meaned , rowvar = False)
+    
+    #Step-3
+    eigen_values , eigen_vectors = np.linalg.eigh(cov_mat)
+    
+    #Step-4
+    sorted_index = np.argsort(eigen_values)[::-1]
+    sorted_eigenvalue = eigen_values[sorted_index]
+    sorted_eigenvectors = eigen_vectors[:,sorted_index]
+    
+    #Step-5
+    eigenvector_subset = sorted_eigenvectors[:,0:num_components]
+    
+    #Step-6
+    X_reduced = np.dot(eigenvector_subset.transpose() , X_meaned.transpose() ).transpose()
+    
+    return X_reduced
+import pandas as pd
+
+#Get the IRIS dataset
+url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"
+data = pd.read_csv(url, names=['sepal length','sepal width','petal length','petal width','target'])
+
+#prepare the data
+x = data.iloc[:,0:4]
+
+#prepare the target
+target = data.iloc[:,4]
+
+#Applying it to PCA function
+mat_reduced = PCA(x , 2)
+
+#Creating a Pandas DataFrame of reduced Dataset
+principal_df = pd.DataFrame(mat_reduced , columns = ['PC1','PC2'])
+
+#Concat it with target variable to create a complete Dataset
+principal_df = pd.concat([principal_df , pd.DataFrame(target)] , axis = 1)
+principal_df
+
+
+6T: Theory Notes
+
+# 1) Linear Algebra Basics
+## Vectors and Matrices
+- **Vectors** are 1‑D arrays, e.g., `a = np.array([1,2,3])`.
+- **Matrices** are 2‑D arrays representing linear maps, e.g., `A = np.array([[1,2],[3,4]])`.
+- Operations include addition (`A + B`), scalar multiplication (`2*A`), and matrix multiplication (`A @ B`).
+
+```python
+import numpy as np
+a = np.array([1,2,3])
+b = np.array([4,5,6])
+A = np.array([[1,2],[3,4]])
+B = np.array([[5,6],[7,8]])
+print('A+B =', A+B)
+print('A@B =', A@B)
+```
+
+## Rank
+- The rank of a matrix is the dimension of its column (or row) space.
+- Computed via `np.linalg.matrix_rank(A)`.
+
+## Determinant & Inverse
+- Determinant `det(A)` is non‑zero ⇔ `A` invertible. `np.linalg.det(A)`.
+- Inverse `A^{-1}` via `np.linalg.inv(A)`.
+
+```python
+print('det(A) =', np.linalg.det(A))
+print('inv(A) =', np.linalg.inv(A))
+```
+
+## Inner Product, Norms, Orthogonality
+- Inner product: `⟨u,v⟩ = u.T @ v`.
+- Norm: `‖u‖ = np.linalg.norm(u)`.
+- Orthogonal if `np.isclose(np.dot(u,v), 0)`.
+
+## Orthogonal Matrices
+- `Q.T @ Q = I`. Preserve lengths and angles. Example: rotation matrix.
+
+# 2) Eigenvalues & Eigenvectors
+- Definition: `A v = λ v`.
+- Computed via `np.linalg.eig(A)`.
+- Characteristic polynomial `det(A - λI) = 0`.
+- Properties: eigenvalues of `A^k` are `λ^k`; of `A^{-1}` are `1/λ`.
+- Diagonalization: `A = V Λ V^{-1}` when enough independent eigenvectors exist.
+- Spectral theorem for symmetric matrices: `A = Q Λ Q.T`.
+
+```python
+vals, vecs = np.linalg.eig(A)
+print('Eigenvalues:', vals)
+print('Eigenvectors:', vecs)
+```
+
+# 3) Singular Value Decomposition (SVD)
+- Any `A ∈ ℝ^{m×n}` can be written as `A = U Σ V.T`.
+- `U` and `V` are orthogonal; `Σ` contains singular values `σ₁ ≥ σ₂ ≥ … ≥ 0`.
+- Relationship: singular values are sqrt of eigenvalues of `A.T @ A`.
+- Low‑rank approximation (Eckart‑Young): truncate `Σ`.
+
+```python
+U, S, VT = np.linalg.svd(A)
+print('U =', U)
+print('Singular values =', S)
+print('V.T =', VT)
+```
+
+# 4) Principal Component Analysis (PCA)
+- Goal: find orthogonal directions of maximal variance.
+- Steps:
+  1. Center data `X_centered = X - X.mean(axis=0)`.
+  2. Compute covariance `C = np.cov(X_centered, rowvar=False)`.
+  3. Eigen‑decompose `C` or use SVD on `X_centered`.
+  4. Select top `k` eigenvectors (principal components).
+- Implementation example (from 6.txt):
+
+```python
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+iris = load_iris()
+X = StandardScaler().fit_transform(iris.data)
+cov = np.cov(X.T)
+vals, vecs = np.linalg.eig(cov)
+order = np.argsort(vals)[::-1]
+vals = vals[order]
+vecs = vecs[:, order]
+explained = vals / vals.sum()
+cum_explained = np.cumsum(explained)
+k = np.argmax(cum_explained >= 0.95) + 1
+P = vecs[:, :k]
+X_pca = X @ P
+print('Number of components =', k)
+print('Reduced data shape =', X_pca.shape)
+```
+
+# 5) Projections (Scalar & Vector)
+- Scalar projection of `u` onto `v`: `comp_v(u) = (u·v) / ‖v‖`.
+- Vector projection: `proj_v(u) = ((u·v) / (v·v)) * v`.
+- Orthogonal projection onto column space of `A` (full column rank): `P = A @ np.linalg.inv(A.T @ A) @ A.T`.
+- Used in least‑squares solution `x̂ = (A.T @ A)^{-1} @ A.T @ b`.
+
+```python
+u = np.array([6,7,8])
+v = np.array([2,3,-1])
+scalar_proj = np.dot(u, v) / np.linalg.norm(v)
+vector_proj = (np.dot(u, v) / np.dot(v, v)) * v
+print('Scalar projection:', scalar_proj)
+print('Vector projection:', vector_proj)
+```
+
+# 6) Gram–Schmidt Process
+- Converts a set of linearly independent vectors into an orthonormal basis.
+- Classic algorithm (unstable) vs. Modified Gram‑Schmidt or QR.
+- Example using QR (from 6.txt):
+
+```python
+M = np.array([[2,3,4],[1,2,1],[0,1,2]], dtype=float)
+Q, R = np.linalg.qr(M)
+print('Orthonormal basis Q =', Q)
+```
+
+# 7) Gradient Descent (GD)
+- Iterative minimization: `θ ← θ - α ∇f(θ)`.
+- Variants: batch, SGD, mini‑batch.
+- Hyperparameters: learning rate `α`, momentum, Adam, etc.
+- Simple linear regression example (from 6.txt):
+
+```python
+import numpy as np
+X = np.array([0,0.4,0.6,1])
+Y = np.array([0,1,0.48,0.95])
+a, b = 0.8, 0.2
+lr = 0.1
+for i in range(10):
+    Y_pred = a*X + b
+    error = Y - Y_pred
+    da = -2*np.sum(error*X)
+    db = -2*np.sum(error)
+    a -= lr * da
+    b -= lr * db
+    print(f'Iter {i+1}: a={a:.3f}, b={b:.3f}')
+```
+
+# 8) Optimization & Calculus Essentials
+- Critical points where gradient = 0. Use Hessian to classify.
+- Convexity ensures global minima.
+- Line search strategies (exact, backtracking Armijo).
+
+# 9) Image Transforms & Processing Basics
+- Represent images as arrays; grayscale `H×W`, color `H×W×3`.
+- Point operations: intensity scaling, negative, thresholding.
+- Geometric transforms: translation, rotation, scaling (using interpolation).
+- Convolution kernels: Gaussian blur, Sobel edge detection, Laplacian.
+- Example (from 6.txt) using Pillow:
+
+```python
+from PIL import Image, ImageFilter, ImageOps
+image = Image.open('Lena.jpg')
+gray = ImageOps.grayscale(image)
+blur = gray.filter(ImageFilter.GaussianBlur(radius=5))
+edges = gray.filter(ImageFilter.FIND_EDGES)
+rotated = image.rotate(45)
+scaled = image.resize((int(image.width*1.5), int(image.height*1.5)))
+flipped = image.transpose(Image.FLIP_LEFT_RIGHT)
+# display or save as needed
+```
+
+# 10) Practical Notes & Numerical Stability
+- Center data before PCA; standardize features.
+- Prefer SVD over eigendecomposition for covariance.
+- Use tolerances for floating‑point comparisons (`np.isclose`).
+
+# References / Next Steps
+- Strang, *Linear Algebra and Its Applications*.
+- Trefethen & Bau, *Numerical Linear Algebra*.
+- Hastie, Tibshirani & Friedman, *Elements of Statistical Learning*.
+- Explore deeper derivations, visual demos, or convert to a Jupyter notebook for interactive experimentation.
+
+
+1) Linear Algebra Basics
+- Vectors and matrices: vectors as 1-D arrays, matrices as linear maps. Operations: addition, scalar multiplication, matrix multiplication (composition of linear maps).
+- Rank: dimension of the column (or row) space; equals number of linearly independent columns. Full column rank means unique least-squares solution for tall systems.
+- Determinant: scalar associated with square matrix; nonzero ⇔ matrix invertible; det(AB)=det(A)det(B), det(A^T)=det(A).
+- Inverse: A^{-1} satisfies A A^{-1}=I for invertible square A. Use LU or direct formula for small matrices.
+- Inner product, norms: ⟨u,v⟩ = u^T v; norm ‖u‖ = sqrt(⟨u,u⟩). Orthogonality: ⟨u,v⟩=0.
+- Orthogonal matrices: Q^T Q = I; preserve lengths and angles; Q^{-1}=Q^T.
+
+2) Eigenvalues & Eigenvectors
+- Definition: For A∈R^{n×n}, v≠0 and scalar λ with A v = λ v. λ is eigenvalue, v eigenvector.
+- Characteristic polynomial: det(A−λI)=0 gives eigenvalues. Algebraic multiplicity vs geometric multiplicity (dimension of eigenspace).
+- Properties: eigenvalues of A^k are λ^k; eigenvalues of A^{-1} (if invertible) are 1/λ. Similar matrices have same eigenvalues.
+- Diagonalization: A = VΛV^{-1} when A has n independent eigenvectors. Diagonalization simplifies powers, exponentials.
+- Spectral theorem: symmetric (real) matrices are diagonalizable by orthogonal matrices: A = QΛQ^T with orthonormal eigenvectors and real eigenvalues.
+
+3) Singular Value Decomposition (SVD)
+- Statement: Any A∈R^{m×n} can be decomposed A = U Σ V^T, where U∈R^{m×m}, V∈R^{n×n} orthogonal, Σ rectangular diagonal with nonnegative singular values σ1≥σ2≥…≥0.
+- Interpretation: singular vectors give orthonormal input/output directions; σ_i measure stretch in those directions.
+- Relationship to eigen: For A, nonzero singular values are sqrt(eigenvalues of A^T A). V columns are eigenvectors of A^T A; U columns are eigenvectors of A A^T.
+- Low-rank approx.: best rank-k approximation in Frobenius or spectral norm is obtained by truncating SVD (Eckart–Young theorem).
+
+4) Principal Component Analysis (PCA)
+- Goal: find orthogonal directions (principal components) of maximum variance in centered data X (observations×features).
+- Steps: center X, compute covariance C = (1/(n−1)) X^T X, compute eigen-decomposition C = VΛV^T, sort eigenvalues descending. Principal components = top eigenvectors; projected data = X V_k.
+- Alternatives: compute SVD of centered X directly for numerical stability: X = U Σ V^T; principal directions = columns of V, variances ∝ σ_i^2/(n−1).
+- Use: dimensionality reduction, decorrelation, visualization; pick k by explained variance (cumulative energy).
+
+5) Projections (Scalar and Vector)
+- Scalar projection (component) of u onto v: comp_v(u) = (u·v)/‖v‖.
+- Vector projection: proj_v(u) = ((u·v)/(v·v)) v = (u·v)/‖v‖^2 · v.
+- Orthogonal projection onto subspace spanned by columns of matrix A (with full column rank): P = A (A^T A)^{-1} A^T. P is symmetric (P^T=P) and idempotent (P^2=P).
+- Use: least squares: minimize ‖Ax−b‖^2 → normal equations A^T A x = A^T b; solution x̂ gives projection of b onto column space.
+
+6) Gram–Schmidt Process
+- Purpose: convert a set of linearly independent vectors {u1,…,uk} into an orthonormal set {q1,…,qk} spanning the same subspace.
+- Algorithm (classical):
+  w1 = u1; q1 = w1/‖w1‖
+  wi = ui − sum_{j< i} (ui·qj) qj; qi = wi/‖wi‖
+- Numeric note: classical Gram–Schmidt is numerically unstable; use Modified Gram–Schmidt or QR via Householder reflections for stable orthogonalization.
+- QR factorization: A = Q R where Q has orthonormal columns and R is upper triangular; produced by Gram–Schmidt or Householder.
+
+7) Gradient Descent (GD)
+- Objective: iterative method to minimize differentiable function f(θ) by updating θ ← θ − α ∇f(θ) where α is learning rate.
+- Variants:
+  - Batch gradient descent: uses full dataset per update (stable gradients, expensive on large data).
+  - Stochastic gradient descent (SGD): uses single example per update (noisy but cheap and often faster to converge in practice).
+  - Mini-batch: compromise using small batch sizes.
+- Hyperparameters: learning rate α (too large → divergence; too small → slow), momentum, adaptive methods (Adam, RMSProp) adjust step sizes.
+- Convergence: for convex, smooth functions with appropriate step size, GD converges to global minimum; for nonconvex, may find local minima or saddle points.
+
+8) Optimization & Calculus Essentials
+- Critical points: points where gradient ∇f = 0. Use Hessian (matrix of second derivatives) to classify: positive-definite → local minimum; negative-definite → local maximum; indefinite → saddle.
+- Convexity: f convex ⇔ domain convex and f(λx+(1−λ)y) ≤ λ f(x) + (1−λ) f(y). Convex problems have no local minima other than global minima.
+- Line search and step-size selection: exact vs backtracking Armijo rule; important for robust GD.
+
+9) Image Transforms & Processing Basics
+- Representation: grayscale images as 2D arrays (matrices) of intensities; color images as H×W×3 arrays (RGB).
+- Point operations: intensity scaling, negative (255−I), thresholding, histogram equalization.
+- Geometric transforms: translation, rotation, scaling (use interpolation: nearest, bilinear, bicubic). Rotations shift grid and require resampling.
+- Linear filtering (convolution): output pixel = sum kernel * neighborhood. Common kernels: Gaussian blur, Sobel (edge detection), Laplacian (second derivatives).
+- Edge detection: gradient-based (Sobel, Prewitt), Canny (multi-stage detector with non-max suppression and hysteresis).
+- SVD for images: interpret image matrix A; low-rank approximation keeps largest singular values to compress while preserving main structures.
+
+10) Practical Notes & Numerical Stability
+- Center data before PCA; scale features if units differ (standardization).
+- Use SVD rather than eigendecomposition of covariance for numerical stability, especially when n < d or when covariance is ill-conditioned.
+- Be mindful of floating point precision; compare floats with tolerances, not exact equality.
+
+References / Next steps
+- Texts: Strang "Linear Algebra and Its Applications", Trefethen & Bau "Numerical Linear Algebra", Hastie/Tibshirani/Friedman "Elements of Statistical Learning".
+- If you want, I can expand any section with more math, derivations, or examples and save as `6T.txt` or a notebook conversion.
+- **Additional Theoretical Topics**
+  - **QR Decomposition**: Decompose a matrix `A` into an orthogonal matrix `Q` and an upper‑triangular matrix `R` such that `A = QR`. Useful for solving least‑squares problems and for Gram–Schmidt orthogonalization.
+  - **Moore‑Penrose Pseudoinverse**: For any matrix `A`, the pseudoinverse `A⁺` provides a least‑squares solution `x = A⁺b`. Computed via `np.linalg.pinv(A)`. It satisfies `A A⁺ A = A` and `A⁺ A A⁺ = A⁺`.
+  - **Condition Number**: Measures sensitivity of a linear system to perturbations. `cond(A) = ||A||·||A⁻¹||`. High condition numbers indicate ill‑conditioning.
+  - **Spectral Decomposition**: For a symmetric matrix `A`, `A = Q Λ Qᵀ` where `Q` contains orthonormal eigenvectors and `Λ` is diagonal of eigenvalues.
+  - **Convex Optimization Basics**: Convex problems have a single global optimum. Key concepts include convex sets, convex functions, and the use of Lagrange multipliers.
+  - **Stochastic Gradient Descent (SGD) Theory**: Updates parameters using a randomly selected mini‑batch, reducing computational cost per iteration and providing noise that can help escape shallow local minima.
+
+# ==========================================================================
+# SECTION 7: NOTEBOOK CONTENT - Lab2 PCA Digits Dataset
+# ==========================================================================
+# Appended missing notebook content from Lab2_PCA_DigitsDataset.ipynb
+# --------------------------------------------------------
+from sklearn import datasets
+import numpy as np
+import matplotlib.pyplot as plt
+# %matplotlib inline
+
+digits = datasets.load_digits()
+
+X = digits.data
+y = digits.target
+
+X.shape
+digits.target_names
+y[0:20]
+X[0,:]
+plt.imshow(X[0,:].reshape([8,8]), cmap='gray')
+from sklearn.decomposition import PCA
+pca = PCA(n_components=2)
+pca.fit(X)
+
+X_pca = pca.transform(X)
+X_pca.shape
+plt.figure(figsize=(12,10))
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y)
+plt.colorbar()
+plt.title('MNIST. PCA projection')
+
+pca = PCA().fit(X)
+plt.figure(figsize=(10,7))
+plt.plot(np.cumsum(pca.explained_variance_ratio_), color='k', lw=2)
+
+plt.xlabel('Number of components')
+plt.ylabel('Total explained variance')
+
+plt.xlim(0, 63)
+plt.yticks(np.arange(0, 1.1, 0.1))
+
+plt.axvline(20, c='b')
+plt.axhline(0.9, c='r')
+
+plt.show()
+
+# Numerical for Covariance
+y1 = np.array([-1.5, -0.5, 0.5, 1.5])
+y2 = np.array([-1.75, 1.25,-2.75, 3.25])
+
+covariance_y1_y2 = np.cov(y1,y2)
+
+covariance_y1_y2
+
+# ==========================================================================
+# SECTION 8: EXTRA QP AND MISCELLANEOUS MATH NOTES
+# ==========================================================================
+# Appended missing notebook content from MF_QP_Set_2 - QP.ipynb
+# --------------------------------------------------------
+import numpy as np
+A = np.array([[2,4,5],[6,1,3],[4,0,7]], dtype=float)
+print(1/np.linalg.det(A))
+
+import numpy as np
+print('Chebyshev distance')
+print('max(abs(x1-x2), abs(y1-y2))')
+
+import numpy as np
+R = lambda x: 13*x**2 + 26*x + 15
+MR = lambda x: 26*x + 26
+print(MR(7))
+
+import numpy as np
+f = lambda x: -8*x**2 + 15
+print('concave')
+print('second derivative =', -16)
+
+import numpy as np
+A = np.array([[1,2],[4,3]], dtype=float)
+B = np.array([[1,0],[2,-1]], dtype=float)
+print(np.allclose(A.T @ B.T, (B @ A).T))
+
+import sympy as sp
+x, y = sp.symbols('x y')
+f1 = x**3 * y
+f2 = x**2 / y + y**2
+J = sp.Matrix([[sp.diff(f1, x), sp.diff(f1, y)], [sp.diff(f2, x), sp.diff(f2, y)]])
+print(J)
+
+import numpy as np
+print('Linearly independent vectors: no one can be written as a combination of the others')
+print('Orthogonal vectors: dot product = 0')
+print('Orthonormal vectors: orthogonal and unit length')
+print('Basis vector: vectors that span the space')
+
+import matplotlib.pyplot as plt
+from PIL import Image
+import numpy as np
+rgb = (255, 20, 20)
+print('Color shade:', 'Red')
+img = np.zeros((100, 100, 3), dtype=np.uint8)
+img[:, :, :] = rgb
+plt.imshow(img)
+plt.axis('off')
+plt.show()
+
+print('A larger learning rate can cause overshooting and divergence, while a very small one makes convergence slow.')
+
+import numpy as np
+T = np.array([[1,0,1],[0,1,1],[0,0,1]])
+R = np.array([[np.cos(np.radians(-45)), -np.sin(np.radians(-45)), 0],[np.sin(np.radians(-45)), np.cos(np.radians(-45)), 0],[0,0,1]])
+print(T @ R)
+
+mappings = {
+    'A': '6',
+    'B': '5',
+    'C': '2',
+    'D': '1',
+    'E': '4',
+    'F': '3'
+}
+print(mappings)
+
+import sympy as sp
+w1, w2 = sp.symbols('w1 w2')
+x = 3*w1 + 2*w2
+y = 5*w1 + 6*w2
+f = x**2 + y**2
+print(sp.diff(f, w1).subs({w1:1, w2:1}))
+print(sp.diff(f, w2).subs({w1:1, w2:1}))
+
+import numpy as np
+from scipy.signal import convolve2d
+img = np.array([[3,0,1,2,7,4],[1,5,8,9,3,1],[2,7,2,5,1,3],[0,1,3,1,7,8],[4,2,1,6,2,8],[2,4,5,2,3,9]])
+kernel = np.array([[1,0,-1],[1,0,-1],[1,0,-1]])
+print(convolve2d(img, kernel, mode='same'))
+print('edge-enhanced output')
+
+import numpy as np
+A = np.array([[0,0,0],[0,2,5],[0,0,-1]], dtype=float)
+vals, vecs = np.linalg.eig(A)
+print(vals)
+print(vecs)
+
+import numpy as np
+weights = np.array([120,125,125,135,145])
+heights = np.array([61,60,64,68,72])
+X = np.column_stack([weights, heights])
+print(np.cov(X, rowvar=False))
+
+import numpy as np
+print('1. Initialize parameters')
+print('2. Compute predictions')
+print('3. Compute error/loss')
+print('4. Compute gradients')
+print('5. Update parameters')
+print('6. Repeat until convergence')
+
+import sympy as sp
+x = sp.symbols('x')
+p = 1000 - x
+C = 3000 + 20*x
+R = p*x
+P = R - C
+print('R(x)=', sp.expand(R))
+print('P(x)=', sp.expand(P))
+a = sp.solve(sp.diff(P, x), x)[0]
+print('Max profit at x=', a)
+print('Max profit =', sp.N(P.subs(x, a)))
+print('Price =', sp.N(p.subs(x, a)))
+
+import numpy as np
+u = np.array([-1, 2])
+v = np.array([4, 6])
+w = np.array([3, -1, -5])
+x = np.array([6, -2, 3])
+print(u@u, v@u, (v@u)/(u@u))
+print(w@w, x@w, (x@w)/(w@w))
+print((1/(w@w))*w)
+print((u@v)/(v@v)*v)
+print(np.linalg.norm(w-x))
+
+import numpy as np
+A = np.array([[4, 0], [3, -5]], dtype=float)
+U, S, VT = np.linalg.svd(A)
+print(U)
+print(np.diag(S))
+print(VT)
+
+# ate = end
+ate = "end"
+
+ 
+# ======================================================================
+# SECTION 11: EXTRA PRACTICE - IMAGE TRANSFORMS, PCA, LINEAR SYSTEMS, AND PROJECTIONS
+# ======================================================================
+
+# 11.1 Vector and Matrix Basics
+# -----------------------------
+
+# 1D Array (Vector):    
+
+import numpy as np    
+vector = np.array([1, 2, 3])   
+# 2D Array (Matrix):    
+matrix = np.array([[1, 2, 3], [4, 5, 6]])  
+# Identity Matrix:   
+identity_matrix = np.eye(3)  # 3x3 identity matrix
+
+# 11.2 Image Transform Practice
+# -----------------------------
+
+# image is a 2D data, which is nothing but a matrix. Apply different matrix transformations on the following image
+
+from PIL import Image, ImageFilter
+from skimage import io
+import math
+
+img = Image.open('C:\cameraman.png')
+img
+# Q1 Is the cameraman coat have any packets in it ? Apply different transformations on this image to visually prove the answer for this question.
+gray_image = img.convert('L')
+
+# Apply the Sobel filter for edge detection
+edges = gray_image.filter(ImageFilter.FIND_EDGES)
+
+# Display the original image and the detected edges
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)
+plt.imshow(img)
+plt.title('Original Image')
+plt.subplot(1, 2, 2)
+plt.imshow(edges)
+plt.title('Edges Detected')
+plt.show()
+
+# Q2.    Create the negative version of this image
+# hint: 255-image graylevel values 
+# Convert the image to grayscale
+gray_image = img.convert('L')
+# Create the negative version of the image
+# Calculate the negative by subtracting from 255
+negative_image = Image.eval(gray_image, lambda x: 255 - x)
+# If you want to save the negative image to a file
+plt.imshow(negative_image)
+
+# Q3.    Rotate the image by angles 45deg, 90deg.
+# use image transformation
+# Rotate the image by 45 degrees
+rotated_45 = img.rotate(45)
+
+# Rotate the image by 90 degrees
+rotated_90 = img.rotate(90)
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 2, 1)
+plt.imshow(rotated_45)
+plt.title('Rotated by 45 degrees')
+
+plt.subplot(1, 2, 2)
+plt.imshow(rotated_90)
+plt.title('Rotated by 90 degrees')
+
+plt.show()
+
+# Q4 Horizontally flip the image
+
+# use image transformation and use vector dot product 
+flipped_image = img.transpose(Image.FLIP_LEFT_RIGHT)
+plt.figure(figsize=(10, 5))
+
+plt.imshow(flipped_image)
+plt.title('Flipped Image')
+plt.show()
+
+# Q5.    Zoom out the image using any matrix interpolation (up-sampling)
+# use image transformation and use vector dot product 
+# Define the new dimensions for the zoomed out image
+zoom_width = img.width // 2 
+zoom_height = img.height // 2 
+zoomed_out_image = img.resize((zoom_width, zoom_height), Image.BILINEAR)
+
+plt.imshow(zoomed_out_image)
+plt.title('Zoomed Out Image')
+plt.show()
+
+# 11.3 PCA and Covariance Practice
+# --------------------------------
+
+# Find singular value decomposition of 
+from scipy.linalg import svd
+A = np.array( ((1,2), (3 , 4), (5,6)))
+A
+
+U, s, V = svd(A)
+print(U)
+print(s)
+print(V)
+
+1. Generate a dummy dataset using
+-  np.random.seed(74)
+-  X = np.random.randint(10,50,100).reshape(20,5) 
+2. Preprocess the data Preprocess the data by subtracting the mean and dividing by the standard deviation of each attribute value. The resulting data should be zero-mean with variance 1.
+3. Compute the covriance matrix 
+4. obtain the eigenvalues and eigenvectors.
+5. Find principle components.
+
+X = np.random.randint(10,50,100).reshape(20,5)
+mean = np.mean(X, axis =0)
+std = np.std(X, axis =0)
+Xcen = X-mean 
+Xnorm = Xcen /std
+XnormCov = np.cov(Xnorm, rowvar =False)
+evals, evecs =np.linalg.eig(XnormCov)
+s_index = np.argsort(evals)[::-1]
+s_evals = evals[s_index]
+s_devecs= evecs[s_index]
+#np.transpose(s_devecs)
+PCs =  np.transpose(np.dot(np.transpose(s_devecs), np.transpose(Xnorm)))
+
+print(XnormCov)
+print(evals)
+print(evecs)
+print(PCs)
+
+# 11.4 Linear Systems, Gram-Schmidt, and Projections
+# --------------------------------------------------
+
+# solve matric  A . X = B
+
+a = np.array([ [1,-1,1], [2,1, -3], [1,1,1] ])
+a
+b = np.array( [4,0,2])
+b
+x = np.linalg.solve(a,b)
+print(x)
+
+import sympy as sp
+sp.init_printing()
+x,y,z = sp.symbols('x,y,z')
+sol = sp.solve([x+(-1)*y+ z-4, 
+                2*x + y + (-3)*z -0 ,
+                x+y+z -2 ], [x,y,z])
+print(sol)
+
+Q.Convert the following matrix to an orthogonal matrix using Gram Schmidt Process?
+
+A = np.array( ((1,1,1), (-1, 0, 1), (1, 1, 2)))
+A
+u1, u2, u3 = A[:,0], A[:,1], A[:,2]
+w1 =u1
+# find magnitude of u1
+mag_w1 = np.linalg.norm(w1) 
+# do normalization 
+v1= w1/mag_w1
+print(v1.dot(v1))
+# remove vector projection of u2 in v1 from u2
+w2 =u2- (u2.dot(v1)) *v1 
+mag_w2 = np.linalg.norm(w2) 
+v2 = w2/mag_w2
+v2.dot(v2)
+# remove vector projection of u3 in v1 and v2 from u3
+w3 = u3- ((u3.dot(v1)) *v1) -  ((u3.dot(v2)) *v2)
+mag_w3 = np.linalg.norm(w3) 
+v3 = w3/mag_w3
+v3.dot(v3)
+
+y = np.column_stack((v1,v2, v3))
+print('result ')
+print(y)
+
+- Find Covariance matrix ?
+
+x = [1.23, 2.12, 3.34, 4.5]
+ 
+y = [2.56, 2.89, 3.76, 3.95]
+
+x1 = np.array( [ [1.23, 2.12, 3.34, 4.5], [2.56, 2.89, 3.76, 3.95]])
+
+print(x1)
+np.cov(x1)
+
+- Consider the following Data 
+- height=[167,145,170,180,189,155,163,178,173,176]
+- weight=[83.5,72.5,85,90,94.5,77.5,81.5,89,86.5,88]
+
+1. Define a loss function 
+2. Calculate derivative at each point 
+3. Run Gradient descent for Learning rate = 0.000001
+4. Calculate the optimal value of w
+5. For 60 Epoch plot cost
+
+import matplotlib.pyplot as plt
+height = np.array([167,145,170,180,189,155,163,178,173,176])
+weight= np.array([83.5,72.5,85,90,94.5,77.5,81.5,89,86.5,88])
+
+N =len(x)
+
+learn_rate = 0.000001
+error_rate =0.001
+epochs = 60 
+w=0
+costs =[]
+#Gradient Descent 
+for epoch in range(epochs):
+    predictions = w*height
+    errors = weight - predictions
+    cost = (errors **2 ).mean()
+    costs.append(cost)
+    gradient = -2 *(height *errors).mean()
+    w-= learn_rate * gradient
+    print(f"Epoch {epoch+1}/{epochs}, Cost :{cost}, w:{w}")
+    
+
+plt.title('Cost over Epochs ')
+plt.xlabel('Epoch ')
+plt.ylabel('Cost')
+plt.plot( range(epochs), costs)
+plt.show()
+
+print(f"Optimal Value of w : {w}")
+
+# 11.5 Projection, Orthogonality, and Eigen Practice
+# --------------------------------------------------
+
+Find Scalar and Vector Projection of u on v
+u = [6,7,8] v= [2,3,-1]
+
+Verify Q is orthogonal
+
+
+ Scalar Projection of u on v
+u = np.array([6,7,8])
+v = np.array([2,3,-1])
+sc_proj = np.dot(u, v) / np.linalg.norm(v)   # u.v/||v||
+sc_proj
+
+
+# Vector projection of u on v
+vec_proj = (v * sc_proj)/ np.linalg.norm(v)   # (v * (np.dot(u,v)/np.linalg.norm(v)) / np.linalg.norm(v)  
+vec_proj
+
+
+from numpy import array
+from numpy.linalg import inv
+# define orthogonal matrix
+Q =1/3* array([ 
+[2,-2, 1],
+[1, 2, 2],
+[2,-1, -2]])
+print(Q)
+# inverse equivalence
+V = inv(Q)
+#print(Q.T)
+print(V)
+
+# identity equivalence
+I = Q.dot(Q.T)
+print(I)
+
+
+Q31 Find eigen values and eigen vectors for
+
+from numpy import linalg as LA
+import numpy as np
+
+a = np.array([[5, 6, 2],[4,7,19],[0,3,12]])
+w, v = np.linalg.eig(a)
+
+print(w)
+print(v)
+
+
+Q1.From sklearn.dataset import iris data
+Preprocess the data Preprocess the data by subtracting the mean and dividing by the standard deviation of each attribute value. The resulting data should be zero-mean with variance 1.
+Compute the covriance matrix
+Factorize the covariance matrix using singular value decomposition (SVD) and obtain the eigenvalues and eigenvectors.
+Find principle components.
+import pandas as pd
+ 
+#Get the IRIS dataset
+url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"
+data = pd.read_csv(url, names=['sepal length','sepal width','petal length','petal width','target'])
+ 
+#prepare the data
+x = data.iloc[:,0:4]
+ 
+#prepare the target
+target = data.iloc[:,4]
+ 
+#Applying it to PCA function
+mat_reduced = PCA(x , 2)
+ 
+#Creating a Pandas DataFrame of reduced Dataset
+principal_df = pd.DataFrame(mat_reduced , columns = ['PC1','PC2'])
+ 
+#Concat it with target variable to create a complete Dataset
+principal_df = pd.concat([principal_df , pd.DataFrame(target)] , axis = 1)
+
+def PCA(X , num_components):
+     
+    #Step-1
+    X_meaned = X - np.mean(X , axis = 0)
+     
+    #Step-2
+    cov_mat = np.cov(X_meaned , rowvar = False)
+     
+    #Step-3
+    eigen_values , eigen_vectors = np.linalg.eigh(cov_mat)
+     
+    #Step-4
+    sorted_index = np.argsort(eigen_values)[::-1]
+    sorted_eigenvalue = eigen_values[sorted_index]
+    sorted_eigenvectors = eigen_vectors[:,sorted_index]
+     
+    #Step-5
+    eigenvector_subset = sorted_eigenvectors[:,0:num_components]
+     
+    #Step-6
+    X_reduced = np.dot(eigenvector_subset.transpose() , X_meaned.transpose() ).transpose()
+     
+    return X_reduced
+
+
+=========
+#image is a 2D data, which is nothing but a matrix. Apply different matrix transformations on the following image
+
+from PIL import Image, ImageFilter
+from skimage import io
+import math
+
+img = Image.open('C:\cameraman.png')
+img
+#Q1 Is the cameraman coat have any packets in it ? Apply different transformations on this image to visually prove the answer for this question.
+gray_image = img.convert('L')
+
+# Apply the Sobel filter for edge detection
+edges = gray_image.filter(ImageFilter.FIND_EDGES)
+
+# Display the original image and the detected edges
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)
+plt.imshow(img)
+plt.title('Original Image')
+plt.subplot(1, 2, 2)
+plt.imshow(edges)
+plt.title('Edges Detected')
+plt.show()
+
+#Q2.	Create the negative version of this image
+#hint: 255-image graylevel values 
+# Convert the image to grayscale
+gray_image = img.convert('L')
+# Create the negative version of the image
+# Calculate the negative by subtracting from 255
+negative_image = Image.eval(gray_image, lambda x: 255 - x)
+# If you want to save the negative image to a file
+plt.imshow(negative_image)
+
+
+#Q3.	Rotate the image by an angles 45deg, 90 deg.
+# use image transformation
+# Rotate the image by 45 degrees
+rotated_45 = img.rotate(45)
+
+# Rotate the image by 90 degrees
+rotated_90 = img.rotate(90)
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 2, 1)
+plt.imshow(rotated_45)
+plt.title('Rotated by 45 degrees')
+
+plt.subplot(1, 2, 2)
+plt.imshow(rotated_90)
+plt.title('Rotated by 90 degrees')
+
+plt.show()
+
+
+#Q4 Horizontally flip the image
+
+# use image transformation and use vector dot product 
+flipped_image = img.transpose(Image.FLIP_LEFT_RIGHT)
+plt.figure(figsize=(10, 5))
+
+plt.imshow(flipped_image)
+plt.title('Flipped Image')
+plt.show()
+
+# Q5.	Zoom out the image using any matrix interpolation (up-sampling)
+# use image transformation and use vector dot product 
+# Define the new dimensions for the zoomed out image
+zoom_width = img.width // 2 
+zoom_height = img.height // 2 
+zoomed_out_image = img.resize((zoom_width, zoom_height), Image.BILINEAR)
+
+plt.imshow(zoomed_out_image)
+plt.title('Zoomed Out Image')
+plt.show()
+
+
+#Find singular value decomposition of 
+from scipy.linalg import svd
+A = np.array( ((1,2), (3 , 4), (5,6)))
+A
+
+U, s, V = svd(A)
+print(U)
+print(s)
+print(V)
+
+
+1. Generate a dummy dataset using
+-  np.random.seed(74)
+-  X = np.random.randint(10,50,100).reshape(20,5) 
+2. Preprocess the data Preprocess the data by subtracting the mean and dividing by the standard deviation of each attribute value. The resulting data should be zero-mean with variance 1.
+3. Compute the covriance matrix 
+4. obtain the eigenvalues and eigenvectors.
+5. Find principle components.
+
+
+X = np.random.randint(10,50,100).reshape(20,5)
+mean = np.mean(X, axis =0)
+std = np.std(X, axis =0)
+Xcen = X-mean 
+Xnorm = Xcen /std
+XnormCov = np.cov(Xnorm, rowvar =False)
+evals, evecs =np.linalg.eig(XnormCov)
+s_index = np.argsort(evals)[::-1]
+s_evals = evals[s_index]
+s_devecs= evecs[s_index]
+#np.transpose(s_devecs)
+PCs =  np.transpose(np.dot(np.transpose(s_devecs), np.transpose(Xnorm)))
+
+print(XnormCov)
+print(evals)
+print(evecs)
+print(PCs)
+
+
+#solve matric  A . X = B
+
+a = np.array([ [1,-1,1], [2,1, -3], [1,1,1] ])
+a
+b = np.array( [4,0,2])
+b
+x = np.linalg.solve(a,b)
+print(x)
+
+import sympy as sp
+sp.init_printing()
+x,y,z = sp.symbols('x,y,z')
+sol = sp.solve([x+(-1)*y+ z-4, 
+                2*x + y + (-3)*z -0 ,
+                x+y+z -2 ], [x,y,z])
+print(sol)
+
+
+Q.Convert the following matrix to an orthogonal matrix using Gram Schmidt Process?
+
+A = np.array( ((1,1,1), (-1, 0, 1), (1, 1, 2)))
+A
+u1, u2, u3 = A[:,0], A[:,1], A[:,2]
+w1 =u1
+# find magnitude of u1
+mag_w1 = np.linalg.norm(w1) 
+# do normalization 
+v1= w1/mag_w1
+print(v1.dot(v1))
+# remove vector projection of u2 in v1 from u2
+w2 =u2- (u2.dot(v1)) *v1 
+mag_w2 = np.linalg.norm(w2) 
+v2 = w2/mag_w2
+v2.dot(v2)
+# remove vector projection of u3 in v1 and v2 from u3
+w3 = u3- ((u3.dot(v1)) *v1) -  ((u3.dot(v2)) *v2)
+mag_w3 = np.linalg.norm(w3) 
+v3 = w3/mag_w3
+v3.dot(v3)
+
+y = np.column_stack((v1,v2, v3))
+print('result ')
+print(y)
+
+- Find Covariance matrix ?
+
+x = [1.23, 2.12, 3.34, 4.5]
+ 
+y = [2.56, 2.89, 3.76, 3.95]
+
+
+x1 = np.array( [ [1.23, 2.12, 3.34, 4.5], [2.56, 2.89, 3.76, 3.95]])
+
+print(x1)
+np.cov(x1)
+
+
+- Consider the following Data 
+- height=[167,145,170,180,189,155,163,178,173,176]
+- weight=[83.5,72.5,85,90,94.5,77.5,81.5,89,86.5,88]
+
+1. Define a loss function 
+2. Calculate derivative at each point 
+3. Run Gradient descent for Learning rate = 0.000001
+4. Calculate the optimal value of w
+5. For 60 Epoch plot cost
+
+
+import matplotlib.pyplot as plt
+height = np.array([167,145,170,180,189,155,163,178,173,176])
+weight= np.array([83.5,72.5,85,90,94.5,77.5,81.5,89,86.5,88])
+
+N =len(x)
+
+learn_rate = 0.000001
+error_rate =0.001
+epochs = 60 
+w=0
+costs =[]
+#Gradient Descent 
+for epoch in range(epochs):
+    predictions = w*height
+    errors = weight - predictions
+    cost = (errors **2 ).mean()
+    costs.append(cost)
+    gradient = -2 *(height *errors).mean()
+    w-= learn_rate * gradient
+    print(f"Epoch {epoch+1}/{epochs}, Cost :{cost}, w:{w}")
+    
+
+plt.title('Cost over Epochs ')
+plt.xlabel('Epoch ')
+plt.ylabel('Cost')
+plt.plot( range(epochs), costs)
+plt.show()
+
+print(f"Optimal Value of w : {w}")
+
+
+Find Scalar and Vector Projection of u on v
+u = [6,7,8] v= [2,3,-1]
+
+Verify Q is orthogonal
+
+
+ Scalar Projection of u on v
+u = np.array([6,7,8])
+v = np.array([2,3,-1])
+sc_proj = np.dot(u, v) / np.linalg.norm(v)   # u.v/||v||
+sc_proj
+
+
+# Vector projection of u on v
+vec_proj = (v * sc_proj)/ np.linalg.norm(v)   # (v * (np.dot(u,v)/np.linalg.norm(v)) / np.linalg.norm(v)  
+vec_proj
+
+
+from numpy import array
+from numpy.linalg import inv
+# define orthogonal matrix
+Q =1/3* array([ 
+[2,-2, 1],
+[1, 2, 2],
+[2,-1, -2]])
+print(Q)
+# inverse equivalence
+V = inv(Q)
+#print(Q.T)
+print(V)
+
+# identity equivalence
+I = Q.dot(Q.T)
+print(I)
+
+
+Q31 Find eigen values and eigen vectors for
+
+from numpy import linalg as LA
+import numpy as np
+
+a = np.array([[5, 6, 2],[4,7,19],[0,3,12]])
+w, v = np.linalg.eig(a)
+
+print(w)
+print(v)
+
+
+Q1.From sklearn.dataset import iris data
+Preprocess the data Preprocess the data by subtracting the mean and dividing by the standard deviation of each attribute value. The resulting data should be zero-mean with variance 1.
+Compute the covriance matrix
+Factorize the covariance matrix using singular value decomposition (SVD) and obtain the eigenvalues and eigenvectors.
+Find principle components.
+import pandas as pd
+ 
+#Get the IRIS dataset
+url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"
+data = pd.read_csv(url, names=['sepal length','sepal width','petal length','petal width','target'])
+ 
+#prepare the data
+x = data.iloc[:,0:4]
+ 
+#prepare the target
+target = data.iloc[:,4]
+ 
+#Applying it to PCA function
+mat_reduced = PCA(x , 2)
+ 
+#Creating a Pandas DataFrame of reduced Dataset
+principal_df = pd.DataFrame(mat_reduced , columns = ['PC1','PC2'])
+ 
+#Concat it with target variable to create a complete Dataset
+principal_df = pd.concat([principal_df , pd.DataFrame(target)] , axis = 1)
+
+def PCA(X , num_components):
+     
+    #Step-1
+    X_meaned = X - np.mean(X , axis = 0)
+     
+    #Step-2
+    cov_mat = np.cov(X_meaned , rowvar = False)
+     
+    #Step-3
+    eigen_values , eigen_vectors = np.linalg.eigh(cov_mat)
+     
+    #Step-4
+    sorted_index = np.argsort(eigen_values)[::-1]
+    sorted_eigenvalue = eigen_values[sorted_index]
+    sorted_eigenvectors = eigen_vectors[:,sorted_index]
+     
+    #Step-5
+    eigenvector_subset = sorted_eigenvectors[:,0:num_components]
+     
+    #Step-6
+    X_reduced = np.dot(eigenvector_subset.transpose() , X_meaned.transpose() ).transpose()
+     
+    return X_reduced
+
+
+# ==========================================================================

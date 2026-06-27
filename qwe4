@@ -1,3 +1,26 @@
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+# 1. Scale data
+X_scaled = StandardScaler().fit_transform(X)
+
+# 2. Fit PCA to retain 95% of the variance
+pca = PCA(n_components=0.95)
+X_pca = pca.fit_transform(X_scaled)
+
+# 3. Check cumulative variance and dimensions retained
+cum_variance = np.cumsum(pca.explained_variance_ratio_)
+print(f"Components retained: {pca.n_components_}")
+print(f"Cumulative variance: {cum_variance}")
+
+# 4. Plot the first two components
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y)
+plt.xlabel("PC1")
+plt.ylabel("PC2")
+plt.show()
+
 1. Creating Matrices and Vectors   
 # 1D Array (Vector):    
 import numpy as np    
